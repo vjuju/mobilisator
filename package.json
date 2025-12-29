@@ -8,6 +8,7 @@
 		"fetch:elections_1": "curl -o elections_1.json https://tabular-api.data.gouv.fr/api/resources/8016ae91-bc47-4997-a3b5-d3515392a75b/data/json/",
 		"fetch:population": "curl -o population.json https://tabular-api.data.gouv.fr/api/resources/ae02973c-4538-49fe-8494-6b77df0f4771/data/json/",
 		"clean:elections": "bun run src/process-elections.ts",
+		"fetch:elections": "bun run fetch:elections_1 && bun run fetch:elections_2 && bun run fetch:population && bun run clean:elections",
 		"dev": "bun run src/server.ts"
 	},
 	"devDependencies": {

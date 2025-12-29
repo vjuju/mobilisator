@@ -2,6 +2,6 @@
 
 - [Install bun](https://bun.com/docs/installation)
 - `bun install`
-- `bun run fetch:communes`
+- `bun run fetch:elections`
 - `bun run build`
 - `bun run dev`
