@@ -54,6 +54,13 @@ export interface PopulationData {
 	"H80+": number;
 }
 
+export interface AnalyseData {
+	"Votes décisifs": number;
+	"tour décisif": number;
+	majeurs: number;
+	"Non votants de 18-24": number;
+}
+
 export interface ElectionEntry {
 	__id: number;
 	"Code du département": string;
@@ -63,6 +70,7 @@ export interface ElectionEntry {
 	"Tour 1": TourData;
 	"Tour 2"?: TourData;
 	population?: PopulationData;
+	Analyse: AnalyseData;
 }
 
 export interface FullCity {
@@ -77,6 +85,13 @@ export interface FullCity {
 	code_commune: string;
 }
 
+export interface AnalyseData {
+	"Votes décisifs": number;
+	"tour décisif": number;
+	majeurs: number;
+	"Non votants de 18-24": number;
+}
+
 export interface City {
 	id: number;
 	slug: string;
@@ -88,6 +103,7 @@ export interface City {
 	"Tour 1": TourData;
 	"Tour 2"?: TourData;
 	population?: PopulationData;
+	Analyse: AnalyseData;
 }
 
 // Search result format: [id, name, code_departement]

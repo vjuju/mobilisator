@@ -27,5 +27,6 @@ export const fullCityToCity = (
 		"Tour 1": electionEntry["Tour 1"],
 		...(electionEntry["Tour 2"] && { "Tour 2": electionEntry["Tour 2"] }),
 		...(electionEntry.population && { population: electionEntry.population }),
+		Analyse: electionEntry.Analyse,
 	};
 };

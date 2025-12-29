@@ -232,6 +232,22 @@ function displayCityDetail(city: City): void {
 		toursHtml += generateTourHtml("Tour 2", city["Tour 2"]);
 	}
 
+	const analyseHtml = city.Analyse
+		? `
+            <div class="analyse-section">
+                <h3>Analyse</h3>
+                <div class="info-item">
+                    <div class="info-label">Votes décisifs</div>
+                    <div class="info-value">${city.Analyse["Votes décisifs"].toLocaleString()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Non votants de 18-24</div>
+                    <div class="info-value">${Math.round(city.Analyse["Non votants de 18-24"]).toLocaleString()}</div>
+                </div>
+            </div>
+        `
+		: "";
+
 	const html = `
         <div class="city-detail">
             <h2>${city.nom_standard}</h2>
@@ -245,6 +261,7 @@ function displayCityDetail(city: City): void {
                     <div class="info-value">${city.code_commune}</div>
                 </div>
             </div>
+            ${analyseHtml}
             ${toursHtml}
         </div>
     `;

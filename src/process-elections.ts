@@ -183,6 +183,46 @@ const extractTourData = (row: Record<string, unknown>): Record<string, unknown> 
 	return tourData;
 };
 
+// Fonction pour calculer les votes décisifs
+const calculateVotesDecisifs = (
+	tour1Data: Record<string, unknown>,
+	tour2Data?: Record<string, unknown>,
+): number => {
+	if (tour2Data && tour2Data.resultats) {
+		// Cas où il y a un second tour : différence entre le 1er et 2ème candidat
+		const resultats = tour2Data.resultats as Array<{
+			Voix: number;
+		}>;
+		if (resultats.length >= 2) {
+			// Trier par nombre de voix décroissant
+			const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
+			return sorted[0].Voix - sorted[1].Voix;
+		}
+		// Si un seul candidat au second tour, retourner 0
+		return 0;
+	} else {
+		// Cas où il n'y a pas de second tour
+		// Calculer le nombre de voix supplémentaires nécessaires pour que le gagnant ait <50%
+		const resultats = tour1Data.resultats as Array<{
+			Voix: number;
+		}>;
+		if (resultats.length === 0) {
+			return 0;
+		}
+
+		// Trier par nombre de voix décroissant pour trouver le gagnant
+		const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
+		const gagnantVoix = sorted[0].Voix;
+		const exprimés = tour1Data.Exprimés as number;
+
+		// Pour que le gagnant ait moins de 50%, il faut que le total exprimés soit > 2 * gagnantVoix
+		// Donc il faut ajouter au moins : 2 * gagnantVoix - exprimés + 1
+		// (le +1 pour garantir <50% et pas juste =50%)
+		const voixNecessaires = 2 * gagnantVoix - exprimés + 1;
+		return Math.max(0, voixNecessaires);
+	}
+};
+
 console.log("📖 Reading elections_1.json...");
 const data1 = await inputFile1.json();
 
@@ -259,6 +299,48 @@ const cleanedData = data1.map((row: Record<string, unknown>) => {
 			baseData.population = populationData;
 		}
 	}
+
+	// Calculer l'analyse
+	const tour2Data = baseData["Tour 2"] as Record<string, unknown> | undefined;
+	const populationData = baseData.population as Record<string, unknown> | undefined;
+	
+	const votesDecisifs = calculateVotesDecisifs(tour1Data, tour2Data);
+	const tourDecisif = tour2Data ? 2 : 1;
+	
+	// Calculer les majeurs (somme des tranches d'âge 18+)
+	let majeurs = 0;
+	if (populationData) {
+		const tranchesMajeurs = [
+			"F18-24", "F25-39", "F40-54", "F55-64", "F65-79", "F80+",
+			"H18-24", "H25-39", "H40-54", "H55-64", "H65-79", "H80+",
+		];
+		for (const tranche of tranchesMajeurs) {
+			if (tranche in populationData && typeof populationData[tranche] === "number") {
+				majeurs += populationData[tranche] as number;
+			}
+		}
+	}
+	
+	// Calculer les non-votants de 18-24
+	let nonVotants1824 = 0;
+	if (populationData && majeurs > 0) {
+		const f1824 = (populationData["F18-24"] as number) || 0;
+		const h1824 = (populationData["H18-24"] as number) || 0;
+		const jeunes1824 = f1824 + h1824;
+		
+		// Récupérer le nombre de votants au tour décisif
+		const tourDecisifData = tourDecisif === 2 ? tour2Data : tour1Data;
+		const votantsAuTourDecisif = (tourDecisifData?.Votants as number) || 0;
+		
+		nonVotants1824 = jeunes1824 * (1 - votantsAuTourDecisif / majeurs);
+	}
+	
+	baseData.Analyse = {
+		"Votes décisifs": votesDecisifs,
+		"tour décisif": tourDecisif,
+		majeurs,
+		"Non votants de 18-24": nonVotants1824,
+	};
 
 	return baseData;
 });
