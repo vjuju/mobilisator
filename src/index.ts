@@ -1,6 +1,6 @@
 import { rm } from "node:fs/promises";
 
-import type { FullCity, RawCity } from "./dtos/city";
+import type { ElectionEntry, FullCity } from "./dtos/city";
 import { fullCityToCity, normalizeText } from "./utils";
 
 const MAX_CITIES_PER_NGRAM = 20;
@@ -10,7 +10,7 @@ const NB_NGRAMS = 45;
 const outputDirectoryPath =
 	"./public/cities";
 const inputPath =
-	"./communes.json";
+	"./elections.json";
 const inputFile = Bun.file(inputPath);
 
 interface Indexable {
@@ -36,10 +36,12 @@ export const createSearchIndex = (
 	cities.forEach((city: FullCity) => {
 		const addStringToFullCityIndex = addStringToIndex(city);
 
-		[city.nom_standard, city.nom_sans_pronom, city.code_postal].forEach(
-			addStringToFullCityIndex,
-		);
-		city.codes_postaux.forEach(addStringToFullCityIndex);
+		[
+			city.nom_standard,
+			city.nom_sans_pronom,
+			city.code_departement,
+			city.code_commune,
+		].forEach(addStringToFullCityIndex);
 	});
 	return searchIndex;
 };
@@ -79,29 +81,30 @@ export const createNGrams = (token: string): Set<string> => {
 
 const startTime = performance.now();
 
-const communes = await inputFile.json();
-const rawCities: RawCity[] = communes.data;
-const cities: FullCity[] = rawCities
-	.filter((city) => !!city && !!city.nom_sans_pronom)
-	.map((city, idx) => {
-		if (city.code_postal === null && city.codes_postaux !== null) {
-			city.code_postal = city.codes_postaux.split(", ")[0];
-		}
-
+const elections: ElectionEntry[] = await inputFile.json();
+const cities: FullCity[] = elections
+	.filter((entry) => !!entry && !!entry["Libellé de la commune"])
+	.map((entry, idx) => {
+		const nomSansPronom = entry["Libellé de la commune"];
 		return {
-			id: idx + 1,
-			normalized_name: normalizeText(city.nom_sans_pronom),
-			nom_standard: city.nom_standard,
-			nom_sans_pronom: city.nom_sans_pronom,
-			code_postal: city.code_postal ?? "",
-			codes_postaux: city.codes_postaux?.split(", ") ?? [],
-			superficie_km2: city.superficie_km2,
+			id: entry.__id,
+			normalized_name: normalizeText(nomSansPronom),
+			nom_standard: nomSansPronom,
+			nom_sans_pronom: nomSansPronom,
+			code_postal: entry["Code du département"],
+			codes_postaux: [],
+			code_departement: entry["Code du département"],
+			libelle_departement: entry["Libellé du département"],
+			code_commune: entry["Code de la commune"],
 		};
 	});
 
 const searchIndex: Map<string, number[]> = createSearchIndex(cities);
 
 const citiesById = Object.fromEntries(cities.map((c) => [c.id, c]));
+const electionsById = Object.fromEntries(
+	elections.map((e) => [e.__id, e]),
+);
 const citiesIndex = Array.from(searchIndex.entries()).map(([k, v]) => [
 	k,
 	v
@@ -110,7 +113,7 @@ const citiesIndex = Array.from(searchIndex.entries()).map(([k, v]) => [
 				citiesById[a].nom_standard.length - citiesById[b].nom_standard.length,
 		)
 		.slice(0, MAX_CITIES_PER_NGRAM)
-		.map((i) => [i, citiesById[i].nom_standard, citiesById[i].code_postal]),
+		.map((i) => [i, citiesById[i].nom_standard, citiesById[i].code_departement]),
 ]);
 const searchIndexJsonString = JSON.stringify(Object.fromEntries(citiesIndex));
 
@@ -121,12 +124,15 @@ for (const [k, v] of citiesIndex) {
 	Bun.write(fileLocation, JSON.stringify(v));
 }
 
-for (const fullFullCity of cities) {
-	const city = fullCityToCity(fullFullCity);
-	const fileLocation = `${outputDirectoryPath}/${city.id}.json`;
-	const prettyFileLocation = `${outputDirectoryPath}/${city.slug}.json`;
-	Bun.write(fileLocation, JSON.stringify(city));
-	Bun.write(prettyFileLocation, JSON.stringify(city));
+for (const fullCity of cities) {
+	const electionEntry = electionsById[fullCity.id];
+	if (electionEntry) {
+		const city = fullCityToCity(fullCity, electionEntry);
+		const fileLocation = `${outputDirectoryPath}/${city.id}.json`;
+		const prettyFileLocation = `${outputDirectoryPath}/${city.slug}.json`;
+		Bun.write(fileLocation, JSON.stringify(city));
+		Bun.write(prettyFileLocation, JSON.stringify(city));
+	}
 }
 
 const endTime = performance.now();

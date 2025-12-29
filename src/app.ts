@@ -1,4 +1,4 @@
-import type { City, CitySearchResult } from "./dtos/city";
+import type { City, CitySearchResult, TourData } from "./dtos/city";
 import { normalizeText } from "./utils";
 
 // Router and app state
@@ -162,14 +162,14 @@ function displaySearchResults(cities: CitySearchResult[]): void {
 		return;
 	}
 
-	// cities is now an array of [id, name, postal_code]
+	// cities is now an array of [id, name, code_departement]
 	const html = cities
 		.map((city) => {
-			const [id, name, postalCode] = city;
+			const [id, name, codeDepartement] = city;
 			return `
             <div class="result-item" onclick="navigateToCityById(${id})">
                 <h3>${name}</h3>
-                <p>Code postal: ${postalCode}</p>
+                <p>Département: ${codeDepartement}</p>
             </div>
         `;
 		})
@@ -220,27 +220,115 @@ function displayCityDetail(city: City): void {
 
 	if (!cityDetailDiv) return;
 
+	let toursHtml = "";
+
+	// Tour 1
+	if (city["Tour 1"]) {
+		toursHtml += generateTourHtml("Tour 1", city["Tour 1"]);
+	}
+
+	// Tour 2
+	if (city["Tour 2"]) {
+		toursHtml += generateTourHtml("Tour 2", city["Tour 2"]);
+	}
+
 	const html = `
         <div class="city-detail">
             <h2>${city.nom_standard}</h2>
             <div class="city-info">
                 <div class="info-item">
-                    <div class="info-label">Code postal</div>
-                    <div class="info-value">${city.code_postal}</div>
+                    <div class="info-label">Département</div>
+                    <div class="info-value">${city.code_departement} - ${city.libelle_departement}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Superficie</div>
-                    <div class="info-value">${city.superficie_km2} km²</div>
+                    <div class="info-label">Code commune</div>
+                    <div class="info-value">${city.code_commune}</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Identifiant</div>
-                    <div class="info-value">${city.id}</div>
+            </div>
+            ${toursHtml}
+        </div>
+    `;
+
+	cityDetailDiv.innerHTML = html;
+}
+
+// Generate HTML for a tour
+function generateTourHtml(tourName: string, tourData: TourData): string {
+	const stats = `
+        <div class="tour-stats">
+            <h4>Statistiques</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Inscrits</span>
+                    <span class="stat-value">${tourData.Inscrits.toLocaleString()}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Votants</span>
+                    <span class="stat-value">${tourData.Votants.toLocaleString()} (${tourData["% Vot/Ins"].toFixed(2)}%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Abstentions</span>
+                    <span class="stat-value">${tourData.Abstentions.toLocaleString()} (${tourData["% Abs/Ins"].toFixed(2)}%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Exprimés</span>
+                    <span class="stat-value">${tourData.Exprimés.toLocaleString()} (${tourData["% Exp/Ins"].toFixed(2)}%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Blancs</span>
+                    <span class="stat-value">${tourData.Blancs.toLocaleString()} (${tourData["% Blancs/Vot"].toFixed(2)}%)</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Nuls</span>
+                    <span class="stat-value">${tourData.Nuls.toLocaleString()} (${tourData["% Nuls/Vot"].toFixed(2)}%)</span>
                 </div>
             </div>
         </div>
     `;
 
-	cityDetailDiv.innerHTML = html;
+	const results = `
+        <div class="tour-results">
+            <h4>Résultats</h4>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Liste</th>
+                        <th>Tête de liste</th>
+                        <th>Nuance</th>
+                        <th>Voix</th>
+                        <th>% Voix/Exp</th>
+                        <th>% Voix/Ins</th>
+                        <th>Sièges</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tourData.resultats
+						.map(
+							(result) => `
+                        <tr>
+                            <td>${result.Liste}</td>
+                            <td>${result.Prénom} ${result.Nom}</td>
+                            <td>${result["Code Nuance"]}</td>
+                            <td>${result.Voix.toLocaleString()}</td>
+                            <td>${result["% Voix/Exp"].toFixed(2)}%</td>
+                            <td>${result["% Voix/Ins"].toFixed(2)}%</td>
+                            <td>${result["Sièges / Elu"]}</td>
+                        </tr>
+                    `,
+						)
+						.join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+	return `
+        <div class="tour-section">
+            <h3>${tourName}</h3>
+            ${stats}
+            ${results}
+        </div>
+    `;
 }
 
 // Make navigateToCityById available globally for onclick handlers
