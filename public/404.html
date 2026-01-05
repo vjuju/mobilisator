@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#RIENSANSNOUS - Municipales 2020</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Anton', Impact, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            padding: 20px 40px;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: normal;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto 60px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #5ECBA1;
+            border-radius: 50px;
+            padding: 15px 25px;
+            cursor: pointer;
+        }
+
+        .search-prefix {
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            margin-right: 5px;
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #333;
+        }
+
+        .results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-radius: 15px;
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 100;
+            text-align: left;
+        }
+
+        .results:empty {
+            display: none;
+        }
+
+        .result-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #333;
+        }
+
+        .result-item:hover {
+            background: #2a2a2a;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item h3 {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #5ECBA1;
+            margin-bottom: 0;
+        }
+
+        /* City Detail Styles */
+        .city-detail {
+            text-align: center;
+        }
+
+        .main-stat {
+            margin-bottom: 40px;
+        }
+
+        .main-number {
+            font-size: 140px;
+            font-weight: 900;
+            color: #5ECBA1;
+            line-height: 1;
+            letter-spacing: -5px;
+        }
+
+        .main-label {
+            font-size: 28px;
+            font-weight: 900;
+            color: #5ECBA1;
+            line-height: 1.2;
+            margin-top: 15px;
+        }
+
+        .secondary-stat {
+            margin: 50px 0;
+        }
+
+        .secondary-number {
+            font-size: 100px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+            letter-spacing: -3px;
+        }
+
+        .secondary-label {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.2;
+            margin-top: 12px;
+        }
+
+        /* CTA Button Section */
+        .cta-section {
+            margin-bottom: 60px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: black;
+            font-family: 'Anton', Impact, sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            text-decoration: underline;
+            padding: 30px 50px;
+            border-radius: 20px;
+            border: 3px solid #333;
+            cursor: pointer;
+            transition: all 0.3s;
+            line-height: 1.2;
+        }
+
+        .cta-button:hover {
+            background: #5ECBA1;
+            color: black;
+        }
+
+        .cta-button .emoji {
+            font-style: normal;
+            margin-left: 10px;
+        }
+
+        /* Explanation Sections */
+        .explanation-section {
+            margin: 50px 0;
+            text-align: left;
+            padding: 0 20px;
+        }
+
+        .explanation-text {
+            font-family: 'Anton', Impact, sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: #5ECBA1;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .explanation-section.white .explanation-text {
+            color: #fff;
+        }
+
+        .source-link {
+            display: block;
+            text-align: right;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #5ECBA1;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+
+        .explanation-section.white .source-link {
+            color: #fff;
+        }
+
+        .source-link:hover {
+            color: #7EDBB5;
+        }
+
+        .explanation-section.white .source-link:hover {
+            color: #ccc;
+        }
+
+        .loading {
+            color: #5ECBA1;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>#RIENSANSNOUS</h1>
+    </nav>
+
+    <div class="container">
+        <p class="subtitle">Aux municipales de 2020,</p>
+
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <span class="search-prefix">À:</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Rechercher une ville...">
+            </div>
+            <div id="results" class="results"></div>
+        </div>
+
+        <div id="cityDetail"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
