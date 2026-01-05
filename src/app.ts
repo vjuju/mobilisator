@@ -97,6 +97,12 @@ function init(): void {
 		"searchInput",
 	) as HTMLInputElement;
 	if (searchInput) {
+		// Clear input on focus
+		searchInput.addEventListener("focus", () => {
+			searchInput.value = "";
+			clearResults();
+		});
+
 		searchInput.addEventListener(
 			"input",
 			debounce(() => {

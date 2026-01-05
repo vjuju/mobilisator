@@ -69,6 +69,10 @@ function init() {
   window.addEventListener("popstate", handleRoute);
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
+    searchInput.addEventListener("focus", () => {
+      searchInput.value = "";
+      clearResults();
+    });
     searchInput.addEventListener("input", debounce(() => {
       searchCities();
     }, 80));
