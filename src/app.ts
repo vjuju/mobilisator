@@ -432,8 +432,8 @@ function displayCityDetail(city: City): void {
 
 	// Determine tagline based on whether there was a second round
 	const mainTagline = hasSecondTour
-		? "votes suffisaient<br>pour élire un autre maire"
-		: "votes suffisaient<br>pour aller au second tour";
+		? "votes suffisaient pour élire un autre maire"
+		: "votes suffisaient à l'opposition pour aller au second tour";
 
 	const nonVotants1824 = Math.round(city.Analyse["Non votants de 18-24"]);
 
