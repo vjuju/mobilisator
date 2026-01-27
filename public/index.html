@@ -132,6 +132,7 @@
 
         .main-stat {
             margin-bottom: 40px;
+            color: #5ECBA1;
         }
 
         .main-number {
@@ -152,6 +153,7 @@
 
         .secondary-stat {
             margin: 50px 0;
+            color: #fff;
         }
 
         .secondary-number {
@@ -168,6 +170,107 @@
             color: #fff;
             line-height: 1.2;
             margin-top: 12px;
+        }
+
+        /* Detail Link */
+        .detail-link {
+            display: inline-block;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #5ECBA1;
+            text-decoration: underline;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .secondary-stat a.detail-link {
+            color: #fff;
+        }
+
+        .detail-link:hover {
+            color: #7EDBB5;
+        }
+
+        .detail-link.white {
+            color: #fff;
+        }
+
+        .detail-link.white:hover {
+            color: #ccc;
+        }
+
+        /* Detail Modal */
+        .detail-modal-content {
+            max-width: 700px;
+        }
+
+        .detail-modal-title {
+            font-family: 'Anton', Impact, sans-serif;
+            font-size: 24px;
+            color: #5ECBA1;
+            margin-bottom: 20px;
+        }
+
+        .detail-modal-formula {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #fff;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .detail-modal-source {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .detail-modal-source a {
+            color: #5ECBA1;
+            word-break: break-all;
+        }
+
+        .detail-modal-source a:hover {
+            color: #7EDBB5;
+        }
+
+        /* Results Table */
+        .table-scroll-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .results-table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .results-table th {
+            color: #5ECBA1;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .results-table td {
+            color: #fff;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .results-table tr:hover td {
+            background: rgba(94, 203, 161, 0.1);
         }
 
         /* CTA Button Section */
@@ -281,11 +384,11 @@
         }
 
         .access-gate-title {
-            font-size: 36px;
+            font-size: 24px;
             font-weight: 900;
-            color: #5ECBA1;
+            letter-spacing: 1px;
+            color: #fff;
             margin-bottom: 30px;
-            text-align: center;
         }
 
         .access-gate-input {
@@ -332,6 +435,20 @@
             font-family: Arial, sans-serif;
             font-size: 14px;
             margin-top: 15px;
+        }
+
+        .access-gate-description {
+            max-width: 380px;
+            margin-bottom: 40px;
+        }
+
+        .access-gate-description p {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #ccc;
+            line-height: 1.6;
+            text-align: left;
+            margin: 0;
         }
 
         /* Modal Styles */
@@ -383,8 +500,11 @@
 <body>
     <!-- Access Gate -->
     <div id="accessGate" class="access-gate">
-        <h2 class="access-gate-title">Entrez le code d'accès</h2>
-        <input type="text" id="accessCodeInput" class="access-gate-input" placeholder="Code" autocomplete="off">
+        <h1 class="access-gate-title">#RIENSANSNOUS</h1>
+        <div class="access-gate-description">
+            <p>#RienSansNous est un outil citoyen qui montre que, dans de nombreuses villes, l'abstention des jeunes est plus forte que l'écart de voix qui a décidé de l'élection municipale.<br><br>Autrement dit : si les jeunes avaient voté, le résultat – et donc les priorités locales – auraient pu être différents.</p>
+        </div>
+        <input type="text" id="accessCodeInput" class="access-gate-input" placeholder="Code d'accès" autocomplete="off">
         <button type="button" id="accessCodeSubmit" class="access-gate-button">Valider</button>
         <p id="accessError" class="access-error"></p>
     </div>

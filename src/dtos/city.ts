@@ -58,7 +58,7 @@ export interface AnalyseData {
 	"Votes décisifs": number;
 	"tour décisif": number;
 	majeurs: number;
-	"Non votants de 18-24": number;
+	"Non votants de 18-39": number;
 }
 
 export interface ElectionEntry {
@@ -89,8 +89,8 @@ export interface AnalyseData {
 	"Votes décisifs": number;
 	"tour décisif": number;
 	majeurs: number;
-	"Non votants de 18-24": number;
-	"Pop 18-24": number;
+	"Non votants de 18-39": number;
+	"Pop 18-39": number;
 	"Pop 18+": number;
 	"Non votants": number;
 	"Part ne votant pas": number;

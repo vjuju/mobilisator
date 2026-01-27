@@ -8,6 +8,7 @@ export const normalizeText = (text: string): string =>
 		.replace(/[''`]/g, "-")
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/\s+/g, "-")
+		.replace(/^-+|-+$/g, "")
 		.trim();
 
 export const fullCityToCity = (
@@ -18,8 +19,8 @@ export const fullCityToCity = (
 
 	// Calculate population stats
 	const pop = electionEntry.population;
-	const pop1824 = pop
-		? (pop["F18-24"] || 0) + (pop["H18-24"] || 0)
+	const pop1839 = pop
+		? (pop["F18-24"] || 0) + (pop["H18-24"] || 0) + (pop["F25-39"] || 0) + (pop["H25-39"] || 0)
 		: 0;
 	const pop18Plus = pop
 		? (pop["F18-24"] || 0) + (pop["F25-39"] || 0) + (pop["F40-54"] || 0) + (pop["F55-64"] || 0) + (pop["F65-79"] || 0) + (pop["F80+"] || 0) +
@@ -51,7 +52,7 @@ export const fullCityToCity = (
 		...(electionEntry.population && { population: electionEntry.population }),
 		Analyse: {
 			...electionEntry.Analyse,
-			"Pop 18-24": Math.round(pop1824),
+			"Pop 18-39": Math.round(pop1839),
 			"Pop 18+": Math.round(pop18Plus),
 			"Non votants": nonVotants,
 			"Part ne votant pas": partNeVotantPas,

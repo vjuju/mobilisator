@@ -202,7 +202,7 @@ const calculateVotesDecisifs = (
 		return 0;
 	} else {
 		// Cas où il n'y a pas de second tour
-		// Calculer le nombre de voix supplémentaires nécessaires pour que le gagnant ait <50%
+		// Calculer la différence entre les voix du gagnant et la moitié des exprimés
 		const resultats = tour1Data.resultats as Array<{
 			Voix: number;
 		}>;
@@ -215,11 +215,9 @@ const calculateVotesDecisifs = (
 		const gagnantVoix = sorted[0].Voix;
 		const exprimés = tour1Data.Exprimés as number;
 
-		// Pour que le gagnant ait moins de 50%, il faut que le total exprimés soit > 2 * gagnantVoix
-		// Donc il faut ajouter au moins : 2 * gagnantVoix - exprimés + 1
-		// (le +1 pour garantir <50% et pas juste =50%)
-		const voixNecessaires = 2 * gagnantVoix - exprimés + 1;
-		return Math.max(0, voixNecessaires);
+		// Différence entre les voix du gagnant et la moitié des exprimés
+		const voixAuDessusMajorite = gagnantVoix - exprimés / 2;
+		return Math.max(0, Math.round(voixAuDessusMajorite));
 	}
 };
 
@@ -321,25 +319,27 @@ const cleanedData = data1.map((row: Record<string, unknown>) => {
 		}
 	}
 	
-	// Calculer les non-votants de 18-24
-	let nonVotants1824 = 0;
+	// Calculer les non-votants de 18-39
+	let nonVotants1839 = 0;
 	if (populationData && majeurs > 0) {
 		const f1824 = (populationData["F18-24"] as number) || 0;
 		const h1824 = (populationData["H18-24"] as number) || 0;
-		const jeunes1824 = f1824 + h1824;
-		
+		const f2539 = (populationData["F25-39"] as number) || 0;
+		const h2539 = (populationData["H25-39"] as number) || 0;
+		const jeunes1839 = f1824 + h1824 + f2539 + h2539;
+
 		// Récupérer le nombre de votants au tour décisif
 		const tourDecisifData = tourDecisif === 2 ? tour2Data : tour1Data;
 		const votantsAuTourDecisif = (tourDecisifData?.Votants as number) || 0;
-		
-		nonVotants1824 = jeunes1824 * (1 - votantsAuTourDecisif / majeurs);
+
+		nonVotants1839 = jeunes1839 * (1 - votantsAuTourDecisif / majeurs);
 	}
-	
+
 	baseData.Analyse = {
 		"Votes décisifs": votesDecisifs,
 		"tour décisif": tourDecisif,
 		majeurs,
-		"Non votants de 18-24": nonVotants1824,
+		"Non votants de 18-39": nonVotants1839,
 	};
 
 	return baseData;
