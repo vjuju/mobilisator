@@ -58,30 +58,53 @@ const createKey = (row: Record<string, unknown>): string => {
 	return dept + commune;
 };
 
-// Mapping des codes communes exceptionnels vers plusieurs codes INSEE
-const communeToInseeMapping: Record<string, number[]> = {
-	"055SR01": [13201, 13207],
-	"055SR02": [13202, 13203],
-	"055SR03": [13204, 13205],
-	"055SR04": [13206, 13208],
-	"055SR05": [13209, 13210],
-	"055SR06": [13211, 13212],
-	"055SR07": [13213, 13214],
-	"055SR08": [13215, 13216],
-	"056SR01": [75101, 75102, 75103, 75104],
+// Mapping des codes communes exceptionnels vers plusieurs codes INSEE avec leurs noms
+const communeToInseeMapping: Record<string, { codes: number[]; noms: string[] }> = {
+	// Marseille - 8 secteurs regroupant 2 arrondissements chacun
+	"055SR01": { codes: [13201, 13207], noms: ["Marseille 1er (13)", "Marseille 7e (13)"] },
+	"055SR02": { codes: [13202, 13203], noms: ["Marseille 2e (13)", "Marseille 3e (13)"] },
+	"055SR03": { codes: [13204, 13205], noms: ["Marseille 4e (13)", "Marseille 5e (13)"] },
+	"055SR04": { codes: [13206, 13208], noms: ["Marseille 6e (13)", "Marseille 8e (13)"] },
+	"055SR05": { codes: [13209, 13210], noms: ["Marseille 9e (13)", "Marseille 10e (13)"] },
+	"055SR06": { codes: [13211, 13212], noms: ["Marseille 11e (13)", "Marseille 12e (13)"] },
+	"055SR07": { codes: [13213, 13214], noms: ["Marseille 13e (13)", "Marseille 14e (13)"] },
+	"055SR08": { codes: [13215, 13216], noms: ["Marseille 15e (13)", "Marseille 16e (13)"] },
+	// Paris - secteur 1 regroupe 4 arrondissements, secteurs 5-20 correspondent à 1 arrondissement chacun
+	"056SR01": { codes: [75101, 75102, 75103, 75104], noms: ["Paris 1er (75)", "Paris 2e (75)", "Paris 3e (75)", "Paris 4e (75)"] },
+	"056SR05": { codes: [75105], noms: ["Paris 5e (75)"] },
+	"056SR06": { codes: [75106], noms: ["Paris 6e (75)"] },
+	"056SR07": { codes: [75107], noms: ["Paris 7e (75)"] },
+	"056SR08": { codes: [75108], noms: ["Paris 8e (75)"] },
+	"056SR09": { codes: [75109], noms: ["Paris 9e (75)"] },
+	"056SR10": { codes: [75110], noms: ["Paris 10e (75)"] },
+	"056SR11": { codes: [75111], noms: ["Paris 11e (75)"] },
+	"056SR12": { codes: [75112], noms: ["Paris 12e (75)"] },
+	"056SR13": { codes: [75113], noms: ["Paris 13e (75)"] },
+	"056SR14": { codes: [75114], noms: ["Paris 14e (75)"] },
+	"056SR15": { codes: [75115], noms: ["Paris 15e (75)"] },
+	"056SR16": { codes: [75116], noms: ["Paris 16e (75)"] },
+	"056SR17": { codes: [75117], noms: ["Paris 17e (75)"] },
+	"056SR18": { codes: [75118], noms: ["Paris 18e (75)"] },
+	"056SR19": { codes: [75119], noms: ["Paris 19e (75)"] },
+	"056SR20": { codes: [75120], noms: ["Paris 20e (75)"] },
 };
 
 // Fonction pour créer le(s) code(s) INSEE pour correspondance avec population.json
-// Retourne un tableau de codes INSEE (peut contenir un seul élément)
+// Retourne un objet avec les codes INSEE et les noms des communes agrégées (si applicable)
 const createInseeCodes = (
 	row: Record<string, unknown>,
-): number[] => {
+): { codes: number[]; communesAgregees?: string[] } => {
 	let dept = String(row["Code du département"]);
 	const commune = String(row["Code de la commune"]);
 
 	// Vérifier si le code commune a un mapping spécial
 	if (communeToInseeMapping[commune]) {
-		return communeToInseeMapping[commune];
+		const mapping = communeToInseeMapping[commune];
+		return {
+			codes: mapping.codes,
+			// N'inclure communesAgregees que s'il y a plusieurs communes (vraie agrégation)
+			...(mapping.codes.length > 1 && { communesAgregees: mapping.noms }),
+		};
 	}
 
 	// Exceptions pour les codes départementaux
@@ -99,7 +122,7 @@ const createInseeCodes = (
 	// Normaliser et combiner
 	dept = dept.padStart(2, "0");
 	processedCommune = processedCommune.padStart(3, "0");
-	return [parseInt(dept + processedCommune)];
+	return { codes: [parseInt(dept + processedCommune)] };
 };
 
 // Clés démographiques à extraire de population.json
@@ -272,14 +295,14 @@ const cleanedData = data1.map((row: Record<string, unknown>) => {
 	}
 
 	// Chercher les données de population correspondantes
-	const inseeCodes = createInseeCodes(row);
-	const populationRows = inseeCodes
-		.map((code) => populationIndex.get(code))
-		.filter((row) => row !== undefined) as Record<string, unknown>[];
+	const inseeResult = createInseeCodes(row);
+	const populationRows = inseeResult.codes
+		.map((code: number) => populationIndex.get(code))
+		.filter((row): row is Record<string, unknown> => row !== undefined);
 
 	if (populationRows.length > 0) {
 		const populationData: Record<string, unknown> = {};
-		
+
 		// Sommer les valeurs pour toutes les clés démographiques
 		for (const popKey of populationKeys) {
 			let sum = 0;
@@ -292,10 +315,15 @@ const cleanedData = data1.map((row: Record<string, unknown>) => {
 				populationData[popKey] = sum;
 			}
 		}
-		
+
 		if (Object.keys(populationData).length > 0) {
 			baseData.population = populationData;
 		}
+	}
+
+	// Stocker les communes agrégées si applicable
+	if (inseeResult.communesAgregees) {
+		baseData.communesAgregees = inseeResult.communesAgregees;
 	}
 
 	// Calculer l'analyse

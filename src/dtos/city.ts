@@ -71,6 +71,7 @@ export interface ElectionEntry {
 	"Tour 2"?: TourData;
 	population?: PopulationData;
 	Analyse: AnalyseData;
+	communesAgregees?: string[];
 }
 
 export interface FullCity {
@@ -109,6 +110,7 @@ export interface City {
 	"Tour 2"?: TourData;
 	population?: PopulationData;
 	Analyse: AnalyseData;
+	communesAgregees?: string[];
 }
 
 // Search result format: [id, name, code_departement]

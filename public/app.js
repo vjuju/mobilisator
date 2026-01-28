@@ -392,8 +392,18 @@ function displayCityDetail(city) {
       source: nonVotingSource
     }
   };
+  let aggregationWarning = "";
+  if (city.communesAgregees && city.communesAgregees.length > 0) {
+    const communesList = city.communesAgregees.join(", ");
+    aggregationWarning = `
+			<div class="aggregation-warning">
+				⚠️ Les chiffres présentés sont les agrégations des communes suivantes : ${communesList}
+			</div>
+		`;
+  }
   const html = `
         <div class="city-detail">
+			${aggregationWarning}
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">

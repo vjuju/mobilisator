@@ -50,6 +50,7 @@ export const fullCityToCity = (
 		"Tour 1": electionEntry["Tour 1"],
 		...(electionEntry["Tour 2"] && { "Tour 2": electionEntry["Tour 2"] }),
 		...(electionEntry.population && { population: electionEntry.population }),
+		...(electionEntry.communesAgregees && { communesAgregees: electionEntry.communesAgregees }),
 		Analyse: {
 			...electionEntry.Analyse,
 			"Pop 18-39": Math.round(pop1839),
