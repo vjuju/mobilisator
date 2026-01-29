@@ -45,8 +45,8 @@ export const labels = {
 
 	// Boutons CTA
 	cta: {
-		inscription: "POUR 2026,<br>INSCRIS TOI EN 1 MINUTE",
-		inscriptionEmoji: "🔥",
+		partager: "PARTAGE À TA COMMU",
+		partagerEmoji: "📣",
 		rejoindre: "REJOINS LE MOUVEMENT",
 		rejoindreEmoji: "✊",
 	},
@@ -72,7 +72,7 @@ export function getMainTagline(hasSecondTour: boolean): string {
 	if (hasSecondTour) {
 		return "votes suffisaient pour élire un autre maire";
 	}
-	return "votes suffisaient à l'opposition pour aller au second tour";
+	return "votes suffisaient pour aller au second tour";
 }
 
 // ============================================================================
@@ -292,9 +292,9 @@ export function formatCityDetailHtml(
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <a href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" class="cta-button">
-                    ${labels.cta.inscription}<span class="emoji">${labels.cta.inscriptionEmoji}</span>
-                </a>
+                <button type="button" class="cta-button" onclick="shareCity()">
+                    ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
+                </button>
             </div>
             <div class="cta-section">
                 <button type="button" class="cta-button" onclick="openQomonModal()">
@@ -354,4 +354,126 @@ export function formatSearchInputValue(
 	codeDepartement: string,
 ): string {
 	return `${nomStandard} (${codeDepartement})`;
+}
+
+// ============================================================================
+// TEXTES POUR L'IMAGE DE PARTAGE
+// ============================================================================
+
+export const shareImageTexts = {
+	// Intro
+	intro: "Aux municipales de 2020,",
+	// Préfixe ville (minuscule)
+	cityPrefix: "à",
+	// Texte principal avec le chiffre (XXX sera remplacé)
+	mainText: "jeunes auraient fait la diff'",
+	// Question
+	question: "Et toi tu votes en 2026 ?",
+	// Call to action ligne 1
+	ctaLine1: "Pour plier le game, embarque le plus de monde autour de toi",
+	// Call to action ligne 2
+	ctaLine2: "et commente \"Je vote #RIENSANSNOUS\"",
+	// URL
+	url: "Trouve ta ville sur onestpret.com/outilmobilisator",
+};
+
+// Configuration visuelle de l'image de partage (couleurs du site)
+export const shareImageConfig = {
+	// Dimensions (format story Instagram vertical)
+	width: 1080,
+	height: 1920,
+	// Couleurs (identiques au site)
+	backgroundColor: "#000000",
+	primaryColor: "#5ECBA1",
+	textColor: "#ffffff",
+	subtitleColor: "#cccccc",
+	// Polices (Anton avec fallback Impact)
+	fontFamily: "Anton, Impact, sans-serif",
+};
+
+/**
+ * Génère une image de partage pour Instagram avec les statistiques de la ville
+ * Retourne un Blob de l'image PNG
+ */
+export async function generateShareImage(
+	cityName: string,
+	votesDecisifs: number,
+): Promise<Blob> {
+	const { width, height, backgroundColor, primaryColor, textColor, subtitleColor, fontFamily } = shareImageConfig;
+	const texts = shareImageTexts;
+
+	// Créer le canvas
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d")!;
+
+	// Fond noir uni
+	ctx.fillStyle = backgroundColor;
+	ctx.fillRect(0, 0, width, height);
+
+	// Position de départ
+	let y = 180;
+
+	// "Aux municipales de 2020,"
+	ctx.fillStyle = subtitleColor;
+	ctx.font = `36px Arial, sans-serif`;
+	ctx.textAlign = "center";
+	ctx.fillText(texts.intro, width / 2, y);
+
+	y += 100;
+
+	// "à [VILLE]," - en blanc, plus gros
+	ctx.fillStyle = textColor;
+	ctx.font = `56px Arial, sans-serif`;
+	ctx.fillText(`${texts.cityPrefix} ${cityName},`, width / 2, y);
+
+	y += 450;
+
+	// Le chiffre (votes décisifs) en très grand
+	ctx.fillStyle = primaryColor;
+	ctx.font = `bold 280px ${fontFamily}`;
+	ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), width / 2, y);
+
+	y += 130;
+
+	// "jeunes auraient fait la diff'" - en vert, plus gros
+	ctx.fillStyle = primaryColor;
+	ctx.font = `bold 72px ${fontFamily}`;
+	ctx.fillText(texts.mainText, width / 2, y);
+
+	y += 250;
+
+	// "Et toi tu votes en 2026 ?"
+	ctx.fillStyle = textColor;
+	ctx.font = `bold 72px ${fontFamily}`;
+	ctx.fillText(texts.question, width / 2, y);
+
+	y += 280;
+
+	// "Pour plier le game, embarque le plus de monde autour de toi"
+	ctx.fillStyle = subtitleColor;
+	ctx.font = `32px Arial, sans-serif`;
+	ctx.fillText(texts.ctaLine1, width / 2, y);
+
+	y += 55;
+
+	// "et commente "Je vote #RIENSANSNOUS""
+	ctx.fillStyle = subtitleColor;
+	ctx.font = `32px Arial, sans-serif`;
+	ctx.fillText(texts.ctaLine2, width / 2, y);
+
+	y += 120;
+
+	// URL
+	ctx.fillStyle = primaryColor;
+	ctx.font = `bold 36px ${fontFamily}`;
+	ctx.fillText(texts.url, width / 2, y);
+
+	// Convertir en blob
+	return new Promise((resolve) => {
+		canvas.toBlob((blob) => {
+			resolve(blob!);
+		}, "image/png");
+	});
 }

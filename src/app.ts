@@ -16,6 +16,7 @@ import {
 	nonVotingSourceUrl,
 	formatSearchResultItem,
 	formatSearchInputValue,
+	generateShareImage,
 } from "./format";
 
 // Access code configuration
@@ -136,6 +137,15 @@ let searchTimeout: number | null = null;
 const searchIndexCache: Record<string, Record<string, CitySearchResult[]>> = {};
 let citiesDataCache: Record<number, City> | null = null;
 let slugMapCache: Record<string, number> | null = null;
+
+// Current city data for sharing
+let currentCityData: {
+	cityName: string;
+	codeDepartement: string;
+	votesDecisifs: number;
+	nonVotants1839: number;
+	hasSecondTour: boolean;
+} | null = null;
 
 // Get partition key for a query (first character)
 function getPartitionKey(query: string): string {
@@ -440,6 +450,15 @@ function displayCityDetail(city: City): void {
 
 	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
 
+	// Store current city data for sharing
+	currentCityData = {
+		cityName: city.nom_standard,
+		codeDepartement: city.code_departement,
+		votesDecisifs,
+		nonVotants1839,
+		hasSecondTour,
+	};
+
 	// Build results table for the decisive tour
 	const tourDecisif = hasSecondTour ? city["Tour 2"]! : city["Tour 1"];
 	const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
@@ -609,6 +628,118 @@ interface DetailDataItem {
 	source: string;
 }
 
+// Show the share success modal with the image
+function showShareModal(imageUrl: string): void {
+	// Create modal if it doesn't exist
+	let modal = document.getElementById("shareModal");
+	if (!modal) {
+		modal = document.createElement("div");
+		modal.id = "shareModal";
+		modal.className = "modal";
+		modal.innerHTML = `
+			<div class="modal-content share-modal-content">
+				<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
+				<h3 class="share-modal-title">Image copiée !</h3>
+				<p class="share-modal-subtitle">Tu peux la coller en story</p>
+				<div class="share-modal-image-container">
+					<img class="share-modal-image" src="" alt="Image à partager">
+				</div>
+			</div>
+		`;
+		document.body.appendChild(modal);
+	}
+
+	// Update image
+	const img = modal.querySelector(".share-modal-image") as HTMLImageElement;
+	if (img) img.src = imageUrl;
+
+	modal.classList.add("show");
+	document.body.style.overflow = "hidden";
+}
+
+// Close the share modal
+function closeShareModal(): void {
+	const modal = document.getElementById("shareModal");
+	if (modal) {
+		modal.classList.remove("show");
+		document.body.style.overflow = "";
+	}
+}
+
+// Share city data via clipboard with generated image
+async function shareCity(): Promise<void> {
+	if (!currentCityData) {
+		console.error("No city data available for sharing");
+		return;
+	}
+
+	const { cityName, votesDecisifs } = currentCityData;
+
+	try {
+		// Generate the share image
+		const imageBlob = await generateShareImage(
+			cityName,
+			votesDecisifs,
+		);
+
+		// Create image URL for display
+		const imageUrl = URL.createObjectURL(imageBlob);
+
+		// Try to copy to clipboard
+		if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
+			try {
+				// Copy image to clipboard
+				const clipboardItem = new ClipboardItem({
+					"image/png": imageBlob,
+				});
+				await navigator.clipboard.write([clipboardItem]);
+
+				// Show success modal with image
+				showShareModal(imageUrl);
+			} catch (clipboardError) {
+				console.error("Clipboard error:", clipboardError);
+				// Fallback: show modal with download option
+				showShareModalWithDownload(imageUrl, cityName);
+			}
+		} else {
+			// Clipboard API not supported: show modal with download option
+			showShareModalWithDownload(imageUrl, cityName);
+		}
+	} catch (error) {
+		console.error("Error sharing:", error);
+		alert("Erreur lors du partage. Réessaie !");
+	}
+}
+
+// Show share modal with download button (fallback)
+function showShareModalWithDownload(imageUrl: string, cityName: string): void {
+	// Create modal if it doesn't exist
+	let modal = document.getElementById("shareModal");
+	if (!modal) {
+		modal = document.createElement("div");
+		modal.id = "shareModal";
+		modal.className = "modal";
+		document.body.appendChild(modal);
+	}
+
+	modal.innerHTML = `
+		<div class="modal-content share-modal-content">
+			<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
+			<h3 class="share-modal-title">Ton image est prête !</h3>
+			<p class="share-modal-subtitle">Télécharge-la et partage-la en story</p>
+			<div class="share-modal-image-container">
+				<img class="share-modal-image" src="${imageUrl}" alt="Image à partager">
+			</div>
+			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button share-download-button">
+				TÉLÉCHARGER<span class="emoji">📥</span>
+			</a>
+		</div>
+	`;
+
+	modal.classList.add("show");
+	document.body.style.overflow = "hidden";
+}
+
 // Make functions available globally for onclick handlers
 declare global {
 	interface Window {
@@ -618,6 +749,8 @@ declare global {
 		openDetailModal: (title: string, formula: string, sourceUrl: string) => void;
 		openDetailModalByKey: (key: string) => void;
 		closeDetailModal: () => void;
+		shareCity: () => Promise<void>;
+		closeShareModal: () => void;
 		detailData?: Record<string, DetailDataItem>;
 		init?: () => void; // Qomon setup.js global init function
 	}
@@ -629,6 +762,8 @@ window.closeQomonModal = closeQomonModal;
 window.openDetailModal = openDetailModal;
 window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
+window.shareCity = shareCity;
+window.closeShareModal = closeShareModal;
 
 // Initialize when DOM is ready
 if (document.readyState === "loading") {

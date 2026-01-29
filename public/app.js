@@ -29,8 +29,8 @@ var labels = {
   },
   elu: "Élu",
   cta: {
-    inscription: "POUR 2026,<br>INSCRIS TOI EN 1 MINUTE",
-    inscriptionEmoji: "\uD83D\uDD25",
+    partager: "PARTAGE À TA COMMU",
+    partagerEmoji: "\uD83D\uDCE3",
     rejoindre: "REJOINS LE MOUVEMENT",
     rejoindreEmoji: "✊"
   },
@@ -44,7 +44,7 @@ function getMainTagline(hasSecondTour) {
   if (hasSecondTour) {
     return "votes suffisaient pour élire un autre maire";
   }
-  return "votes suffisaient à l'opposition pour aller au second tour";
+  return "votes suffisaient pour aller au second tour";
 }
 function formatExplanationDecisive(cityName, codeDepartement, votesDecisifs, hasSecondTour) {
   const formattedVotes = votesDecisifs.toLocaleString("fr-FR");
@@ -160,9 +160,9 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <a href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" class="cta-button">
-                    ${labels.cta.inscription}<span class="emoji">${labels.cta.inscriptionEmoji}</span>
-                </a>
+                <button type="button" class="cta-button" onclick="shareCity()">
+                    ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
+                </button>
             </div>
             <div class="cta-section">
                 <button type="button" class="cta-button" onclick="openQomonModal()">
@@ -187,6 +187,72 @@ function formatSearchResultItem(id, name, codeDepartement) {
 }
 function formatSearchInputValue(nomStandard, codeDepartement) {
   return `${nomStandard} (${codeDepartement})`;
+}
+var shareImageTexts = {
+  intro: "Aux municipales de 2020,",
+  cityPrefix: "à",
+  mainText: "jeunes auraient fait la diff'",
+  question: "Et toi tu votes en 2026 ?",
+  ctaLine1: "Pour plier le game, embarque le plus de monde autour de toi",
+  ctaLine2: 'et commente "Je vote #RIENSANSNOUS"',
+  url: "Trouve ta ville sur onestpret.com/outilmobilisator"
+};
+var shareImageConfig = {
+  width: 1080,
+  height: 1920,
+  backgroundColor: "#000000",
+  primaryColor: "#5ECBA1",
+  textColor: "#ffffff",
+  subtitleColor: "#cccccc",
+  fontFamily: "Anton, Impact, sans-serif"
+};
+async function generateShareImage(cityName, votesDecisifs) {
+  const { width, height, backgroundColor, primaryColor, textColor, subtitleColor, fontFamily } = shareImageConfig;
+  const texts = shareImageTexts;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, width, height);
+  let y = 180;
+  ctx.fillStyle = subtitleColor;
+  ctx.font = `36px Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.fillText(texts.intro, width / 2, y);
+  y += 100;
+  ctx.fillStyle = textColor;
+  ctx.font = `56px Arial, sans-serif`;
+  ctx.fillText(`${texts.cityPrefix} ${cityName},`, width / 2, y);
+  y += 450;
+  ctx.fillStyle = primaryColor;
+  ctx.font = `bold 280px ${fontFamily}`;
+  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), width / 2, y);
+  y += 130;
+  ctx.fillStyle = primaryColor;
+  ctx.font = `bold 72px ${fontFamily}`;
+  ctx.fillText(texts.mainText, width / 2, y);
+  y += 250;
+  ctx.fillStyle = textColor;
+  ctx.font = `bold 72px ${fontFamily}`;
+  ctx.fillText(texts.question, width / 2, y);
+  y += 280;
+  ctx.fillStyle = subtitleColor;
+  ctx.font = `32px Arial, sans-serif`;
+  ctx.fillText(texts.ctaLine1, width / 2, y);
+  y += 55;
+  ctx.fillStyle = subtitleColor;
+  ctx.font = `32px Arial, sans-serif`;
+  ctx.fillText(texts.ctaLine2, width / 2, y);
+  y += 120;
+  ctx.fillStyle = primaryColor;
+  ctx.font = `bold 36px ${fontFamily}`;
+  ctx.fillText(texts.url, width / 2, y);
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    }, "image/png");
+  });
 }
 
 // src/app.ts
@@ -279,6 +345,7 @@ var searchTimeout = null;
 var searchIndexCache = {};
 var citiesDataCache = null;
 var slugMapCache = null;
+var currentCityData = null;
 function getPartitionKey(query) {
   const firstChar = query.charAt(0).toLowerCase();
   if (firstChar >= "a" && firstChar <= "z") {
@@ -483,6 +550,13 @@ function displayCityDetail(city) {
   const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
   const mainTagline = getMainTagline(hasSecondTour);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
+  currentCityData = {
+    cityName: city.nom_standard,
+    codeDepartement: city.code_departement,
+    votesDecisifs,
+    nonVotants1839,
+    hasSecondTour
+  };
   const tourDecisif = hasSecondTour ? city["Tour 2"] : city["Tour 1"];
   const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
   const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
@@ -589,12 +663,97 @@ function openDetailModalByKey(key) {
     openDetailModal(data.title, data.formula, data.source);
   }
 }
+function showShareModal(imageUrl) {
+  let modal = document.getElementById("shareModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "shareModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+			<div class="modal-content share-modal-content">
+				<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
+				<h3 class="share-modal-title">Image copiée !</h3>
+				<p class="share-modal-subtitle">Tu peux la coller en story</p>
+				<div class="share-modal-image-container">
+					<img class="share-modal-image" src="" alt="Image à partager">
+				</div>
+			</div>
+		`;
+    document.body.appendChild(modal);
+  }
+  const img = modal.querySelector(".share-modal-image");
+  if (img)
+    img.src = imageUrl;
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+function closeShareModal() {
+  const modal = document.getElementById("shareModal");
+  if (modal) {
+    modal.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+}
+async function shareCity() {
+  if (!currentCityData) {
+    console.error("No city data available for sharing");
+    return;
+  }
+  const { cityName, votesDecisifs } = currentCityData;
+  try {
+    const imageBlob = await generateShareImage(cityName, votesDecisifs);
+    const imageUrl = URL.createObjectURL(imageBlob);
+    if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
+      try {
+        const clipboardItem = new ClipboardItem({
+          "image/png": imageBlob
+        });
+        await navigator.clipboard.write([clipboardItem]);
+        showShareModal(imageUrl);
+      } catch (clipboardError) {
+        console.error("Clipboard error:", clipboardError);
+        showShareModalWithDownload(imageUrl, cityName);
+      }
+    } else {
+      showShareModalWithDownload(imageUrl, cityName);
+    }
+  } catch (error) {
+    console.error("Error sharing:", error);
+    alert("Erreur lors du partage. Réessaie !");
+  }
+}
+function showShareModalWithDownload(imageUrl, cityName) {
+  let modal = document.getElementById("shareModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "shareModal";
+    modal.className = "modal";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+		<div class="modal-content share-modal-content">
+			<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
+			<h3 class="share-modal-title">Ton image est prête !</h3>
+			<p class="share-modal-subtitle">Télécharge-la et partage-la en story</p>
+			<div class="share-modal-image-container">
+				<img class="share-modal-image" src="${imageUrl}" alt="Image à partager">
+			</div>
+			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button share-download-button">
+				TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span>
+			</a>
+		</div>
+	`;
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
 window.navigateToCityById = navigateToCityById;
 window.openQomonModal = openQomonModal;
 window.closeQomonModal = closeQomonModal;
 window.openDetailModal = openDetailModal;
 window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
+window.shareCity = shareCity;
+window.closeShareModal = closeShareModal;
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
