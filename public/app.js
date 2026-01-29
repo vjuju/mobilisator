@@ -1,6 +1,194 @@
 // src/utils.ts
 var normalizeText = (text) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[''`]/g, "-").replace(/[^a-z0-9]+/g, "-").replace(/\s+/g, "-").replace(/^-+|-+$/g, "").trim();
 
+// src/format.ts
+var messages = {
+  codeIncorrect: "Code incorrect",
+  rechercheEnCours: "Recherche en cours...",
+  aucuneVille: "Aucune ville trouvée",
+  erreurRecherche: "Erreur lors de la recherche",
+  chargement: "Chargement...",
+  villeNonTrouvee: "Ville non trouvée",
+  erreurChargementVille: "Erreur lors du chargement de la ville",
+  analyseNonDisponible: "Données d'analyse non disponibles pour cette ville"
+};
+var labels = {
+  tableHeaders: {
+    listeConduitePar: "Liste conduite par",
+    voix: "Voix",
+    pourcentInscrits: "% inscrits",
+    pourcentExprimes: "% exprimés",
+    siegesCM: "Sièges CM",
+    siegesCC: "Sièges CC"
+  },
+  tour1: "1er tour",
+  tour2: "2nd tour",
+  modalTitles: {
+    votesDecisifs: "Calcul des votes décisifs",
+    nonVotants: "Calcul des non-votants 18-39 ans"
+  },
+  elu: "Élu",
+  cta: {
+    inscription: "POUR 2026,<br>INSCRIS TOI EN 1 MINUTE",
+    inscriptionEmoji: "\uD83D\uDD25",
+    rejoindre: "REJOINS LE MOUVEMENT",
+    rejoindreEmoji: "✊"
+  },
+  stats: {
+    jeunesNonVotants: "jeunes de 18-39 ans<br>n'ont pas voté"
+  },
+  detailLink: "Détail",
+  sourceLabel: "Source :"
+};
+function getMainTagline(hasSecondTour) {
+  if (hasSecondTour) {
+    return "votes suffisaient pour élire un autre maire";
+  }
+  return "votes suffisaient à l'opposition pour aller au second tour";
+}
+function formatExplanationDecisive(cityName, codeDepartement, votesDecisifs, hasSecondTour) {
+  const formattedVotes = votesDecisifs.toLocaleString("fr-FR");
+  if (hasSecondTour) {
+    return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${formattedVotes} voix.`;
+  }
+  return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), la 1ère liste a obtenu ${formattedVotes} voix au-dessus de la majorité au premier tour.`;
+}
+function formatFormulaDecisiveSecondTour(explanationDecisive, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
+  return `${explanationDecisive}
+<br><br>
+<strong>Formule :</strong> Voix de la 1ère liste − Voix de la 2e liste au second tour
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
+		<br><br><strong>Résultats du ${tourLabel} :</strong>
+		${resultsTableHtml}`;
+}
+function formatFormulaDecisivePremierTour(explanationDecisive, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
+  const moitieExprimes = Math.round(exprimes / 2);
+  return `${explanationDecisive}
+<br><br>
+<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
+<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
+<br>• Marge au-dessus de la majorité : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
+		<br><br><strong>Résultats du ${tourLabel} :</strong>
+		${resultsTableHtml}`;
+}
+function formatExplanationNonVoting(cityName, codeDepartement, pop1839, partNeVotantPas, nonVotants, pop18Plus) {
+  return `Lors des municipales de 2020, ${cityName} (${codeDepartement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${cityName} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
+}
+function formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839) {
+  return `${explanationNonVoting}
+<br><br>
+<strong>Formule :</strong> Population 18-39 ans × Taux d'abstention
+<br><br>
+<strong>Détail :</strong>
+<br>• Population 18-39 ans : ${pop1839.toLocaleString("fr-FR")}
+<br>• Population 18+ ans : ${pop18Plus.toLocaleString("fr-FR")}
+<br>• Votants : ${votants.toLocaleString("fr-FR")}
+<br>• Taux d'abstention : ${(partNeVotantPas * 100).toFixed(1)}% = (${pop18Plus.toLocaleString("fr-FR")} − ${votants.toLocaleString("fr-FR")}) ÷ ${pop18Plus.toLocaleString("fr-FR")}
+<br>• Non-votants 18-39 ans estimés : ${pop1839.toLocaleString("fr-FR")} × ${(partNeVotantPas * 100).toFixed(1)}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
+}
+function formatResultatRow(resultat) {
+  const titre = resultat.Sexe === "F" ? "Mme" : "M.";
+  const sieges = typeof resultat["Sièges / Elu"] === "number" ? resultat["Sièges / Elu"] : resultat["Sièges / Elu"] === "Oui" ? labels.elu : resultat["Sièges / Elu"];
+  return `<tr>
+		<td>${titre} ${resultat.Prénom} ${resultat.Nom}</td>
+		<td>${resultat.Voix.toLocaleString("fr-FR")}</td>
+		<td>${resultat["% Voix/Ins"].toFixed(2)}%</td>
+		<td>${resultat["% Voix/Exp"].toFixed(2)}%</td>
+		<td>${sieges}</td>
+		<td>${resultat["Sièges CC"]}</td>
+	</tr>`;
+}
+function formatResultsTable(resultats) {
+  const rows = resultats.map(formatResultatRow).join("");
+  return `
+		<div class="table-scroll-container">
+			<table class="results-table">
+				<thead>
+					<tr>
+						<th>${labels.tableHeaders.listeConduitePar}</th>
+						<th>${labels.tableHeaders.voix}</th>
+						<th>${labels.tableHeaders.pourcentInscrits}</th>
+						<th>${labels.tableHeaders.pourcentExprimes}</th>
+						<th>${labels.tableHeaders.siegesCM}</th>
+						<th>${labels.tableHeaders.siegesCC}</th>
+					</tr>
+				</thead>
+				<tbody>
+					${rows}
+				</tbody>
+			</table>
+		</div>
+	`;
+}
+function formatAggregationWarning(communesAgregees) {
+  if (!communesAgregees || communesAgregees.length === 0) {
+    return "";
+  }
+  const communesList = communesAgregees.join(", ");
+  return `
+		<div class="aggregation-warning">
+			⚠️ Les chiffres présentés sont les agrégations des communes suivantes : ${communesList}
+		</div>
+	`;
+}
+function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning) {
+  return `
+        <div class="city-detail">
+			${aggregationWarning}
+
+			<!-- Main Stat: Decisive Votes -->
+			<div class="main-stat">
+				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
+				<div class="main-label">${mainTagline}</div>
+				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
+			</div>
+
+            <!-- Secondary Stat: Non-Voting Youth -->
+            <div class="secondary-stat">
+                <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
+                <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
+				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="cta-section">
+                <a href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" class="cta-button">
+                    ${labels.cta.inscription}<span class="emoji">${labels.cta.inscriptionEmoji}</span>
+                </a>
+            </div>
+            <div class="cta-section">
+                <button type="button" class="cta-button" onclick="openQomonModal()">
+                    ${labels.cta.rejoindre}<span class="emoji">${labels.cta.rejoindreEmoji}</span>
+                </button>
+            </div>
+
+        </div>
+    `;
+}
+function getElectionSourceUrl(codeDepartement, codeCommune) {
+  const deptCode = codeDepartement.padStart(3, "0");
+  return `https://www.archives-resultats-elections.interieur.gouv.fr/resultats/municipales-2020/${deptCode}/${deptCode}${codeCommune}.php`;
+}
+var nonVotingSourceUrl = "https://explore.data.gouv.fr/fr/datasets/6627b6fd7291f9d8a62d9997/#/resources/b8ad4a63-a4e3-4ef2-af6e-b08ef3b8084d";
+function formatSearchResultItem(id, name, codeDepartement) {
+  return `
+		<div class="result-item" onclick="navigateToCityById(${id})">
+			<h3>${name} (${codeDepartement})</h3>
+		</div>
+	`;
+}
+function formatSearchInputValue(nomStandard, codeDepartement) {
+  return `${nomStandard} (${codeDepartement})`;
+}
+
 // src/app.ts
 var ACCESS_CODE = "OEP";
 var ACCESS_STORAGE_KEY = "mobilisator_access_granted";
@@ -57,7 +245,7 @@ function validateAccessCode() {
     grantAccess();
   } else {
     if (error) {
-      error.textContent = "Code incorrect";
+      error.textContent = messages.codeIncorrect;
       error.style.display = "block";
     }
     input.value = "";
@@ -194,20 +382,20 @@ async function searchCities() {
     resultsDiv.innerHTML = "";
     return;
   }
-  resultsDiv.innerHTML = '<p class="loading">Recherche en cours...</p>';
+  resultsDiv.innerHTML = `<p class="loading">${messages.rechercheEnCours}</p>`;
   try {
     const normalized = normalizeText(query);
     const partition = getPartitionKey(normalized);
     const searchIndex = await loadSearchPartition(partition);
     const citiesData = searchIndex[normalized];
     if (!citiesData || citiesData.length === 0) {
-      resultsDiv.innerHTML = '<p class="error">Aucune ville trouvée</p>';
+      resultsDiv.innerHTML = `<p class="error">${messages.aucuneVille}</p>`;
       return;
     }
     displaySearchResults(citiesData.slice(0, 50));
   } catch (error) {
     console.error("Search error:", error);
-    resultsDiv.innerHTML = '<p class="error">Erreur lors de la recherche</p>';
+    resultsDiv.innerHTML = `<p class="error">${messages.erreurRecherche}</p>`;
   }
 }
 async function fetchCityById(id) {
@@ -236,16 +424,12 @@ function displaySearchResults(cities) {
   if (!resultsDiv)
     return;
   if (cities.length === 0) {
-    resultsDiv.innerHTML = '<p class="error">Aucune ville trouvée</p>';
+    resultsDiv.innerHTML = `<p class="error">${messages.aucuneVille}</p>`;
     return;
   }
   const html = cities.map((city) => {
     const [id, name, codeDepartement] = city;
-    return `
-            <div class="result-item" onclick="navigateToCityById(${id})">
-                <h3>${name} (${codeDepartement})</h3>
-            </div>
-        `;
+    return formatSearchResultItem(id, name, codeDepartement);
   }).join("");
   resultsDiv.innerHTML = html;
 }
@@ -257,24 +441,24 @@ async function navigateToCityById(id) {
     clearResults();
     const searchInput = document.getElementById("searchInput");
     if (searchInput)
-      searchInput.value = `${city.nom_standard} (${city.code_departement})`;
+      searchInput.value = formatSearchInputValue(city.nom_standard, city.code_departement);
   }
 }
 async function loadCityBySlug(slug) {
   const cityDetailDiv = document.getElementById("cityDetail");
   if (!cityDetailDiv)
     return;
-  cityDetailDiv.innerHTML = '<p class="loading">Chargement...</p>';
+  cityDetailDiv.innerHTML = `<p class="loading">${messages.chargement}</p>`;
   try {
     const city = await fetchCityBySlug(slug);
     if (!city) {
-      cityDetailDiv.innerHTML = '<p class="error">Ville non trouvée</p>';
+      cityDetailDiv.innerHTML = `<p class="error">${messages.villeNonTrouvee}</p>`;
       return;
     }
     displayCityDetail(city);
   } catch (error) {
     console.error("Error loading city:", error);
-    cityDetailDiv.innerHTML = '<p class="error">Erreur lors du chargement de la ville</p>';
+    cityDetailDiv.innerHTML = `<p class="error">${messages.erreurChargementVille}</p>`;
   }
 }
 function displayCityDetail(city) {
@@ -283,156 +467,51 @@ function displayCityDetail(city) {
     return;
   const searchInput = document.getElementById("searchInput");
   if (searchInput)
-    searchInput.value = `${city.nom_standard} (${city.code_departement})`;
+    searchInput.value = formatSearchInputValue(city.nom_standard, city.code_departement);
   if (!city.Analyse) {
-    cityDetailDiv.innerHTML = `<p class="error">Données d'analyse non disponibles pour cette ville</p>`;
+    cityDetailDiv.innerHTML = `<p class="error">${messages.analyseNonDisponible}</p>`;
     return;
   }
   const votesDecisifs = city.Analyse["Votes décisifs"];
   const hasSecondTour = !!city["Tour 2"];
-  let explanationDecisive = "";
-  if (hasSecondTour) {
-    explanationDecisive = `Lors des municipales de 2020, à ${city.nom_standard} (${city.code_departement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${votesDecisifs.toLocaleString("fr-FR")} voix.`;
-  } else {
-    explanationDecisive = `Lors des municipales de 2020, à ${city.nom_standard} (${city.code_departement}), la 1ère liste a obtenu ${votesDecisifs.toLocaleString("fr-FR")} voix au-dessus de la majorité au premier tour.`;
-  }
-  const deptCode = city.code_departement.padStart(3, "0");
-  const electionSource = `https://www.archives-resultats-elections.interieur.gouv.fr/resultats/municipales-2020/${deptCode}/${deptCode}${city.code_commune}.php`;
+  const explanationDecisive = formatExplanationDecisive(city.nom_standard, city.code_departement, votesDecisifs, hasSecondTour);
+  const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
   const pop1839 = city.Analyse["Pop 18-39"];
   const pop18Plus = city.Analyse["Pop 18+"];
   const nonVotants = city.Analyse["Non votants"];
   const partNeVotantPas = city.Analyse["Part ne votant pas"];
-  const explanationNonVoting = `Lors des municipales de 2020, ${city.nom_standard} (${city.code_departement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${city.nom_standard} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
-  const nonVotingSource = "https://explore.data.gouv.fr/fr/datasets/6627b6fd7291f9d8a62d9997/#/resources/b8ad4a63-a4e3-4ef2-af6e-b08ef3b8084d";
-  const mainTagline = hasSecondTour ? "votes suffisaient pour élire un autre maire" : "votes suffisaient à l'opposition pour aller au second tour";
+  const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
+  const mainTagline = getMainTagline(hasSecondTour);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
   const tourDecisif = hasSecondTour ? city["Tour 2"] : city["Tour 1"];
-  const tourLabel = hasSecondTour ? "2nd tour" : "1er tour";
+  const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
   const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
-  let resultsTableRows = resultats.map((r) => {
-    const titre = r.Sexe === "F" ? "Mme" : "M.";
-    const sieges = typeof r["Sièges / Elu"] === "number" ? r["Sièges / Elu"] : r["Sièges / Elu"] === "Oui" ? "Élu" : r["Sièges / Elu"];
-    return `<tr>
-				<td>${titre} ${r.Prénom} ${r.Nom}</td>
-				<td>${r.Voix.toLocaleString("fr-FR")}</td>
-				<td>${r["% Voix/Ins"].toFixed(2)}%</td>
-				<td>${r["% Voix/Exp"].toFixed(2)}%</td>
-				<td>${sieges}</td>
-				<td>${r["Sièges CC"]}</td>
-			</tr>`;
-  }).join("");
-  const resultsTable = `
-		<div class="table-scroll-container">
-			<table class="results-table">
-				<thead>
-					<tr>
-						<th>Liste conduite par</th>
-						<th>Voix</th>
-						<th>% inscrits</th>
-						<th>% exprimés</th>
-						<th>Sièges CM</th>
-						<th>Sièges CC</th>
-					</tr>
-				</thead>
-				<tbody>
-					${resultsTableRows}
-				</tbody>
-			</table>
-		</div>
-	`;
+  const resultsTable = formatResultsTable(resultats);
   const firstPlace = resultats[0];
   const secondPlace = resultats[1];
   const exprimes = tourDecisif.Exprimés;
   let formulaDecisive = "";
   if (hasSecondTour) {
-    formulaDecisive = `${explanationDecisive}
-<br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − Voix de la 2e liste au second tour
-<br><br>
-<strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlace.Voix.toLocaleString("fr-FR")}
-<br>• Voix de la 2e liste : ${secondPlace.Voix.toLocaleString("fr-FR")}
-<br>• Écart : ${firstPlace.Voix.toLocaleString("fr-FR")} − ${secondPlace.Voix.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTable}`;
+    formulaDecisive = formatFormulaDecisiveSecondTour(explanationDecisive, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
   } else {
-    const moitieExprimes = Math.round(exprimes / 2);
-    formulaDecisive = `${explanationDecisive}
-<br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
-<br><br>
-<strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlace.Voix.toLocaleString("fr-FR")}
-<br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
-<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
-<br>• Marge au-dessus de la majorité : ${firstPlace.Voix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTable}`;
+    formulaDecisive = formatFormulaDecisivePremierTour(explanationDecisive, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
   }
   const votants = tourDecisif.Votants;
-  const formulaNonVotants = `${explanationNonVoting}
-<br><br>
-<strong>Formule :</strong> Population 18-39 ans × Taux d'abstention
-<br><br>
-<strong>Détail :</strong>
-<br>• Population 18-39 ans : ${pop1839.toLocaleString("fr-FR")}
-<br>• Population 18+ ans : ${pop18Plus.toLocaleString("fr-FR")}
-<br>• Votants : ${votants.toLocaleString("fr-FR")}
-<br>• Taux d'abstention : ${(partNeVotantPas * 100).toFixed(1)}% = (${pop18Plus.toLocaleString("fr-FR")} − ${votants.toLocaleString("fr-FR")}) ÷ ${pop18Plus.toLocaleString("fr-FR")}
-<br>• Non-votants 18-39 ans estimés : ${pop1839.toLocaleString("fr-FR")} × ${(partNeVotantPas * 100).toFixed(1)}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
+  const formulaNonVotants = formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839);
   window.detailData = {
     decisive: {
-      title: "Calcul des votes décisifs",
+      title: labels.modalTitles.votesDecisifs,
       formula: formulaDecisive,
       source: electionSource
     },
     nonVoting: {
-      title: "Calcul des non-votants 18-39 ans",
+      title: labels.modalTitles.nonVotants,
       formula: formulaNonVotants,
-      source: nonVotingSource
+      source: nonVotingSourceUrl
     }
   };
-  let aggregationWarning = "";
-  if (city.communesAgregees && city.communesAgregees.length > 0) {
-    const communesList = city.communesAgregees.join(", ");
-    aggregationWarning = `
-			<div class="aggregation-warning">
-				⚠️ Les chiffres présentés sont les agrégations des communes suivantes : ${communesList}
-			</div>
-		`;
-  }
-  const html = `
-        <div class="city-detail">
-			${aggregationWarning}
-
-			<!-- Main Stat: Decisive Votes -->
-			<div class="main-stat">
-				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
-				<div class="main-label">${mainTagline}</div>
-				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">Détail</a>
-			</div>
-
-            <!-- Secondary Stat: Non-Voting Youth -->
-            <div class="secondary-stat">
-                <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
-                <div class="secondary-label">jeunes de 18-39 ans<br>n'ont pas voté</div>
-				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">Détail</a>
-            </div>
-
-            <!-- CTA Buttons -->
-            <div class="cta-section">
-                <a href="https://www.service-public.fr/particuliers/vosdroits/R16396" target="_blank" class="cta-button">
-                    POUR 2026,<br>INSCRIS TOI EN 1 MINUTE<span class="emoji">\uD83D\uDD25</span>
-                </a>
-            </div>
-            <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openQomonModal()">
-                    REJOINS LE MOUVEMENT<span class="emoji">✊</span>
-                </button>
-            </div>
-
-        </div>
-    `;
+  const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
+  const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning);
   cityDetailDiv.innerHTML = html;
 }
 function openQomonModal() {
