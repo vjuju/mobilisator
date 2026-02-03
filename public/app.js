@@ -194,8 +194,7 @@ var shareImageTexts = {
   mainText: "jeunes auraient fait la diff'",
   question: "Et toi tu votes en 2026 ?",
   ctaLine1: "Pour plier le game, embarque le plus de monde autour de toi",
-  ctaLine2: 'et commente "Je vote #RIENSANSNOUS"',
-  url: "Trouve ta ville sur onestpret.com/outilmobilisator"
+  ctaLine2: 'et commente "Je vote #RIENSANSNOUS"'
 };
 var shareImageConfig = {
   width: 1080,
@@ -244,10 +243,6 @@ async function generateShareImage(cityName, votesDecisifs) {
   ctx.fillStyle = subtitleColor;
   ctx.font = `32px Arial, sans-serif`;
   ctx.fillText(texts.ctaLine2, width / 2, y);
-  y += 120;
-  ctx.fillStyle = primaryColor;
-  ctx.font = `bold 36px ${fontFamily}`;
-  ctx.fillText(texts.url, width / 2, y);
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       resolve(blob);

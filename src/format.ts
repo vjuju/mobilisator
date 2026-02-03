@@ -373,8 +373,6 @@ export const shareImageTexts = {
 	ctaLine1: "Pour plier le game, embarque le plus de monde autour de toi",
 	// Call to action ligne 2
 	ctaLine2: "et commente \"Je vote #RIENSANSNOUS\"",
-	// URL
-	url: "Trouve ta ville sur onestpret.com/outilmobilisator",
 };
 
 // Configuration visuelle de l'image de partage (couleurs du site)
@@ -462,13 +460,6 @@ export async function generateShareImage(
 	ctx.fillStyle = subtitleColor;
 	ctx.font = `32px Arial, sans-serif`;
 	ctx.fillText(texts.ctaLine2, width / 2, y);
-
-	y += 120;
-
-	// URL
-	ctx.fillStyle = primaryColor;
-	ctx.font = `bold 36px ${fontFamily}`;
-	ctx.fillText(texts.url, width / 2, y);
 
 	// Convertir en blob
 	return new Promise((resolve) => {
