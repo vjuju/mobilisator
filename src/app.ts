@@ -20,7 +20,7 @@ import {
 } from "./format";
 
 // Access code configuration
-const ACCESS_CODE = "OEP";
+const ACCESS_CODE = "ONBASCULE";
 const ACCESS_STORAGE_KEY = "mobilisator_access_granted";
 
 // Check if access has been granted

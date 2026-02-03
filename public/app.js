@@ -256,7 +256,7 @@ async function generateShareImage(cityName, votesDecisifs) {
 }
 
 // src/app.ts
-var ACCESS_CODE = "OEP";
+var ACCESS_CODE = "ONBASCULE";
 var ACCESS_STORAGE_KEY = "mobilisator_access_granted";
 function hasAccess() {
   return localStorage.getItem(ACCESS_STORAGE_KEY) === "true";
