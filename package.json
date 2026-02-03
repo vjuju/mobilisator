@@ -3,7 +3,7 @@
 	"scripts": {
 		"build:app": "bun build src/app.ts --outfile public/app.js --target browser",
 		"build:index": "bun run src/index.ts",
-		"build": "bun run build:app && bun run build:index",
+		"build": "echo '=== BUILD STARTED ===' && echo 'Building app.ts...' && bun run build:app && echo 'App built successfully!' && echo 'Building search index...' && bun run build:index && echo '=== BUILD COMPLETED ==='",
 		"fetch:communes": "curl -o communes.json https://static.data.gouv.fr/resources/communes-et-villes-de-france-en-csv-excel-json-parquet-et-feather/20250221-162818/communes-france-avec-polygon-2025.json",
 		"fetch:elections_2": "curl -o elections_2.json https://tabular-api.data.gouv.fr/api/resources/aa5766de-f869-4f44-a4cf-49649ed5389e/data/json/",
 		"fetch:elections_1": "curl -o elections_1.json https://tabular-api.data.gouv.fr/api/resources/8016ae91-bc47-4997-a3b5-d3515392a75b/data/json/",
