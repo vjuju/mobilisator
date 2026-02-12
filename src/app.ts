@@ -472,7 +472,7 @@ function displayCityDetail(city: City): void {
 	const exprimes = tourDecisif.Exprimés;
 
 	let formulaDecisive = "";
-	if (hasSecondTour) {
+	if (hasSecondTour && secondPlace) {
 		formulaDecisive = formatFormulaDecisiveSecondTour(
 			explanationDecisive,
 			firstPlace.Voix,

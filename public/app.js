@@ -560,7 +560,7 @@ function displayCityDetail(city) {
   const secondPlace = resultats[1];
   const exprimes = tourDecisif.Exprimés;
   let formulaDecisive = "";
-  if (hasSecondTour) {
+  if (hasSecondTour && secondPlace) {
     formulaDecisive = formatFormulaDecisiveSecondTour(explanationDecisive, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
   } else {
     formulaDecisive = formatFormulaDecisivePremierTour(explanationDecisive, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
