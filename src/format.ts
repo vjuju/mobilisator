@@ -72,7 +72,7 @@ export function getMainTagline(hasSecondTour: boolean): string {
 	if (hasSecondTour) {
 		return "votes suffisaient pour élire un autre maire";
 	}
-	return "votes suffisaient pour aller au second tour";
+	return "votes supplémentaires à un rival auraient suffi à empêcher la victoire au 1er tour";
 }
 
 // ============================================================================
@@ -93,7 +93,7 @@ export function formatExplanationDecisive(
 	if (hasSecondTour) {
 		return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${formattedVotes} voix.`;
 	}
-	return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), la 1ère liste a obtenu ${formattedVotes} voix au-dessus de la majorité au premier tour.`;
+	return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), en donnant ${formattedVotes} voix supplémentaires à un autre candidat au premier tour, la 1ère liste n'aurait plus eu la majorité absolue des suffrages exprimés.`;
 }
 
 /**
@@ -130,17 +130,14 @@ export function formatFormulaDecisivePremierTour(
 	tourLabel: string,
 	resultsTableHtml: string,
 ): string {
-	const moitieExprimes = Math.round(exprimes / 2);
-
 	return `${explanationDecisive}
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
+<strong>Formule :</strong> (2 × Voix de la 1ère liste) − Exprimés au premier tour
 <br><br>
 <strong>Détail :</strong>
 <br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
 <br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
-<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
-<br>• Marge au-dessus de la majorité : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
+<br>• Votes supplémentaires nécessaires : (2 × ${firstPlaceVoix.toLocaleString("fr-FR")}) − ${exprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
 		<br><br><strong>Résultats du ${tourLabel} :</strong>
 		${resultsTableHtml}`;
 }

@@ -238,9 +238,12 @@ const calculateVotesDecisifs = (
 		const gagnantVoix = sorted[0].Voix;
 		const exprimés = tour1Data.Exprimés as number;
 
-		// Différence entre les voix du gagnant et la moitié des exprimés
-		const voixAuDessusMajorite = gagnantVoix - exprimés / 2;
-		return Math.max(0, Math.round(voixAuDessusMajorite));
+		// Nombre de votes supplémentaires à donner à un rival pour que le gagnant
+		// perde la majorité absolue : si on ajoute X voix à un rival, les exprimés
+		// deviennent (exprimés + X) et le gagnant perd la majorité quand
+		// gagnant / (exprimés + X) <= 0.5, soit X >= 2 * gagnant - exprimés
+		const voixSupplementairesRival = 2 * gagnantVoix - exprimés;
+		return Math.max(0, Math.round(voixSupplementairesRival));
 	}
 };
 
