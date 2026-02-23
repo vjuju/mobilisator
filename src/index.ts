@@ -3,6 +3,12 @@ import { rm } from "node:fs/promises";
 import type { City, ElectionEntry, FullCity } from "./dtos/city";
 import { fullCityToCity, normalizeText } from "./utils";
 
+// Strip leading French articles (Le, La, Les, L') from city names
+const stripLeadingArticle = (name: string): string => {
+	const articlePattern = /^(le |la |les |l')/i;
+	return name.replace(articlePattern, "").trim();
+};
+
 const MAX_CITIES_PER_NGRAM = 20;
 const MIN_NGRAMS = 2;
 const NB_NGRAMS = 45;
@@ -103,7 +109,7 @@ const cities: FullCity[] = elections
 			id: entry.__id,
 			normalized_name: normalizeText(nomSansPronom),
 			nom_standard: nomSansPronom,
-			nom_sans_pronom: nomSansPronom,
+			nom_sans_pronom: stripLeadingArticle(nomSansPronom),
 			code_postal: entry["Code du département"],
 			codes_postaux: [],
 			code_departement: entry["Code du département"],
