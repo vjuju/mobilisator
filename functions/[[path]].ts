@@ -15,8 +15,8 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 	const requestUrl = new URL(request.url);
 	const path = requestUrl.pathname.slice(1);
 
-	// Some deployments may route /api/og/* to SPA fallback instead of the function route.
-	// Bridge it to /og/* so image generation still works.
+	// Prefer /og/* for generated images in this deployment.
+	// Keep /api/og/* metadata-compatible by pointing to /og/*.
 	if (path.startsWith("api/og/")) {
 		requestUrl.pathname = `/${path.replace(/^api\/og\//, "og/")}`;
 		return Response.redirect(requestUrl.toString(), 307);
@@ -25,7 +25,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 	if (BOT_UA.test(ua) && CITY_SLUG.test(path)) {
 		const slug = path.replace(/\.html$/, "");
 		const origin = requestUrl.origin;
-		const ogImageUrl = `${origin}/api/og/${slug}.png`;
+		const ogImageUrl = `${origin}/og/${slug}.png`;
 
 		const indexResp = await env.ASSETS.fetch(new URL("/index.html", request.url).toString());
 		const html = await indexResp.text();

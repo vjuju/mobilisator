@@ -678,10 +678,10 @@ var buildOgCandidateUrls = (citySlug) => {
   const encodedSlug = encodeURIComponent(citySlug);
   const cb = Date.now();
   return Array.from(new Set([
-    new URL(`/api/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
-    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`),
     new URL(`/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
-    getAbsolutePath(`og/${encodedSlug}.png?cb=${cb}`)
+    getAbsolutePath(`og/${encodedSlug}.png?cb=${cb}`),
+    new URL(`/api/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
+    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`)
   ]));
 };
 var fetchOgImageWithDebug = async (citySlug) => {

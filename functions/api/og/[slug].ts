@@ -1,1 +1,1 @@
-export { onRequest } from "../../og/[slug]";
+export { onRequest } from "../../og/[slug].ts";
