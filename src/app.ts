@@ -888,6 +888,15 @@ async function shareCity(): Promise<void> {
 							bodyPreview: "",
 						} satisfies OgAttemptDebug,
 					];
+		const attemptsSummary = attempts.map((a) => ({
+			url: a.url,
+			finalUrl: a.finalUrl,
+			status: a.status,
+			contentType: a.contentType,
+			xOgError: a.xOgError,
+			xOgImageMode: a.xOgImageMode,
+			bodyPreview: a.bodyPreview,
+		}));
 		console.error("Error sharing [OG_DEBUG]:", {
 			citySlug,
 			pageUrl: window.location.href,
@@ -895,6 +904,14 @@ async function shareCity(): Promise<void> {
 			error,
 			attempts,
 		});
+		console.table(attemptsSummary);
+		const first = attemptsSummary[0];
+		if (first) {
+			alert(
+				`Erreur image OG (${first.status || "network"}). URL: ${first.finalUrl || first.url}\nType: ${first.contentType || "n/a"}\nOG error: ${first.xOgError || "n/a"}`,
+			);
+			return;
+		}
 		alert("Erreur lors du partage. Réessaie !");
 	}
 }
