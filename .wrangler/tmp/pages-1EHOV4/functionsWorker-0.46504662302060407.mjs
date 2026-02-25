@@ -22197,7 +22197,7 @@ function toWikimediaThumb(url, width = 600) {
   if (direct) return `${direct[1]}thumb/${direct[2]}${direct[3]}/${width}px-${direct[3]}`;
   return url;
 }
-var fontCache, shareDataCache, OG_IMAGE_UA, fetchInlineImage, resolveImageSrc, onRequest;
+var fontCache, shareDataCache, logoCache, OG_IMAGE_UA, fetchInlineImage, resolveImageSrc, onRequest;
 var init_slug = __esm({
   "og/[slug].ts"() {
     init_functionsRoutes_0_7528516906645166();
@@ -22208,6 +22208,7 @@ var init_slug = __esm({
     __name(el, "el");
     fontCache = null;
     shareDataCache = null;
+    logoCache = null;
     OG_IMAGE_UA = "Mobilisator-OG/1.0 (+https://mobilisator.fr)";
     __name(toWikimediaThumb, "toWikimediaThumb");
     fetchInlineImage = /* @__PURE__ */ __name(async (url) => {
@@ -22255,6 +22256,17 @@ var init_slug = __esm({
           const r = await env2.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
           if (!r.ok) return new Response("Font not found", { status: 503 });
           fontCache = await r.arrayBuffer();
+        }
+        if (!logoCache) {
+          const r = await env2.ASSETS.fetch(new URL("/assets/LogoOEP.png", request.url).toString());
+          if (r.ok) {
+            const buf = await r.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let bin = "";
+            const CHUNK = 32768;
+            for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+            logoCache = `data:image/png;base64,${btoa(bin)}`;
+          }
         }
         const imageSrc = await resolveImageSrc(city);
         const creditParts = [];
@@ -22314,33 +22326,83 @@ var init_slug = __esm({
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "flex-start",
-                padding: "180px 60px 80px",
+                padding: "100px 60px 80px",
                 color: "#ffffff",
                 textAlign: "center"
               }
             },
-            // "Aux municipales de 2020,"
-            el("div", {
-              style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" }
-            }, "Aux municipales de 2020,"),
-            // "à [VILLE],"
-            el("div", {
-              style: { fontSize: 56, color: "#ffffff", fontFamily: "Arial, sans-serif", marginTop: 40 }
-            }, `\xE0 ${city.name},`),
+            // OEP logo
+            logoCache && el("img", {
+              src: logoCache,
+              style: { width: 75, height: 75, borderRadius: 10, marginBottom: 40 }
+            }),
+            // City name pill — rotated, solid offset shadow
+            el(
+              "div",
+              {
+                style: {
+                  display: "flex",
+                  transform: "rotate(-4deg)",
+                  alignSelf: "center",
+                  position: "relative",
+                  paddingBottom: 12,
+                  paddingRight: 12,
+                  marginBottom: 50
+                }
+              },
+              // Black shadow (same size as green pill, offset by 12px)
+              el("div", {
+                style: {
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: "#000000",
+                  borderRadius: 100
+                }
+              }),
+              // Green foreground pill
+              el(
+                "div",
+                {
+                  style: {
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#5ECBA1",
+                    borderRadius: 100,
+                    paddingTop: 20,
+                    paddingBottom: 20,
+                    paddingLeft: 60,
+                    paddingRight: 60
+                  }
+                },
+                el("div", {
+                  style: {
+                    fontSize: 100,
+                    color: "#000000",
+                    fontFamily: "Anton",
+                    fontWeight: 400,
+                    lineHeight: 1
+                  }
+                }, city.name.toUpperCase())
+              )
+            ),
             // Big number
             el("div", {
               style: {
-                fontSize: 280,
+                fontSize: 260,
                 color: "#5ECBA1",
                 fontFamily: "Anton",
                 fontWeight: 400,
-                lineHeight: 1,
-                marginTop: 100
+                lineHeight: 1
               }
             }, city.votes.toLocaleString("fr-FR")),
             // "jeunes auraient fait la diff'"
             el("div", {
-              style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 40 }
+              style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 30 }
             }, "jeunes auraient fait la diff'"),
             // "Et toi tu votes en 2026 ?"
             el("div", {
@@ -22494,13 +22556,13 @@ var init_functionsRoutes_0_7528516906645166 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-9gsLuE/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-0X13Mn/middleware-loader.entry.ts
 init_functionsRoutes_0_7528516906645166();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
 init_performance2();
 
-// ../.wrangler/tmp/bundle-9gsLuE/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-0X13Mn/middleware-insertion-facade.js
 init_functionsRoutes_0_7528516906645166();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
@@ -23011,7 +23073,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-9gsLuE/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-0X13Mn/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -23047,7 +23109,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-9gsLuE/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-0X13Mn/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

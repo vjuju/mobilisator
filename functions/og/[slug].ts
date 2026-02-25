@@ -111,9 +111,9 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 		const city = shareDataCache![slug];
 		if (!city) return new Response("City not found", { status: 404 });
 
-		// Load Anton font (cached after first load)
+		// Load Folsom font (cached after first load)
 		if (!fontCache) {
-			const r = await env.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
+			const r = await env.ASSETS.fetch(new URL("/fonts/Folsom-Black.otf", request.url).toString());
 			if (!r.ok) return new Response("Font not found", { status: 503 });
 			fontCache = await r.arrayBuffer();
 		}
@@ -199,45 +199,150 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 			// OEP logo
 			logoCache && el("img", {
 				src: logoCache,
-				style: { width: 180, height: 180, borderRadius: 20, marginBottom: 40 },
+				style: { width: 75, height: 75, borderRadius: 10, marginBottom: 40 },
 			}),
-			// "Aux municipales de 2020,"
+			// City name pill — rotated, solid offset shadow
 			el("div", {
-				style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" },
-			}, "Aux municipales de 2020,"),
-			// "à [VILLE],"
-			el("div", {
-				style: { fontSize: 56, color: "#ffffff", fontFamily: "Arial, sans-serif", marginTop: 40 },
-			}, `à ${city.name},`),
+				style: {
+					display: "flex",
+					transform: "rotate(-4deg)",
+					alignSelf: "center",
+					position: "relative",
+					paddingBottom: 12,
+					paddingRight: 12,
+					marginTop: 10,
+					marginBottom: 50,
+				},
+			},
+				// Black shadow (same size as green pill, offset by 12px)
+				el("div", {
+					style: {
+						position: "absolute",
+						top: 12,
+						left: 12,
+						bottom: 0,
+						right: 0,
+						backgroundColor: "#000000",
+						borderRadius: 100,
+					},
+				}),
+				// Green foreground pill
+				el("div", {
+					style: {
+						position: "relative",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						backgroundColor: "#5ECBA1",
+						borderRadius: 100,
+						border: "3px solid #000000",
+						paddingTop: 20,
+						paddingBottom: 20,
+						paddingLeft: 80,
+						paddingRight: 80,
+					},
+				},
+					el("div", {
+						style: {
+							fontSize: 100,
+							color: "#000000",
+							fontFamily: "Folsom",
+							fontWeight: 400,
+							lineHeight: 1,
+							WebkitTextStroke: "3px #000000",
+						},
+					}, city.name.toUpperCase()),
+				),
+			),
 			// Big number
 			el("div", {
 				style: {
-					fontSize: 280,
-					color: "#5ECBA1",
-					fontFamily: "Anton",
+					fontSize: 260,
+					color: "#ffffff",
+					fontFamily: "Folsom",
 					fontWeight: 400,
 					lineHeight: 1,
-					marginTop: 100,
+					marginTop: 140,
 				},
 			}, city.votes.toLocaleString("fr-FR")),
-			// "jeunes auraient fait la diff'"
+			// Tagline — 3 lines in Folsom
 			el("div", {
-				style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 40 },
-			}, "jeunes auraient fait la diff'"),
-			// "Et toi tu votes en 2026 ?"
+				style: {
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					marginTop: 30,
+					gap: 4,
+				},
+			},
+				// Line 1: "JEUNES DE " + "18-39 ANS" in green
+				el("div", {
+					style: { display: "flex", flexDirection: "row", alignItems: "baseline" },
+				},
+					el("div", {
+						style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+					}, "JEUNES DE\u00A0"),
+					el("div", {
+						style: { fontSize: 60, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+					}, "18-39 ANS"),
+				),
+				// Line 2
+				el("div", {
+					style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "AURAIENT FAIT LA DIFF'"),
+				// Line 3: dynamic city name
+				el("div", {
+					style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, `À ${city.name.toUpperCase()} EN 2020`),
+			),
+				// "JE VOTE EN 2026. / ET TOI ?"
 			el("div", {
-				style: { fontSize: 72, color: "#ffffff", fontFamily: "Anton", fontWeight: 400, marginTop: 120 },
-			}, "Et toi tu votes en 2026 ?"),
-			// CTA line 1
-			el("div", {
-				style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 150, textAlign: "center" },
-			}, "Pour plier le game, embarque le plus de monde autour de toi"),
-			// CTA line 2
-			el("div", {
-				style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 22 },
-			}, 'et commente "Je vote #RIENSANSNOUS"'),
+				style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 130, gap: 0 },
+			},
+				el("div", {
+					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "JE VOTE EN 2026."),
+				el("div", {
+					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "ET TOI ?"),
+			),
 		),
-		// Photo credit pill (bottom-right)
+		// #RIENSANSNOUS — bottom-right
+		el("div", {
+			style: {
+				position: "absolute",
+				bottom: 275,
+				right: 60,
+				fontSize: 64,
+				color: "#ffffff",
+				fontFamily: "Folsom",
+				fontWeight: 400,
+				lineHeight: 1,
+				display: "flex",
+			},
+		}, "#RIENSANSNOUS"),
+		// MOBILISATOR.FR pill — bottom-right
+		el("div", {
+			style: {
+				position: "absolute",
+				bottom: 160,
+				right: 60,
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				backgroundColor: "#5ECBA1",
+				borderRadius: 16,
+				paddingTop: 20,
+				paddingBottom: 20,
+				paddingLeft: 30,
+				paddingRight: 30,
+			},
+		},
+			el("div", {
+				style: { fontSize: 60, color: "#000000", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+			}, "MOBILISATOR.FR"),
+		),
+				// Photo credit pill (bottom-right)
 		showCredit && el("div", {
 			style: {
 				position: "absolute",
@@ -259,7 +364,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 			height: 1920,
 			fonts: [
 				{
-					name: "Anton",
+					name: "Folsom",
 					data: fontCache!,
 					weight: 400,
 					style: "normal",

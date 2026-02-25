@@ -24392,6 +24392,7 @@ function toWikimediaThumb(url, width = 600) {
 __name(toWikimediaThumb, "toWikimediaThumb");
 var fontCache;
 var shareDataCache;
+var logoCache;
 var OG_IMAGE_UA;
 var fetchInlineImage;
 var resolveImageSrc;
@@ -24406,6 +24407,7 @@ var init_slug = __esm({
     __name2(el, "el");
     fontCache = null;
     shareDataCache = null;
+    logoCache = null;
     OG_IMAGE_UA = "Mobilisator-OG/1.0 (+https://mobilisator.fr)";
     __name2(toWikimediaThumb, "toWikimediaThumb");
     fetchInlineImage = /* @__PURE__ */ __name2(async (url) => {
@@ -24453,6 +24455,17 @@ var init_slug = __esm({
           const r = await env22.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
           if (!r.ok) return new Response("Font not found", { status: 503 });
           fontCache = await r.arrayBuffer();
+        }
+        if (!logoCache) {
+          const r = await env22.ASSETS.fetch(new URL("/assets/LogoOEP.png", request.url).toString());
+          if (r.ok) {
+            const buf = await r.arrayBuffer();
+            const bytes = new Uint8Array(buf);
+            let bin = "";
+            const CHUNK = 32768;
+            for (let i2 = 0; i2 < bytes.length; i2 += CHUNK) bin += String.fromCharCode(...bytes.subarray(i2, i2 + CHUNK));
+            logoCache = `data:image/png;base64,${btoa(bin)}`;
+          }
         }
         const imageSrc = await resolveImageSrc(city);
         const creditParts = [];
@@ -24512,33 +24525,83 @@ var init_slug = __esm({
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "flex-start",
-                padding: "180px 60px 80px",
+                padding: "100px 60px 80px",
                 color: "#ffffff",
                 textAlign: "center"
               }
             },
-            // "Aux municipales de 2020,"
-            el("div", {
-              style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" }
-            }, "Aux municipales de 2020,"),
-            // "à [VILLE],"
-            el("div", {
-              style: { fontSize: 56, color: "#ffffff", fontFamily: "Arial, sans-serif", marginTop: 40 }
-            }, `\xE0 ${city.name},`),
+            // OEP logo
+            logoCache && el("img", {
+              src: logoCache,
+              style: { width: 75, height: 75, borderRadius: 10, marginBottom: 40 }
+            }),
+            // City name pill — rotated, solid offset shadow
+            el(
+              "div",
+              {
+                style: {
+                  display: "flex",
+                  transform: "rotate(-4deg)",
+                  alignSelf: "center",
+                  position: "relative",
+                  paddingBottom: 12,
+                  paddingRight: 12,
+                  marginBottom: 50
+                }
+              },
+              // Black shadow (same size as green pill, offset by 12px)
+              el("div", {
+                style: {
+                  position: "absolute",
+                  top: 12,
+                  left: 12,
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: "#000000",
+                  borderRadius: 100
+                }
+              }),
+              // Green foreground pill
+              el(
+                "div",
+                {
+                  style: {
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#5ECBA1",
+                    borderRadius: 100,
+                    paddingTop: 20,
+                    paddingBottom: 20,
+                    paddingLeft: 60,
+                    paddingRight: 60
+                  }
+                },
+                el("div", {
+                  style: {
+                    fontSize: 100,
+                    color: "#000000",
+                    fontFamily: "Anton",
+                    fontWeight: 400,
+                    lineHeight: 1
+                  }
+                }, city.name.toUpperCase())
+              )
+            ),
             // Big number
             el("div", {
               style: {
-                fontSize: 280,
+                fontSize: 260,
                 color: "#5ECBA1",
                 fontFamily: "Anton",
                 fontWeight: 400,
-                lineHeight: 1,
-                marginTop: 100
+                lineHeight: 1
               }
             }, city.votes.toLocaleString("fr-FR")),
             // "jeunes auraient fait la diff'"
             el("div", {
-              style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 40 }
+              style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 30 }
             }, "jeunes auraient fait la diff'"),
             // "Et toi tu votes en 2026 ?"
             el("div", {
