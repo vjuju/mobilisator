@@ -24382,11 +24382,17 @@ function el(type, props, ...children) {
   };
 }
 __name(el, "el");
+function toWikimediaThumb(url, width = 600) {
+  const thumbed = url.match(/^(.+\/thumb\/.+\/)(\d+px-)(.+)$/);
+  if (thumbed) return `${thumbed[1]}${width}px-${thumbed[3]}`;
+  const direct = url.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/[^/]+\/)([a-f0-9]\/[a-f0-9]{2}\/)(.+)$/);
+  if (direct) return `${direct[1]}thumb/${direct[2]}${direct[3]}/${width}px-${direct[3]}`;
+  return url;
+}
+__name(toWikimediaThumb, "toWikimediaThumb");
 var fontCache;
 var shareDataCache;
-var inlineImageCache;
 var OG_IMAGE_UA;
-var bytesToBase64;
 var fetchInlineImage;
 var resolveImageSrc;
 var onRequest;
@@ -24400,20 +24406,9 @@ var init_slug = __esm({
     __name2(el, "el");
     fontCache = null;
     shareDataCache = null;
-    inlineImageCache = /* @__PURE__ */ new Map();
     OG_IMAGE_UA = "Mobilisator-OG/1.0 (+https://mobilisator.fr)";
-    bytesToBase64 = /* @__PURE__ */ __name2((bytes) => {
-      let binary = "";
-      const CHUNK_SIZE = 32768;
-      for (let i2 = 0; i2 < bytes.length; i2 += CHUNK_SIZE) {
-        binary += String.fromCharCode(...bytes.subarray(i2, i2 + CHUNK_SIZE));
-      }
-      return btoa(binary);
-    }, "bytesToBase64");
+    __name2(toWikimediaThumb, "toWikimediaThumb");
     fetchInlineImage = /* @__PURE__ */ __name2(async (url) => {
-      if (inlineImageCache.has(url)) {
-        return inlineImageCache.get(url) ?? null;
-      }
       try {
         const resp = await fetch(url, {
           headers: {
@@ -24426,24 +24421,22 @@ var init_slug = __esm({
         if (!contentType.startsWith("image/")) return null;
         const buffer = await resp.arrayBuffer();
         if (buffer.byteLength === 0) return null;
-        const inlineSrc = `data:${contentType};base64,${bytesToBase64(new Uint8Array(buffer))}`;
-        inlineImageCache.set(url, inlineSrc);
-        return inlineSrc;
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        const CHUNK = 32768;
+        for (let i2 = 0; i2 < bytes.length; i2 += CHUNK) {
+          binary += String.fromCharCode(...bytes.subarray(i2, i2 + CHUNK));
+        }
+        return `data:${contentType};base64,${btoa(binary)}`;
       } catch {
         return null;
       }
     }, "fetchInlineImage");
     resolveImageSrc = /* @__PURE__ */ __name2(async (city) => {
-      const candidates = [city.thumbUrl, city.url].filter((u2) => Boolean(u2));
-      if (candidates.length === 0) return { src: null, mode: "none" };
-      let fallbackExternal = null;
-      for (const url of candidates) {
-        if (!fallbackExternal) fallbackExternal = url;
-        const inline = await fetchInlineImage(url);
-        if (inline) return { src: inline, mode: "inline" };
-      }
-      if (fallbackExternal) return { src: fallbackExternal, mode: "external" };
-      return { src: null, mode: "none" };
+      const raw = city.thumbUrl || city.url;
+      if (!raw) return null;
+      const thumbUrl = toWikimediaThumb(raw, 600);
+      return fetchInlineImage(thumbUrl);
     }, "resolveImageSrc");
     onRequest = /* @__PURE__ */ __name2(async (context2) => {
       const { request, env: env22, params } = context2;
@@ -24461,8 +24454,7 @@ var init_slug = __esm({
           if (!r.ok) return new Response("Font not found", { status: 503 });
           fontCache = await r.arrayBuffer();
         }
-        const imageResult = await resolveImageSrc(city);
-        const imageSrc = imageResult.src;
+        const imageSrc = await resolveImageSrc(city);
         const creditParts = [];
         if (city.author) creditParts.push(`Photo : ${city.author}`);
         if (city.license) creditParts.push(city.license);
@@ -24590,11 +24582,7 @@ var init_slug = __esm({
         });
         const headers = new Headers(response.headers);
         headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
-        headers.set("X-OG-Image-Mode", imageResult.mode);
-        headers.set("X-OG-Slug", slug);
-        const pngBuffer = await response.arrayBuffer();
-        headers.set("X-OG-Bytes", String(pngBuffer.byteLength));
-        return new Response(pngBuffer, { status: response.status, headers });
+        return new Response(response.body, { status: response.status, headers });
       } catch (error3) {
         const message = error3 instanceof Error ? error3.message : String(error3);
         return new Response(`OG generation error: ${message}`, {
