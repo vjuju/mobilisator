@@ -203,6 +203,13 @@ for (const city of Object.values(allCitiesData)) {
 const shareDataLocation = `${outputDirectoryPath}/share-data.json`;
 await Bun.write(shareDataLocation, JSON.stringify(shareData));
 
+// Generate sitemap.xml for SEO
+const sitemapUrls = Object.values(allCitiesData)
+	.map((city) => `\t<url><loc>https://mobilisator.fr/${city.slug}</loc></url>`)
+	.join("\n");
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapUrls}\n</urlset>`;
+await Bun.write("./public/sitemap.xml", sitemap);
+
 const endTime = performance.now();
 
 console.log(`⏺ ${cities.length} cities`);
@@ -211,7 +218,8 @@ console.log(`⏺ ${PARTITIONS.length} search partition files`);
 console.log(`⏺ 1 cities-data.json file`);
 console.log(`⏺ 1 slug-map.json file`);
 console.log(`⏺ 1 share-data.json file`);
-console.log(`⏺ ${PARTITIONS.length + 3} total files`);
+console.log(`⏺ 1 sitemap.xml file`);
+console.log(`⏺ ${PARTITIONS.length + 4} total files`);
 console.log(
 	`⏺ ${Number(endTime - startTime).toFixed(1)} ms to process search index`,
 );
