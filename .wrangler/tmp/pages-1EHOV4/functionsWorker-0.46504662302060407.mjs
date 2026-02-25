@@ -22433,10 +22433,15 @@ var init_path = __esm({
     CITY_SLUG = /^\d{1,3}-\d/;
     onRequest2 = /* @__PURE__ */ __name(async ({ request, env: env2 }) => {
       const ua2 = request.headers.get("user-agent") ?? "";
-      const path = new URL(request.url).pathname.slice(1);
+      const requestUrl = new URL(request.url);
+      const path = requestUrl.pathname.slice(1);
+      if (path.startsWith("api/og/")) {
+        requestUrl.pathname = `/${path.replace(/^api\/og\//, "og/")}`;
+        return Response.redirect(requestUrl.toString(), 307);
+      }
       if (BOT_UA.test(ua2) && CITY_SLUG.test(path)) {
         const slug = path.replace(/\.html$/, "");
-        const origin = new URL(request.url).origin;
+        const origin = requestUrl.origin;
         const ogImageUrl = `${origin}/api/og/${slug}.png`;
         const indexResp = await env2.ASSETS.fetch(new URL("/index.html", request.url).toString());
         const html = await indexResp.text();
@@ -22498,13 +22503,13 @@ var init_functionsRoutes_0_7528516906645166 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-1Sk12Z/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-1wajQe/middleware-loader.entry.ts
 init_functionsRoutes_0_7528516906645166();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
 init_performance2();
 
-// ../.wrangler/tmp/bundle-1Sk12Z/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-1wajQe/middleware-insertion-facade.js
 init_functionsRoutes_0_7528516906645166();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
@@ -23015,7 +23020,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-1Sk12Z/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-1wajQe/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -23051,7 +23056,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-1Sk12Z/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-1wajQe/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

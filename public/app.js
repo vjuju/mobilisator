@@ -657,6 +657,15 @@ var normalizeImageForClipboard = async (blob) => {
     return blob.type === "image/png" ? blob : new Blob([await blob.arrayBuffer()], { type: "image/png" });
   }
 };
+
+class OgFetchError extends Error {
+  attempts;
+  constructor(message, attempts) {
+    super(message);
+    this.name = "OgFetchError";
+    this.attempts = attempts;
+  }
+}
 var safeResponsePreview = async (response) => {
   try {
     const text = await response.clone().text();
@@ -670,12 +679,44 @@ var buildOgCandidateUrls = (citySlug) => {
   const cb = Date.now();
   return Array.from(new Set([
     new URL(`/api/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
-    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`)
+    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`),
+    new URL(`/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
+    getAbsolutePath(`og/${encodedSlug}.png?cb=${cb}`)
   ]));
 };
 var fetchOgImageWithDebug = async (citySlug) => {
-  const candidates = buildOgCandidateUrls(citySlug);
   const attempts = [];
+  let candidates = [];
+  try {
+    candidates = buildOgCandidateUrls(citySlug);
+  } catch (error) {
+    attempts.push({
+      url: "(candidate-build)",
+      finalUrl: "",
+      status: 0,
+      ok: false,
+      contentType: "",
+      xOgImageMode: "",
+      xOgSlug: citySlug,
+      xOgError: `candidate build error: ${String(error)}`,
+      bodyPreview: ""
+    });
+    throw new OgFetchError(`OG candidate URL build failed for slug "${citySlug}"`, attempts);
+  }
+  if (candidates.length === 0) {
+    attempts.push({
+      url: "(candidate-build)",
+      finalUrl: "",
+      status: 0,
+      ok: false,
+      contentType: "",
+      xOgImageMode: "",
+      xOgSlug: citySlug,
+      xOgError: "no OG candidate URL generated",
+      bodyPreview: ""
+    });
+    throw new OgFetchError(`No OG candidate URL for slug "${citySlug}"`, attempts);
+  }
   for (const url of candidates) {
     let response;
     try {
@@ -720,7 +761,7 @@ var fetchOgImageWithDebug = async (citySlug) => {
     attempts.push(debug);
     return { imageBlob, attempts, usedUrl: url };
   }
-  throw new Error(`OG image fetch failed for slug "${citySlug}"`);
+  throw new OgFetchError(`OG image fetch failed for slug "${citySlug}"`, attempts);
 };
 async function shareCity() {
   if (!currentCityData) {
@@ -747,13 +788,19 @@ async function shareCity() {
       showShareModalWithDownload(imageUrl, cityName);
     }
   } catch (error) {
-    let attempts = [];
-    try {
-      const result = await fetchOgImageWithDebug(citySlug);
-      attempts = result.attempts;
-    } catch (secondError) {
-      console.error("OG_DEBUG retry failed", secondError);
-    }
+    const attempts = error instanceof OgFetchError ? error.attempts : [
+      {
+        url: "(unknown)",
+        finalUrl: "",
+        status: 0,
+        ok: false,
+        contentType: "",
+        xOgImageMode: "",
+        xOgSlug: citySlug,
+        xOgError: String(error),
+        bodyPreview: ""
+      }
+    ];
     console.error("Error sharing [OG_DEBUG]:", {
       citySlug,
       pageUrl: window.location.href,

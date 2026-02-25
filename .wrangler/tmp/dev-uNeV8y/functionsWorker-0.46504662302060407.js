@@ -24630,10 +24630,15 @@ var init_path = __esm({
     CITY_SLUG = /^\d{1,3}-\d/;
     onRequest2 = /* @__PURE__ */ __name2(async ({ request, env: env22 }) => {
       const ua2 = request.headers.get("user-agent") ?? "";
-      const path = new URL(request.url).pathname.slice(1);
+      const requestUrl = new URL(request.url);
+      const path = requestUrl.pathname.slice(1);
+      if (path.startsWith("api/og/")) {
+        requestUrl.pathname = `/${path.replace(/^api\/og\//, "og/")}`;
+        return Response.redirect(requestUrl.toString(), 307);
+      }
       if (BOT_UA.test(ua2) && CITY_SLUG.test(path)) {
         const slug = path.replace(/\.html$/, "");
-        const origin = new URL(request.url).origin;
+        const origin = requestUrl.origin;
         const ogImageUrl = `${origin}/api/og/${slug}.png`;
         const indexResp = await env22.ASSETS.fetch(new URL("/index.html", request.url).toString());
         const html = await indexResp.text();

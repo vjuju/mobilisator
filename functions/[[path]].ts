@@ -12,12 +12,20 @@ const CITY_SLUG = /^\d{1,3}-\d/;
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 	const ua = request.headers.get("user-agent") ?? "";
-	const path = new URL(request.url).pathname.slice(1);
+	const requestUrl = new URL(request.url);
+	const path = requestUrl.pathname.slice(1);
+
+	// Some deployments may route /api/og/* to SPA fallback instead of the function route.
+	// Bridge it to /og/* so image generation still works.
+	if (path.startsWith("api/og/")) {
+		requestUrl.pathname = `/${path.replace(/^api\/og\//, "og/")}`;
+		return Response.redirect(requestUrl.toString(), 307);
+	}
 
 	if (BOT_UA.test(ua) && CITY_SLUG.test(path)) {
 		const slug = path.replace(/\.html$/, "");
-		const origin = new URL(request.url).origin;
-			const ogImageUrl = `${origin}/api/og/${slug}.png`;
+		const origin = requestUrl.origin;
+		const ogImageUrl = `${origin}/api/og/${slug}.png`;
 
 		const indexResp = await env.ASSETS.fetch(new URL("/index.html", request.url).toString());
 		const html = await indexResp.text();
