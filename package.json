@@ -11,11 +11,18 @@
 		"fetch:population": "curl -o population.json https://tabular-api.data.gouv.fr/api/resources/ae02973c-4538-49fe-8494-6b77df0f4771/data/json/",
 		"clean:elections": "bun run src/process-elections.ts",
 		"fetch:elections": "bun run fetch:elections_1 && bun run fetch:elections_2 && bun run fetch:population && bun run clean:elections",
-		"dev": "bun run src/server.ts"
+		"fetch:images": "bun run src/fetch-images.ts",
+		"dev": "bun run src/server.ts",
+		"dev:pages": "wrangler pages dev ./public"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.10",
+		"@cloudflare/workers-types": "^4.20260304.0",
 		"@types/bun": "^1.3.4",
-		"@types/node": "^25.0.3"
+		"@types/node": "^25.0.3",
+		"wrangler": "^4.68.1"
+	},
+	"dependencies": {
+		"@cf-wasm/og": "^0.3.7"
 	}
 }

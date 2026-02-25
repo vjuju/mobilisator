@@ -188,67 +188,6 @@ function formatSearchResultItem(id, name, codeDepartement) {
 function formatSearchInputValue(nomStandard, codeDepartement) {
   return `${nomStandard} (${codeDepartement})`;
 }
-var shareImageTexts = {
-  intro: "Aux municipales de 2020,",
-  cityPrefix: "à",
-  mainText: "jeunes auraient fait la diff'",
-  question: "Et toi tu votes en 2026 ?",
-  ctaLine1: "Pour plier le game, embarque le plus de monde autour de toi",
-  ctaLine2: 'et commente "Je vote #RIENSANSNOUS"'
-};
-var shareImageConfig = {
-  width: 1080,
-  height: 1920,
-  backgroundColor: "#000000",
-  primaryColor: "#5ECBA1",
-  textColor: "#ffffff",
-  subtitleColor: "#cccccc",
-  fontFamily: "Anton, Impact, sans-serif"
-};
-async function generateShareImage(cityName, votesDecisifs) {
-  const { width, height, backgroundColor, primaryColor, textColor, subtitleColor, fontFamily } = shareImageConfig;
-  const texts = shareImageTexts;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, width, height);
-  let y = 180;
-  ctx.fillStyle = subtitleColor;
-  ctx.font = `36px Arial, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(texts.intro, width / 2, y);
-  y += 100;
-  ctx.fillStyle = textColor;
-  ctx.font = `56px Arial, sans-serif`;
-  ctx.fillText(`${texts.cityPrefix} ${cityName},`, width / 2, y);
-  y += 450;
-  ctx.fillStyle = primaryColor;
-  ctx.font = `bold 280px ${fontFamily}`;
-  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), width / 2, y);
-  y += 130;
-  ctx.fillStyle = primaryColor;
-  ctx.font = `bold 72px ${fontFamily}`;
-  ctx.fillText(texts.mainText, width / 2, y);
-  y += 250;
-  ctx.fillStyle = textColor;
-  ctx.font = `bold 72px ${fontFamily}`;
-  ctx.fillText(texts.question, width / 2, y);
-  y += 280;
-  ctx.fillStyle = subtitleColor;
-  ctx.font = `32px Arial, sans-serif`;
-  ctx.fillText(texts.ctaLine1, width / 2, y);
-  y += 55;
-  ctx.fillStyle = subtitleColor;
-  ctx.font = `32px Arial, sans-serif`;
-  ctx.fillText(texts.ctaLine2, width / 2, y);
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      resolve(blob);
-    }, "image/png");
-  });
-}
 
 // src/app.ts
 var ACCESS_CODE = "ONBASCULE";
@@ -546,6 +485,7 @@ function displayCityDetail(city) {
   const mainTagline = getMainTagline(hasSecondTour);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
   currentCityData = {
+    citySlug: city.slug,
     cityName: city.nom_standard,
     codeDepartement: city.code_departement,
     votesDecisifs,
@@ -694,15 +634,19 @@ async function shareCity() {
     console.error("No city data available for sharing");
     return;
   }
-  const { cityName, votesDecisifs } = currentCityData;
+  const { citySlug, cityName } = currentCityData;
   try {
-    const imageBlob = await generateShareImage(cityName, votesDecisifs);
+    const ogUrl = `${BASE_PATH}og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
+    const resp = await fetch(ogUrl, { cache: "no-store" });
+    if (!resp.ok)
+      throw new Error(`Image generation failed: ${resp.status}`);
+    const imageBlob = await resp.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
-    if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
+    const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
+    if (clipboardSupportsPng) {
       try {
-        const clipboardItem = new ClipboardItem({
-          "image/png": imageBlob
-        });
+        const pngBlob = imageBlob.type === "image/png" ? imageBlob : new Blob([await imageBlob.arrayBuffer()], { type: "image/png" });
+        const clipboardItem = new ClipboardItem({ "image/png": pngBlob });
         await navigator.clipboard.write([clipboardItem]);
         showShareModal(imageUrl);
       } catch (clipboardError) {

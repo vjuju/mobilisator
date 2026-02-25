@@ -182,6 +182,27 @@ for (const city of Object.values(allCitiesData)) {
 const slugMapLocation = `${outputDirectoryPath}/slug-map.json`;
 await Bun.write(slugMapLocation, JSON.stringify(slugToId));
 
+// Write share-data.json: slug → { name, votes, thumbUrl, url, author, license }
+// Used by the Cloudflare Pages Function that generates share images (og:image + clipboard)
+const cityImagesFile = Bun.file("./city-images.json");
+const cityImages: Record<number, { thumbUrl?: string; url?: string; author?: string; license?: string }> =
+	(await cityImagesFile.exists()) ? await cityImagesFile.json() : {};
+
+const shareData: Record<string, { name: string; votes: number; thumbUrl: string; url: string; author: string; license: string }> = {};
+for (const city of Object.values(allCitiesData)) {
+	const img = cityImages[city.id] ?? {};
+	shareData[city.slug] = {
+		name: city.nom_standard,
+		votes: city.Analyse["Votes décisifs"],
+		thumbUrl: img.thumbUrl ?? "",
+		url: img.url ?? "",
+		author: img.author ?? "",
+		license: img.license ?? "",
+	};
+}
+const shareDataLocation = `${outputDirectoryPath}/share-data.json`;
+await Bun.write(shareDataLocation, JSON.stringify(shareData));
+
 const endTime = performance.now();
 
 console.log(`⏺ ${cities.length} cities`);
@@ -189,7 +210,8 @@ console.log(`⏺ ${searchIndex.size} index entries`);
 console.log(`⏺ ${PARTITIONS.length} search partition files`);
 console.log(`⏺ 1 cities-data.json file`);
 console.log(`⏺ 1 slug-map.json file`);
-console.log(`⏺ ${PARTITIONS.length + 2} total files`);
+console.log(`⏺ 1 share-data.json file`);
+console.log(`⏺ ${PARTITIONS.length + 3} total files`);
 console.log(
 	`⏺ ${Number(endTime - startTime).toFixed(1)} ms to process search index`,
 );

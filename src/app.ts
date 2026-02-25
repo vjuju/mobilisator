@@ -16,7 +16,6 @@ import {
 	nonVotingSourceUrl,
 	formatSearchResultItem,
 	formatSearchInputValue,
-	generateShareImage,
 } from "./format";
 
 // Access code configuration
@@ -140,6 +139,7 @@ let slugMapCache: Record<string, number> | null = null;
 
 // Current city data for sharing
 let currentCityData: {
+	citySlug: string;
 	cityName: string;
 	codeDepartement: string;
 	votesDecisifs: number;
@@ -452,6 +452,7 @@ function displayCityDetail(city: City): void {
 
 	// Store current city data for sharing
 	currentCityData = {
+		citySlug: city.slug,
 		cityName: city.nom_standard,
 		codeDepartement: city.code_departement,
 		votesDecisifs,
@@ -666,43 +667,46 @@ function closeShareModal(): void {
 	}
 }
 
-// Share city data via clipboard with generated image
+// Share city data via clipboard with generated image (server-side via Cloudflare Pages Function)
 async function shareCity(): Promise<void> {
 	if (!currentCityData) {
 		console.error("No city data available for sharing");
 		return;
 	}
 
-	const { cityName, votesDecisifs } = currentCityData;
+	const { citySlug, cityName } = currentCityData;
 
 	try {
-		// Generate the share image
-		const imageBlob = await generateShareImage(
-			cityName,
-			votesDecisifs,
-		);
+		// Fetch a fresh OG image to avoid stale CDN/browser cache after deployments.
+		const ogUrl = `${BASE_PATH}og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
+		const resp = await fetch(ogUrl, { cache: "no-store" });
+		if (!resp.ok) throw new Error(`Image generation failed: ${resp.status}`);
+		const imageBlob = await resp.blob();
 
 		// Create image URL for display
 		const imageUrl = URL.createObjectURL(imageBlob);
 
-		// Try to copy to clipboard
-		if (navigator.clipboard && typeof ClipboardItem !== "undefined") {
-			try {
-				// Copy image to clipboard
-				const clipboardItem = new ClipboardItem({
-					"image/png": imageBlob,
-				});
-				await navigator.clipboard.write([clipboardItem]);
+		// Try to copy to clipboard first (supported browsers / secure contexts only)
+		const clipboardSupportsPng =
+			navigator.clipboard &&
+			typeof ClipboardItem !== "undefined" &&
+			(typeof ClipboardItem.supports !== "function" ||
+				ClipboardItem.supports("image/png"));
 
-				// Show success modal with image
+		if (clipboardSupportsPng) {
+			try {
+				const pngBlob =
+					imageBlob.type === "image/png"
+						? imageBlob
+						: new Blob([await imageBlob.arrayBuffer()], { type: "image/png" });
+				const clipboardItem = new ClipboardItem({ "image/png": pngBlob });
+				await navigator.clipboard.write([clipboardItem]);
 				showShareModal(imageUrl);
 			} catch (clipboardError) {
 				console.error("Clipboard error:", clipboardError);
-				// Fallback: show modal with download option
 				showShareModalWithDownload(imageUrl, cityName);
 			}
 		} else {
-			// Clipboard API not supported: show modal with download option
 			showShareModalWithDownload(imageUrl, cityName);
 		}
 	} catch (error) {
