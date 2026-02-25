@@ -42,6 +42,7 @@ function el(
 // Module-level cache (per worker instance)
 let fontCache: ArrayBuffer | null = null;
 let shareDataCache: Record<string, ShareData> | null = null;
+let logoCache: string | null = null;
 
 const OG_IMAGE_UA = "Mobilisator-OG/1.0 (+https://mobilisator.fr)";
 
@@ -117,6 +118,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 			fontCache = await r.arrayBuffer();
 		}
 
+		// Load OEP logo (cached after first load)
+		if (!logoCache) {
+			const r = await env.ASSETS.fetch(new URL("/assets/LogoOEP.png", request.url).toString());
+			if (r.ok) {
+				const buf = await r.arrayBuffer();
+				const bytes = new Uint8Array(buf);
+				let bin = "";
+				const CHUNK = 0x8000;
+				for (let i = 0; i < bytes.length; i += CHUNK) bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+				logoCache = `data:image/png;base64,${btoa(bin)}`;
+			}
+		}
+
 		const imageSrc = await resolveImageSrc(city);
 
 		const creditParts: string[] = [];
@@ -177,11 +191,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 					flexDirection: "column",
 					alignItems: "center",
 					justifyContent: "flex-start",
-					padding: "180px 60px 80px",
+					padding: "100px 60px 80px",
 					color: "#ffffff",
 					textAlign: "center",
 				},
 			},
+			// OEP logo
+			logoCache && el("img", {
+				src: logoCache,
+				style: { width: 180, height: 180, borderRadius: 20, marginBottom: 40 },
+			}),
 			// "Aux municipales de 2020,"
 			el("div", {
 				style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" },
