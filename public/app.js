@@ -674,6 +674,15 @@ var safeResponsePreview = async (response) => {
     return "";
   }
 };
+var canDecodeImageBlob = async (blob) => {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    bitmap.close();
+    return true;
+  } catch {
+    return false;
+  }
+};
 var buildOgCandidateUrls = (citySlug) => {
   const encodedSlug = encodeURIComponent(citySlug);
   const cb = Date.now();
@@ -766,6 +775,12 @@ var fetchOgImageWithDebug = async (citySlug) => {
     }
     const imageBlob = await response.blob();
     debug.blobSize = imageBlob.size;
+    const decodable = await canDecodeImageBlob(imageBlob);
+    if (!decodable) {
+      debug.bodyPreview = "image blob decode failed";
+      attempts.push(debug);
+      continue;
+    }
     attempts.push(debug);
     return { imageBlob, attempts, usedUrl: url };
   }

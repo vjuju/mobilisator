@@ -735,6 +735,16 @@ const safeResponsePreview = async (response: Response): Promise<string> => {
 	}
 };
 
+const canDecodeImageBlob = async (blob: Blob): Promise<boolean> => {
+	try {
+		const bitmap = await createImageBitmap(blob);
+		bitmap.close();
+		return true;
+	} catch {
+		return false;
+	}
+};
+
 const buildOgCandidateUrls = (citySlug: string): string[] => {
 	const encodedSlug = encodeURIComponent(citySlug);
 	const cb = Date.now();
@@ -838,6 +848,12 @@ const fetchOgImageWithDebug = async (
 
 		const imageBlob = await response.blob();
 		debug.blobSize = imageBlob.size;
+		const decodable = await canDecodeImageBlob(imageBlob);
+		if (!decodable) {
+			debug.bodyPreview = "image blob decode failed";
+			attempts.push(debug);
+			continue;
+		}
 
 		attempts.push(debug);
 		return { imageBlob, attempts, usedUrl: url };
