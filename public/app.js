@@ -685,12 +685,11 @@ var canDecodeImageBlob = async (blob) => {
 };
 var buildOgCandidateUrls = (citySlug) => {
   const encodedSlug = encodeURIComponent(citySlug);
-  const cb = Date.now();
   return Array.from(new Set([
-    new URL(`/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
-    getAbsolutePath(`og/${encodedSlug}.png?cb=${cb}`),
-    new URL(`/api/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
-    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`)
+    new URL(`/og/${encodedSlug}.png`, window.location.origin).toString(),
+    getAbsolutePath(`og/${encodedSlug}.png`),
+    new URL(`/api/og/${encodedSlug}.png`, window.location.origin).toString(),
+    getAbsolutePath(`api/og/${encodedSlug}.png`)
   ]));
 };
 var fetchOgImageWithDebug = async (citySlug) => {
@@ -802,6 +801,7 @@ async function shareCity() {
     btn.disabled = true;
     btn.innerHTML = "Chargement...";
   }
+  await new Promise((r) => setTimeout(r, 0));
   try {
     const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
     console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
