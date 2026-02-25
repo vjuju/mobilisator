@@ -268,11 +268,18 @@ function initAccessGate() {
 }
 var getBasePath = () => {
   const path = window.location.pathname;
-  const match = path.match(/^(\/[^/]+\/)/);
-  if (match && match[1] !== "/") {
-    return match[1];
-  }
-  return "/";
+  const firstSegment = path.split("/").filter(Boolean)[0] ?? "";
+  if (!firstSegment)
+    return "/";
+  const looksLikeCitySlug = /^([a-z]{1,3}|\d{1,3})-\d+/i.test(firstSegment);
+  const looksLikeFile = firstSegment.includes(".");
+  if (looksLikeCitySlug || looksLikeFile)
+    return "/";
+  return `/${firstSegment}/`;
+};
+var getAbsolutePath = (relativePath) => {
+  const normalized = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
+  return new URL(`${BASE_PATH}${normalized}`, window.location.origin).toString();
 };
 var BASE_PATH = getBasePath();
 var searchTimeout = null;
@@ -657,7 +664,7 @@ async function shareCity() {
   }
   const { citySlug, cityName } = currentCityData;
   try {
-    const ogUrl = `${BASE_PATH}api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
+    const ogUrl = getAbsolutePath(`api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`);
     const resp = await fetch(ogUrl, { cache: "no-store" });
     if (!resp.ok)
       throw new Error(`Image generation failed: ${resp.status}`);

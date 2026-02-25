@@ -118,13 +118,22 @@ function initAccessGate(): void {
 // Get the base path for assets (handles GitHub Pages subdirectory deployment)
 const getBasePath = (): string => {
 	const path = window.location.pathname;
-	// If we're at /Mobilisator/ or /Mobilisator/something, base is /Mobilisator/
-	// If we're at / or /something, base is /
-	const match = path.match(/^(\/[^/]+\/)/);
-	if (match && match[1] !== "/") {
-		return match[1];
-	}
-	return "/";
+	const firstSegment = path.split("/").filter(Boolean)[0] ?? "";
+	if (!firstSegment) return "/";
+
+	// Route like /123-456-ville or /ZN-822-ville are city slugs, not deployment subdirectories.
+	const looksLikeCitySlug = /^([a-z]{1,3}|\d{1,3})-\d+/i.test(firstSegment);
+	// Route like /index.html or /mentions-legales.html should stay on root.
+	const looksLikeFile = firstSegment.includes(".");
+	if (looksLikeCitySlug || looksLikeFile) return "/";
+
+	// Keep support for subdirectory deployments (e.g. GitHub Pages /Mobilisator/).
+	return `/${firstSegment}/`;
+};
+
+const getAbsolutePath = (relativePath: string): string => {
+	const normalized = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
+	return new URL(`${BASE_PATH}${normalized}`, window.location.origin).toString();
 };
 
 const BASE_PATH = getBasePath();
@@ -703,7 +712,9 @@ async function shareCity(): Promise<void> {
 
 	try {
 		// Use a dedicated API route to avoid SPA route interception on city URLs.
-		const ogUrl = `${BASE_PATH}api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
+			const ogUrl = getAbsolutePath(
+				`api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`,
+			);
 		const resp = await fetch(ogUrl, { cache: "no-store" });
 		if (!resp.ok) throw new Error(`Image generation failed: ${resp.status}`);
 		const contentType = resp.headers.get("content-type") ?? "";
