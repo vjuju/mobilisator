@@ -445,6 +445,10 @@ async function navigateToCityById(id) {
   const city = await fetchCityById(id);
   if (city?.slug) {
     window.history.pushState({}, "", `${BASE_PATH}${city.slug}`);
+    const paq = window._paq ?? [];
+    paq.push(["setCustomUrl", window.location.href]);
+    paq.push(["setDocumentTitle", city.nom_standard]);
+    paq.push(["trackPageView"]);
     displayCityDetail(city);
     clearResults();
     const searchInput = document.getElementById("searchInput");
@@ -796,6 +800,8 @@ async function shareCity() {
     return;
   }
   const { citySlug, cityName } = currentCityData;
+  const paq = window._paq ?? [];
+  paq.push(["trackEvent", "Share", "click", cityName]);
   const btn = document.getElementById("shareBtn");
   if (btn) {
     btn.disabled = true;

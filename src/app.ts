@@ -379,6 +379,11 @@ async function navigateToCityById(id: number): Promise<void> {
 	const city = await fetchCityById(id);
 	if (city?.slug) {
 		window.history.pushState({}, "", `${BASE_PATH}${city.slug}`);
+		// Track SPA navigation in Matomo
+		const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
+		paq.push(["setCustomUrl", window.location.href]);
+		paq.push(["setDocumentTitle", city.nom_standard]);
+		paq.push(["trackPageView"]);
 		displayCityDetail(city);
 		clearResults();
 		// Update search input with city name
@@ -874,6 +879,10 @@ async function shareCity(): Promise<void> {
 	}
 
 	const { citySlug, cityName } = currentCityData;
+
+	// Track share button click in Matomo
+	const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
+	paq.push(["trackEvent", "Share", "click", cityName]);
 
 	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
 	if (btn) {

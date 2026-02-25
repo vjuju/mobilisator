@@ -24742,8 +24742,13 @@ var init_slug2 = __esm({
     init_slug();
   }
 });
+function escapeAttr(str) {
+  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+__name(escapeAttr, "escapeAttr");
 var BOT_UA;
 var CITY_SLUG;
+var shareDataCache2;
 var onRequest2;
 var init_path = __esm({
   "[[path]].ts"() {
@@ -24753,6 +24758,8 @@ var init_path = __esm({
     init_performance2();
     BOT_UA = /facebookexternalhit|twitterbot|linkedinbot|slackbot|discordbot|googlebot|bingbot|whatsapp|telegram/i;
     CITY_SLUG = /^\d{1,3}-\d/;
+    shareDataCache2 = null;
+    __name2(escapeAttr, "escapeAttr");
     onRequest2 = /* @__PURE__ */ __name2(async ({ request, env: env22 }) => {
       const ua2 = request.headers.get("user-agent") ?? "";
       const requestUrl = new URL(request.url);
@@ -24765,21 +24772,40 @@ var init_path = __esm({
         const slug = path.replace(/\.html$/, "");
         const origin = requestUrl.origin;
         const ogImageUrl = `${origin}/og/${slug}.png`;
+        if (!shareDataCache2) {
+          const r = await env22.ASSETS.fetch(new URL("/cities/share-data.json", request.url).toString());
+          if (r.ok) shareDataCache2 = await r.json();
+        }
+        const city = shareDataCache2?.[slug];
+        const title22 = city ? `${city.name} \u2014 ${city.votes.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS` : "#RIENSANSNOUS - Municipales 2020";
+        const description = city ? `${city.votes.toLocaleString("fr-FR")} jeunes de 18-39 ans auraient pu changer le r\xE9sultat des municipales 2020 \xE0 ${city.name}. Et toi, tu votes en 2026 ?` : "D\xE9couvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville.";
         const indexResp = await env22.ASSETS.fetch(new URL("/index.html", request.url).toString());
-        const html = await indexResp.text();
-        const injected = html.replace(
+        let html = await indexResp.text();
+        html = html.replace(
+          /<meta property="og:title"[^>]*>/,
+          `<meta property="og:title" content="${escapeAttr(title22)}">`
+        ).replace(
+          /<meta property="og:description"[^>]*>/,
+          `<meta property="og:description" content="${escapeAttr(description)}">`
+        ).replace(
+          /<meta name="description"[^>]*>/,
+          `<meta name="description" content="${escapeAttr(description)}">`
+        );
+        html = html.replace(
           "</head>",
-          `<meta property="og:title" content="#RIENSANSNOUS - Municipales 2020">
-<meta property="og:image" content="${ogImageUrl}">
+          `<meta property="og:image" content="${ogImageUrl}">
 <meta property="og:image:width" content="1080">
 <meta property="og:image:height" content="1920">
 <meta property="og:url" content="${request.url}">
-<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeAttr(title22)}">
+<meta name="twitter:description" content="${escapeAttr(description)}">
 <meta name="twitter:image" content="${ogImageUrl}">
+<link rel="canonical" href="${request.url}">
 </head>`
         );
-        return new Response(injected, {
+        return new Response(html, {
           headers: { "Content-Type": "text/html; charset=utf-8" }
         });
       }
