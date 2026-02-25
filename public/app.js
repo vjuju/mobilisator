@@ -696,6 +696,9 @@ var fetchOgImageWithDebug = async (citySlug) => {
       status: 0,
       ok: false,
       contentType: "",
+      contentLength: "",
+      redirected: false,
+      blobSize: 0,
       xOgImageMode: "",
       xOgSlug: citySlug,
       xOgError: `candidate build error: ${String(error)}`,
@@ -710,6 +713,9 @@ var fetchOgImageWithDebug = async (citySlug) => {
       status: 0,
       ok: false,
       contentType: "",
+      contentLength: "",
+      redirected: false,
+      blobSize: 0,
       xOgImageMode: "",
       xOgSlug: citySlug,
       xOgError: "no OG candidate URL generated",
@@ -728,6 +734,9 @@ var fetchOgImageWithDebug = async (citySlug) => {
         status: 0,
         ok: false,
         contentType: "",
+        contentLength: "",
+        redirected: false,
+        blobSize: 0,
         xOgImageMode: "",
         xOgSlug: "",
         xOgError: String(error),
@@ -742,6 +751,9 @@ var fetchOgImageWithDebug = async (citySlug) => {
       status: response.status,
       ok: response.ok,
       contentType,
+      contentLength: response.headers.get("content-length") ?? "",
+      redirected: response.redirected,
+      blobSize: 0,
       xOgImageMode: response.headers.get("x-og-image-mode") ?? "",
       xOgSlug: response.headers.get("x-og-slug") ?? "",
       xOgError: response.headers.get("x-og-error") ?? "",
@@ -753,11 +765,7 @@ var fetchOgImageWithDebug = async (citySlug) => {
       continue;
     }
     const imageBlob = await response.blob();
-    if (imageBlob.size === 0) {
-      debug.bodyPreview = "empty image blob";
-      attempts.push(debug);
-      continue;
-    }
+    debug.blobSize = imageBlob.size;
     attempts.push(debug);
     return { imageBlob, attempts, usedUrl: url };
   }
@@ -795,6 +803,9 @@ async function shareCity() {
         status: 0,
         ok: false,
         contentType: "",
+        contentLength: "",
+        redirected: false,
+        blobSize: 0,
         xOgImageMode: "",
         xOgSlug: citySlug,
         xOgError: String(error),
@@ -806,6 +817,9 @@ async function shareCity() {
       finalUrl: a.finalUrl,
       status: a.status,
       contentType: a.contentType,
+      contentLength: a.contentLength,
+      redirected: a.redirected,
+      blobSize: a.blobSize,
       xOgError: a.xOgError,
       xOgImageMode: a.xOgImageMode,
       bodyPreview: a.bodyPreview

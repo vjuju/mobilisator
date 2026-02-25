@@ -707,6 +707,9 @@ interface OgAttemptDebug {
 	status: number;
 	ok: boolean;
 	contentType: string;
+	contentLength: string;
+	redirected: boolean;
+	blobSize: number;
 	xOgImageMode: string;
 	xOgSlug: string;
 	xOgError: string;
@@ -754,17 +757,20 @@ const fetchOgImageWithDebug = async (
 	try {
 		candidates = buildOgCandidateUrls(citySlug);
 	} catch (error) {
-		attempts.push({
-			url: "(candidate-build)",
-			finalUrl: "",
-			status: 0,
-			ok: false,
-			contentType: "",
-			xOgImageMode: "",
-			xOgSlug: citySlug,
-			xOgError: `candidate build error: ${String(error)}`,
-			bodyPreview: "",
-		});
+			attempts.push({
+				url: "(candidate-build)",
+				finalUrl: "",
+				status: 0,
+				ok: false,
+				contentType: "",
+				contentLength: "",
+				redirected: false,
+				blobSize: 0,
+				xOgImageMode: "",
+				xOgSlug: citySlug,
+				xOgError: `candidate build error: ${String(error)}`,
+				bodyPreview: "",
+			});
 		throw new OgFetchError(`OG candidate URL build failed for slug "${citySlug}"`, attempts);
 	}
 
@@ -775,6 +781,9 @@ const fetchOgImageWithDebug = async (
 			status: 0,
 			ok: false,
 			contentType: "",
+			contentLength: "",
+			redirected: false,
+			blobSize: 0,
 			xOgImageMode: "",
 			xOgSlug: citySlug,
 			xOgError: "no OG candidate URL generated",
@@ -788,17 +797,20 @@ const fetchOgImageWithDebug = async (
 		try {
 			response = await fetch(url, { cache: "no-store", redirect: "follow" });
 		} catch (error) {
-			attempts.push({
-				url,
-				finalUrl: "",
-				status: 0,
-				ok: false,
-				contentType: "",
-				xOgImageMode: "",
-				xOgSlug: "",
-				xOgError: String(error),
-				bodyPreview: "",
-			});
+				attempts.push({
+					url,
+					finalUrl: "",
+					status: 0,
+					ok: false,
+					contentType: "",
+					contentLength: "",
+					redirected: false,
+					blobSize: 0,
+					xOgImageMode: "",
+					xOgSlug: "",
+					xOgError: String(error),
+					bodyPreview: "",
+				});
 			continue;
 		}
 
@@ -809,6 +821,9 @@ const fetchOgImageWithDebug = async (
 			status: response.status,
 			ok: response.ok,
 			contentType,
+			contentLength: response.headers.get("content-length") ?? "",
+			redirected: response.redirected,
+			blobSize: 0,
 			xOgImageMode: response.headers.get("x-og-image-mode") ?? "",
 			xOgSlug: response.headers.get("x-og-slug") ?? "",
 			xOgError: response.headers.get("x-og-error") ?? "",
@@ -822,11 +837,7 @@ const fetchOgImageWithDebug = async (
 		}
 
 		const imageBlob = await response.blob();
-		if (imageBlob.size === 0) {
-			debug.bodyPreview = "empty image blob";
-			attempts.push(debug);
-			continue;
-		}
+		debug.blobSize = imageBlob.size;
 
 		attempts.push(debug);
 		return { imageBlob, attempts, usedUrl: url };
@@ -882,6 +893,9 @@ async function shareCity(): Promise<void> {
 							status: 0,
 							ok: false,
 							contentType: "",
+							contentLength: "",
+							redirected: false,
+							blobSize: 0,
 							xOgImageMode: "",
 							xOgSlug: citySlug,
 							xOgError: String(error),
@@ -893,6 +907,9 @@ async function shareCity(): Promise<void> {
 			finalUrl: a.finalUrl,
 			status: a.status,
 			contentType: a.contentType,
+			contentLength: a.contentLength,
+			redirected: a.redirected,
+			blobSize: a.blobSize,
 			xOgError: a.xOgError,
 			xOgImageMode: a.xOgImageMode,
 			bodyPreview: a.bodyPreview,
