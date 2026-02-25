@@ -42,24 +42,24 @@ function el(
 // Module-level cache (per worker instance)
 let fontCache: ArrayBuffer | null = null;
 let shareDataCache: Record<string, ShareData> | null = null;
-const inlineImageCache = new Map<string, string>();
 
 const OG_IMAGE_UA = "Mobilisator-OG/1.0 (+https://mobilisator.fr)";
 
-const bytesToBase64 = (bytes: Uint8Array): string => {
-	let binary = "";
-	const CHUNK_SIZE = 0x8000;
-	for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-		binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK_SIZE));
-	}
-	return btoa(binary);
-};
+/**
+ * Return a Wikimedia thumbnail at the requested width.
+ * Handles both already-thumbed URLs (replace width) and direct upload URLs (insert thumb/).
+ */
+function toWikimediaThumb(url: string, width = 600): string {
+	// Already a thumbnail URL: .../thumb/{hash}/{hash}/File.jpg/1280px-File.jpg
+	const thumbed = url.match(/^(.+\/thumb\/.+\/)(\d+px-)(.+)$/);
+	if (thumbed) return `${thumbed[1]}${width}px-${thumbed[3]}`;
+	// Direct upload URL: .../commons/{h}/{hh}/File.jpg
+	const direct = url.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/[^/]+\/)([a-f0-9]\/[a-f0-9]{2}\/)(.+)$/);
+	if (direct) return `${direct[1]}thumb/${direct[2]}${direct[3]}/${width}px-${direct[3]}`;
+	return url;
+}
 
 const fetchInlineImage = async (url: string): Promise<string | null> => {
-	if (inlineImageCache.has(url)) {
-		return inlineImageCache.get(url) ?? null;
-	}
-
 	try {
 		const resp = await fetch(url, {
 			headers: {
@@ -75,28 +75,24 @@ const fetchInlineImage = async (url: string): Promise<string | null> => {
 		const buffer = await resp.arrayBuffer();
 		if (buffer.byteLength === 0) return null;
 
-		const inlineSrc = `data:${contentType};base64,${bytesToBase64(new Uint8Array(buffer))}`;
-		inlineImageCache.set(url, inlineSrc);
-		return inlineSrc;
+		const bytes = new Uint8Array(buffer);
+		let binary = "";
+		const CHUNK = 0x8000;
+		for (let i = 0; i < bytes.length; i += CHUNK) {
+			binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+		}
+		return `data:${contentType};base64,${btoa(binary)}`;
 	} catch {
 		return null;
 	}
 };
 
-const resolveImageSrc = async (
-	city: ShareData,
-): Promise<{ src: string | null; mode: "inline" | "external" | "none" }> => {
-	const candidates = [city.thumbUrl, city.url].filter((u): u is string => Boolean(u));
-	if (candidates.length === 0) return { src: null, mode: "none" };
-
-	let fallbackExternal: string | null = null;
-	for (const url of candidates) {
-		if (!fallbackExternal) fallbackExternal = url;
-		const inline = await fetchInlineImage(url);
-		if (inline) return { src: inline, mode: "inline" };
-	}
-	if (fallbackExternal) return { src: fallbackExternal, mode: "external" };
-	return { src: null, mode: "none" };
+const resolveImageSrc = async (city: ShareData): Promise<string | null> => {
+	const raw = city.thumbUrl || city.url;
+	if (!raw) return null;
+	// Request a 600px thumbnail to keep memory usage low
+	const thumbUrl = toWikimediaThumb(raw, 600);
+	return fetchInlineImage(thumbUrl);
 };
 
 export const onRequest: PagesFunction<Env> = async (context) => {
@@ -121,8 +117,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 			fontCache = await r.arrayBuffer();
 		}
 
-		const imageResult = await resolveImageSrc(city);
-		const imageSrc = imageResult.src;
+		const imageSrc = await resolveImageSrc(city);
 
 		const creditParts: string[] = [];
 		if (city.author) creditParts.push(`Photo : ${city.author}`);
@@ -255,11 +250,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
 		const headers = new Headers(response.headers);
 		headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
-		headers.set("X-OG-Image-Mode", imageResult.mode);
-		headers.set("X-OG-Slug", slug);
-		const pngBuffer = await response.arrayBuffer();
-		headers.set("X-OG-Bytes", String(pngBuffer.byteLength));
-		return new Response(pngBuffer, { status: response.status, headers });
+		return new Response(response.body, { status: response.status, headers });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		return new Response(`OG generation error: ${message}`, {
