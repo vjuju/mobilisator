@@ -22393,7 +22393,9 @@ var init_slug = __esm({
         headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
         headers.set("X-OG-Image-Mode", imageResult.mode);
         headers.set("X-OG-Slug", slug);
-        return new Response(response.body, { status: response.status, headers });
+        const pngBuffer = await response.arrayBuffer();
+        headers.set("X-OG-Bytes", String(pngBuffer.byteLength));
+        return new Response(pngBuffer, { status: response.status, headers });
       } catch (error3) {
         const message = error3 instanceof Error ? error3.message : String(error3);
         return new Response(`OG generation error: ${message}`, {
@@ -22503,13 +22505,13 @@ var init_functionsRoutes_0_8175656967551672 = __esm({
   }
 });
 
-// ../.wrangler/tmp/bundle-PSCqm6/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-bzKYhJ/middleware-loader.entry.ts
 init_functionsRoutes_0_8175656967551672();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
 init_performance2();
 
-// ../.wrangler/tmp/bundle-PSCqm6/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-bzKYhJ/middleware-insertion-facade.js
 init_functionsRoutes_0_8175656967551672();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
 init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
@@ -23020,7 +23022,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// ../.wrangler/tmp/bundle-PSCqm6/middleware-insertion-facade.js
+// ../.wrangler/tmp/bundle-bzKYhJ/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -23056,7 +23058,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-PSCqm6/middleware-loader.entry.ts
+// ../.wrangler/tmp/bundle-bzKYhJ/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

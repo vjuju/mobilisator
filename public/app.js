@@ -775,6 +775,11 @@ var fetchOgImageWithDebug = async (citySlug) => {
     }
     const imageBlob = await response.blob();
     debug.blobSize = imageBlob.size;
+    if (imageBlob.size === 0) {
+      debug.bodyPreview = "empty image blob";
+      attempts.push(debug);
+      continue;
+    }
     const decodable = await canDecodeImageBlob(imageBlob);
     if (!decodable) {
       debug.bodyPreview = "image blob decode failed";

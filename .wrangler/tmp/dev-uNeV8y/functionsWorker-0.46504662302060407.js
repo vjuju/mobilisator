@@ -24592,7 +24592,9 @@ var init_slug = __esm({
         headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
         headers.set("X-OG-Image-Mode", imageResult.mode);
         headers.set("X-OG-Slug", slug);
-        return new Response(response.body, { status: response.status, headers });
+        const pngBuffer = await response.arrayBuffer();
+        headers.set("X-OG-Bytes", String(pngBuffer.byteLength));
+        return new Response(pngBuffer, { status: response.status, headers });
       } catch (error3) {
         const message = error3 instanceof Error ? error3.message : String(error3);
         return new Response(`OG generation error: ${message}`, {
