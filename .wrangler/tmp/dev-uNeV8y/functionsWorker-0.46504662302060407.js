@@ -24595,6 +24595,15 @@ var init_slug = __esm({
     }, "onRequest");
   }
 });
+var init_slug2 = __esm({
+  "api/og/[slug].ts"() {
+    init_functionsRoutes_0_7528516906645166();
+    init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_process();
+    init_virtual_unenv_global_polyfill_cloudflare_unenv_preset_node_console();
+    init_performance2();
+    init_slug();
+  }
+});
 var BOT_UA;
 var CITY_SLUG;
 var onRequest2;
@@ -24612,7 +24621,7 @@ var init_path = __esm({
       if (BOT_UA.test(ua2) && CITY_SLUG.test(path)) {
         const slug = path.replace(/\.html$/, "");
         const origin = new URL(request.url).origin;
-        const ogImageUrl = `${origin}/og/${slug}.png`;
+        const ogImageUrl = `${origin}/api/og/${slug}.png`;
         const indexResp = await env22.ASSETS.fetch(new URL("/index.html", request.url).toString());
         const html = await indexResp.text();
         const injected = html.replace(
@@ -24642,9 +24651,17 @@ var init_path = __esm({
 var routes;
 var init_functionsRoutes_0_7528516906645166 = __esm({
   "../.wrangler/tmp/pages-1EHOV4/functionsRoutes-0.7528516906645166.mjs"() {
+    init_slug2();
     init_slug();
     init_path();
     routes = [
+      {
+        routePath: "/api/og/:slug",
+        mountPath: "/api/og",
+        method: "",
+        middlewares: [],
+        modules: [onRequest]
+      },
       {
         routePath: "/og/:slug",
         mountPath: "/og",

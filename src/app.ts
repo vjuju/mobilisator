@@ -667,6 +667,31 @@ function closeShareModal(): void {
 	}
 }
 
+const normalizeImageForClipboard = async (blob: Blob): Promise<Blob> => {
+	try {
+		const bitmap = await createImageBitmap(blob);
+		const canvas = document.createElement("canvas");
+		canvas.width = bitmap.width;
+		canvas.height = bitmap.height;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			bitmap.close();
+			return blob.type === "image/png" ? blob : new Blob([await blob.arrayBuffer()], { type: "image/png" });
+		}
+
+		ctx.drawImage(bitmap, 0, 0);
+		bitmap.close();
+
+		const reencoded = await new Promise<Blob | null>((resolve) =>
+			canvas.toBlob((pngBlob) => resolve(pngBlob), "image/png"),
+		);
+		if (reencoded) return reencoded;
+		return blob.type === "image/png" ? blob : new Blob([await blob.arrayBuffer()], { type: "image/png" });
+	} catch {
+		return blob.type === "image/png" ? blob : new Blob([await blob.arrayBuffer()], { type: "image/png" });
+	}
+};
+
 // Share city data via clipboard with generated image (server-side via Cloudflare Pages Function)
 async function shareCity(): Promise<void> {
 	if (!currentCityData) {
@@ -677,10 +702,14 @@ async function shareCity(): Promise<void> {
 	const { citySlug, cityName } = currentCityData;
 
 	try {
-		// Fetch a fresh OG image to avoid stale CDN/browser cache after deployments.
-		const ogUrl = `${BASE_PATH}og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
+		// Use a dedicated API route to avoid SPA route interception on city URLs.
+		const ogUrl = `${BASE_PATH}api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`;
 		const resp = await fetch(ogUrl, { cache: "no-store" });
 		if (!resp.ok) throw new Error(`Image generation failed: ${resp.status}`);
+		const contentType = resp.headers.get("content-type") ?? "";
+		if (!contentType.startsWith("image/")) {
+			throw new Error(`OG endpoint returned non-image content-type: ${contentType || "unknown"}`);
+		}
 		const imageBlob = await resp.blob();
 
 		// Create image URL for display
@@ -693,16 +722,13 @@ async function shareCity(): Promise<void> {
 			(typeof ClipboardItem.supports !== "function" ||
 				ClipboardItem.supports("image/png"));
 
-		if (clipboardSupportsPng) {
-			try {
-				const pngBlob =
-					imageBlob.type === "image/png"
-						? imageBlob
-						: new Blob([await imageBlob.arrayBuffer()], { type: "image/png" });
-				const clipboardItem = new ClipboardItem({ "image/png": pngBlob });
-				await navigator.clipboard.write([clipboardItem]);
-				showShareModal(imageUrl);
-			} catch (clipboardError) {
+			if (clipboardSupportsPng) {
+				try {
+					const pngBlob = await normalizeImageForClipboard(imageBlob);
+					const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
+					await navigator.clipboard.write([clipboardItem]);
+					showShareModal(imageUrl);
+				} catch (clipboardError) {
 				console.error("Clipboard error:", clipboardError);
 				showShareModalWithDownload(imageUrl, cityName);
 			}

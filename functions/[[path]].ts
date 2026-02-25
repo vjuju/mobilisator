@@ -17,7 +17,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 	if (BOT_UA.test(ua) && CITY_SLUG.test(path)) {
 		const slug = path.replace(/\.html$/, "");
 		const origin = new URL(request.url).origin;
-		const ogImageUrl = `${origin}/og/${slug}.png`;
+			const ogImageUrl = `${origin}/api/og/${slug}.png`;
 
 		const indexResp = await env.ASSETS.fetch(new URL("/index.html", request.url).toString());
 		const html = await indexResp.text();
