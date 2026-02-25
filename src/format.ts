@@ -292,7 +292,7 @@ export function formatCityDetailHtml(
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="shareCity()">
+                <button type="button" id="shareBtn" class="cta-button" onclick="shareCity()">
                     ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
                 </button>
             </div>

@@ -876,6 +876,12 @@ async function shareCity(): Promise<void> {
 
 	const { citySlug, cityName } = currentCityData;
 
+	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
+	if (btn) {
+		btn.disabled = true;
+		btn.innerHTML = "Chargement...";
+	}
+
 	try {
 		const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
 		console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
@@ -951,6 +957,11 @@ async function shareCity(): Promise<void> {
 			return;
 		}
 		alert("Erreur lors du partage. Réessaie !");
+	} finally {
+		if (btn) {
+			btn.disabled = false;
+			btn.innerHTML = `${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>`;
+		}
 	}
 }
 

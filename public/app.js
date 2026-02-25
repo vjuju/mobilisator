@@ -160,7 +160,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="shareCity()">
+                <button type="button" id="shareBtn" class="cta-button" onclick="shareCity()">
                     ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
                 </button>
             </div>
@@ -797,6 +797,11 @@ async function shareCity() {
     return;
   }
   const { citySlug, cityName } = currentCityData;
+  const btn = document.getElementById("shareBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "Chargement...";
+  }
   try {
     const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
     console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
@@ -860,6 +865,11 @@ OG error: ${first.xOgError || "n/a"}`);
       return;
     }
     alert("Erreur lors du partage. Réessaie !");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>`;
+    }
   }
 }
 function showShareModalWithDownload(imageUrl, cityName) {
