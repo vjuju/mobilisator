@@ -103,35 +103,36 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 	const { request, env, params } = context;
 	const slug = (params.slug as string).replace(/\.png$/, "");
 
-	// Load share-data.json (cached after first load)
-	if (!shareDataCache) {
-		const r = await env.ASSETS.fetch(new URL("/cities/share-data.json", request.url).toString());
-		if (!r.ok) return new Response("share-data.json not found", { status: 503 });
-		shareDataCache = await r.json();
-	}
+	try {
+		// Load share-data.json (cached after first load)
+		if (!shareDataCache) {
+			const r = await env.ASSETS.fetch(new URL("/cities/share-data.json", request.url).toString());
+			if (!r.ok) return new Response("share-data.json not found", { status: 503 });
+			shareDataCache = await r.json();
+		}
 
-	const city = shareDataCache![slug];
-	if (!city) return new Response("City not found", { status: 404 });
+		const city = shareDataCache![slug];
+		if (!city) return new Response("City not found", { status: 404 });
 
-	// Load Anton font (cached after first load)
-	if (!fontCache) {
-		const r = await env.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
-		if (!r.ok) return new Response("Font not found", { status: 503 });
-		fontCache = await r.arrayBuffer();
-	}
+		// Load Anton font (cached after first load)
+		if (!fontCache) {
+			const r = await env.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
+			if (!r.ok) return new Response("Font not found", { status: 503 });
+			fontCache = await r.arrayBuffer();
+		}
 
-	const imageResult = await resolveImageSrc(city);
-	const imageSrc = imageResult.src;
+		const imageResult = await resolveImageSrc(city);
+		const imageSrc = imageResult.src;
 
-	const creditParts: string[] = [];
-	if (city.author) creditParts.push(`Photo : ${city.author}`);
-	if (city.license) creditParts.push(city.license);
-	creditParts.push("via Wikimedia Commons");
-	creditParts.push("Modifiée");
-	const credit = creditParts.join(" – ");
-	const showCredit = imageSrc && city.author;
+		const creditParts: string[] = [];
+		if (city.author) creditParts.push(`Photo : ${city.author}`);
+		if (city.license) creditParts.push(city.license);
+		creditParts.push("via Wikimedia Commons");
+		creditParts.push("Modifiée");
+		const credit = creditParts.join(" – ");
+		const showCredit = imageSrc && city.author;
 
-	const root = el(
+		const root = el(
 		"div",
 		{
 			style: {
@@ -236,25 +237,37 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 				display: "flex",
 			},
 		}, credit),
-	);
+		);
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const response = new ImageResponse(root as any, {
-		width: 1080,
-		height: 1920,
-		fonts: [
-			{
-				name: "Anton",
-				data: fontCache!,
-				weight: 400,
-				style: "normal",
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const response = new ImageResponse(root as any, {
+			width: 1080,
+			height: 1920,
+			fonts: [
+				{
+					name: "Anton",
+					data: fontCache!,
+					weight: 400,
+					style: "normal",
+				},
+			],
+		});
+
+		const headers = new Headers(response.headers);
+		headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
+		headers.set("X-OG-Image-Mode", imageResult.mode);
+		headers.set("X-OG-Slug", slug);
+		return new Response(response.body, { status: response.status, headers });
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return new Response(`OG generation error: ${message}`, {
+			status: 500,
+			headers: {
+				"Content-Type": "text/plain; charset=utf-8",
+				"Cache-Control": "no-store",
+				"X-OG-Error": message.slice(0, 180),
+				"X-OG-Slug": slug,
 			},
-		],
-	});
-
-	const headers = new Headers(response.headers);
-	headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
-	headers.set("X-OG-Image-Mode", imageResult.mode);
-	headers.set("X-OG-Slug", slug);
-	return new Response(response.body, { status: response.status, headers });
+		});
+	}
 };

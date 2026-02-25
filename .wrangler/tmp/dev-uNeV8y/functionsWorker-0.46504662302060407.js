@@ -24448,150 +24448,163 @@ var init_slug = __esm({
     onRequest = /* @__PURE__ */ __name2(async (context2) => {
       const { request, env: env22, params } = context2;
       const slug = params.slug.replace(/\.png$/, "");
-      if (!shareDataCache) {
-        const r = await env22.ASSETS.fetch(new URL("/cities/share-data.json", request.url).toString());
-        if (!r.ok) return new Response("share-data.json not found", { status: 503 });
-        shareDataCache = await r.json();
-      }
-      const city = shareDataCache[slug];
-      if (!city) return new Response("City not found", { status: 404 });
-      if (!fontCache) {
-        const r = await env22.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
-        if (!r.ok) return new Response("Font not found", { status: 503 });
-        fontCache = await r.arrayBuffer();
-      }
-      const imageResult = await resolveImageSrc(city);
-      const imageSrc = imageResult.src;
-      const creditParts = [];
-      if (city.author) creditParts.push(`Photo : ${city.author}`);
-      if (city.license) creditParts.push(city.license);
-      creditParts.push("via Wikimedia Commons");
-      creditParts.push("Modifi\xE9e");
-      const credit = creditParts.join(" \u2013 ");
-      const showCredit = imageSrc && city.author;
-      const root = el(
-        "div",
-        {
-          style: {
-            display: "flex",
-            flexDirection: "column",
-            width: "1080px",
-            height: "1920px",
-            backgroundColor: "#000000",
-            position: "relative",
-            overflow: "hidden"
-          }
-        },
-        // Background photo
-        imageSrc && el("img", {
-          src: imageSrc,
-          style: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover"
-          }
-        }),
-        // Dark overlay
-        el("div", {
-          style: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.68)"
-          }
-        }),
-        // Text content
-        el(
+      try {
+        if (!shareDataCache) {
+          const r = await env22.ASSETS.fetch(new URL("/cities/share-data.json", request.url).toString());
+          if (!r.ok) return new Response("share-data.json not found", { status: 503 });
+          shareDataCache = await r.json();
+        }
+        const city = shareDataCache[slug];
+        if (!city) return new Response("City not found", { status: 404 });
+        if (!fontCache) {
+          const r = await env22.ASSETS.fetch(new URL("/fonts/Anton-Regular.ttf", request.url).toString());
+          if (!r.ok) return new Response("Font not found", { status: 503 });
+          fontCache = await r.arrayBuffer();
+        }
+        const imageResult = await resolveImageSrc(city);
+        const imageSrc = imageResult.src;
+        const creditParts = [];
+        if (city.author) creditParts.push(`Photo : ${city.author}`);
+        if (city.license) creditParts.push(city.license);
+        creditParts.push("via Wikimedia Commons");
+        creditParts.push("Modifi\xE9e");
+        const credit = creditParts.join(" \u2013 ");
+        const showCredit = imageSrc && city.author;
+        const root = el(
           "div",
           {
+            style: {
+              display: "flex",
+              flexDirection: "column",
+              width: "1080px",
+              height: "1920px",
+              backgroundColor: "#000000",
+              position: "relative",
+              overflow: "hidden"
+            }
+          },
+          // Background photo
+          imageSrc && el("img", {
+            src: imageSrc,
             style: {
               position: "absolute",
               top: 0,
               left: 0,
               width: "100%",
               height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              padding: "180px 60px 80px",
-              color: "#ffffff",
-              textAlign: "center"
+              objectFit: "cover"
             }
-          },
-          // "Aux municipales de 2020,"
-          el("div", {
-            style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" }
-          }, "Aux municipales de 2020,"),
-          // "à [VILLE],"
-          el("div", {
-            style: { fontSize: 56, color: "#ffffff", fontFamily: "Arial, sans-serif", marginTop: 40 }
-          }, `\xE0 ${city.name},`),
-          // Big number
+          }),
+          // Dark overlay
           el("div", {
             style: {
-              fontSize: 280,
-              color: "#5ECBA1",
-              fontFamily: "Anton",
-              fontWeight: 400,
-              lineHeight: 1,
-              marginTop: 100
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              backgroundColor: "rgba(0, 0, 0, 0.68)"
             }
-          }, city.votes.toLocaleString("fr-FR")),
-          // "jeunes auraient fait la diff'"
-          el("div", {
-            style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 40 }
-          }, "jeunes auraient fait la diff'"),
-          // "Et toi tu votes en 2026 ?"
-          el("div", {
-            style: { fontSize: 72, color: "#ffffff", fontFamily: "Anton", fontWeight: 400, marginTop: 120 }
-          }, "Et toi tu votes en 2026 ?"),
-          // CTA line 1
-          el("div", {
-            style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 150, textAlign: "center" }
-          }, "Pour plier le game, embarque le plus de monde autour de toi"),
-          // CTA line 2
-          el("div", {
-            style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 22 }
-          }, 'et commente "Je vote #RIENSANSNOUS"')
-        ),
-        // Photo credit pill (bottom-right)
-        showCredit && el("div", {
-          style: {
-            position: "absolute",
-            bottom: 60,
-            right: 20,
-            fontSize: 18,
-            color: "rgba(255, 255, 255, 0.85)",
-            backgroundColor: "rgba(0, 0, 0, 0.45)",
-            padding: "10px 16px",
-            borderRadius: 6,
-            display: "flex"
+          }),
+          // Text content
+          el(
+            "div",
+            {
+              style: {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                padding: "180px 60px 80px",
+                color: "#ffffff",
+                textAlign: "center"
+              }
+            },
+            // "Aux municipales de 2020,"
+            el("div", {
+              style: { fontSize: 36, color: "#cccccc", fontFamily: "Arial, sans-serif" }
+            }, "Aux municipales de 2020,"),
+            // "à [VILLE],"
+            el("div", {
+              style: { fontSize: 56, color: "#ffffff", fontFamily: "Arial, sans-serif", marginTop: 40 }
+            }, `\xE0 ${city.name},`),
+            // Big number
+            el("div", {
+              style: {
+                fontSize: 280,
+                color: "#5ECBA1",
+                fontFamily: "Anton",
+                fontWeight: 400,
+                lineHeight: 1,
+                marginTop: 100
+              }
+            }, city.votes.toLocaleString("fr-FR")),
+            // "jeunes auraient fait la diff'"
+            el("div", {
+              style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Anton", fontWeight: 400, marginTop: 40 }
+            }, "jeunes auraient fait la diff'"),
+            // "Et toi tu votes en 2026 ?"
+            el("div", {
+              style: { fontSize: 72, color: "#ffffff", fontFamily: "Anton", fontWeight: 400, marginTop: 120 }
+            }, "Et toi tu votes en 2026 ?"),
+            // CTA line 1
+            el("div", {
+              style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 150, textAlign: "center" }
+            }, "Pour plier le game, embarque le plus de monde autour de toi"),
+            // CTA line 2
+            el("div", {
+              style: { fontSize: 32, color: "#cccccc", fontFamily: "Arial, sans-serif", marginTop: 22 }
+            }, 'et commente "Je vote #RIENSANSNOUS"')
+          ),
+          // Photo credit pill (bottom-right)
+          showCredit && el("div", {
+            style: {
+              position: "absolute",
+              bottom: 60,
+              right: 20,
+              fontSize: 18,
+              color: "rgba(255, 255, 255, 0.85)",
+              backgroundColor: "rgba(0, 0, 0, 0.45)",
+              padding: "10px 16px",
+              borderRadius: 6,
+              display: "flex"
+            }
+          }, credit)
+        );
+        const response = new ImageResponse(root, {
+          width: 1080,
+          height: 1920,
+          fonts: [
+            {
+              name: "Anton",
+              data: fontCache,
+              weight: 400,
+              style: "normal"
+            }
+          ]
+        });
+        const headers = new Headers(response.headers);
+        headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
+        headers.set("X-OG-Image-Mode", imageResult.mode);
+        headers.set("X-OG-Slug", slug);
+        return new Response(response.body, { status: response.status, headers });
+      } catch (error3) {
+        const message = error3 instanceof Error ? error3.message : String(error3);
+        return new Response(`OG generation error: ${message}`, {
+          status: 500,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Cache-Control": "no-store",
+            "X-OG-Error": message.slice(0, 180),
+            "X-OG-Slug": slug
           }
-        }, credit)
-      );
-      const response = new ImageResponse(root, {
-        width: 1080,
-        height: 1920,
-        fonts: [
-          {
-            name: "Anton",
-            data: fontCache,
-            weight: 400,
-            style: "normal"
-          }
-        ]
-      });
-      const headers = new Headers(response.headers);
-      headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
-      headers.set("X-OG-Image-Mode", imageResult.mode);
-      headers.set("X-OG-Slug", slug);
-      return new Response(response.body, { status: response.status, headers });
+        });
+      }
     }, "onRequest");
   }
 });

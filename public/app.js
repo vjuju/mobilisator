@@ -657,6 +657,71 @@ var normalizeImageForClipboard = async (blob) => {
     return blob.type === "image/png" ? blob : new Blob([await blob.arrayBuffer()], { type: "image/png" });
   }
 };
+var safeResponsePreview = async (response) => {
+  try {
+    const text = await response.clone().text();
+    return text.slice(0, 240).replace(/\s+/g, " ").trim();
+  } catch {
+    return "";
+  }
+};
+var buildOgCandidateUrls = (citySlug) => {
+  const encodedSlug = encodeURIComponent(citySlug);
+  const cb = Date.now();
+  return Array.from(new Set([
+    new URL(`/api/og/${encodedSlug}.png?cb=${cb}`, window.location.origin).toString(),
+    getAbsolutePath(`api/og/${encodedSlug}.png?cb=${cb}`)
+  ]));
+};
+var fetchOgImageWithDebug = async (citySlug) => {
+  const candidates = buildOgCandidateUrls(citySlug);
+  const attempts = [];
+  for (const url of candidates) {
+    let response;
+    try {
+      response = await fetch(url, { cache: "no-store", redirect: "follow" });
+    } catch (error) {
+      attempts.push({
+        url,
+        finalUrl: "",
+        status: 0,
+        ok: false,
+        contentType: "",
+        xOgImageMode: "",
+        xOgSlug: "",
+        xOgError: String(error),
+        bodyPreview: ""
+      });
+      continue;
+    }
+    const contentType = response.headers.get("content-type") ?? "";
+    const debug = {
+      url,
+      finalUrl: response.url,
+      status: response.status,
+      ok: response.ok,
+      contentType,
+      xOgImageMode: response.headers.get("x-og-image-mode") ?? "",
+      xOgSlug: response.headers.get("x-og-slug") ?? "",
+      xOgError: response.headers.get("x-og-error") ?? "",
+      bodyPreview: ""
+    };
+    if (!response.ok || !contentType.startsWith("image/")) {
+      debug.bodyPreview = await safeResponsePreview(response);
+      attempts.push(debug);
+      continue;
+    }
+    const imageBlob = await response.blob();
+    if (imageBlob.size === 0) {
+      debug.bodyPreview = "empty image blob";
+      attempts.push(debug);
+      continue;
+    }
+    attempts.push(debug);
+    return { imageBlob, attempts, usedUrl: url };
+  }
+  throw new Error(`OG image fetch failed for slug "${citySlug}"`);
+};
 async function shareCity() {
   if (!currentCityData) {
     console.error("No city data available for sharing");
@@ -664,15 +729,8 @@ async function shareCity() {
   }
   const { citySlug, cityName } = currentCityData;
   try {
-    const ogUrl = getAbsolutePath(`api/og/${encodeURIComponent(citySlug)}.png?cb=${Date.now()}`);
-    const resp = await fetch(ogUrl, { cache: "no-store" });
-    if (!resp.ok)
-      throw new Error(`Image generation failed: ${resp.status}`);
-    const contentType = resp.headers.get("content-type") ?? "";
-    if (!contentType.startsWith("image/")) {
-      throw new Error(`OG endpoint returned non-image content-type: ${contentType || "unknown"}`);
-    }
-    const imageBlob = await resp.blob();
+    const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
+    console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
     const imageUrl = URL.createObjectURL(imageBlob);
     const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
     if (clipboardSupportsPng) {
@@ -689,7 +747,20 @@ async function shareCity() {
       showShareModalWithDownload(imageUrl, cityName);
     }
   } catch (error) {
-    console.error("Error sharing:", error);
+    let attempts = [];
+    try {
+      const result = await fetchOgImageWithDebug(citySlug);
+      attempts = result.attempts;
+    } catch (secondError) {
+      console.error("OG_DEBUG retry failed", secondError);
+    }
+    console.error("Error sharing [OG_DEBUG]:", {
+      citySlug,
+      pageUrl: window.location.href,
+      basePath: BASE_PATH,
+      error,
+      attempts
+    });
     alert("Erreur lors du partage. Réessaie !");
   }
 }
