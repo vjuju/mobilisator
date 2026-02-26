@@ -642,6 +642,131 @@
             padding: 20px 40px;
         }
 
+        /* ── Panels (mobilisation windows) ── */
+        .panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel.hidden {
+            display: none;
+        }
+
+        .panel-back {
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            flex-shrink: 0;
+        }
+
+        .panel-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .back-chevron {
+            color: #fff;
+            font-size: 36px;
+            line-height: 1;
+        }
+
+        .panel-back-link:hover .back-chevron,
+        .panel-back-link:hover .back-label {
+            color: #5ECBA1;
+        }
+
+        .back-label {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 14px;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .panel-body {
+            flex: 1;
+            min-height: 0;
+            container-type: size;
+            container-name: panel;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4cqh;
+            padding: 0 20px 20px;
+        }
+
+        #mobilisationPanel .panel-body {
+            justify-content: space-around;
+        }
+
+        .panel-body.form-body {
+            justify-content: flex-start;
+            padding-top: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: clamp(22px, 9cqh, 46px);
+            color: #fff;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .influ-title {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: clamp(16px, 5cqh, 32px);
+            color: #5ECBA1;
+            text-align: center;
+        }
+
+        .influ-subtitle {
+            font-family: Arial, sans-serif;
+            font-size: clamp(11px, 3cqh, 16px);
+            color: #ccc;
+            text-align: center;
+        }
+
+        #influPanel .panel-body {
+            justify-content: space-around;
+            padding-bottom: 28px;
+            gap: 16px;
+        }
+
+        #influImageContainer {
+            width: 100%;
+        }
+
+        .influ-copy-text {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: clamp(20px, 5cqh, 40px);
+            color: #fff;
+            text-align: center;
+            line-height: 1.15;
+        }
+
+        .influ-image {
+            max-width: 100%;
+            width: min(100%, 620px);
+            max-height: 58cqh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(94, 203, 161, 0.3);
+        }
+
         /* Footer Styles */
         .footer {
             text-align: center;
@@ -698,6 +823,66 @@
         <footer class="footer">
             <a href="/mentions-legales.html">Mentions légales</a>
         </footer>
+    </div>
+
+    <!-- Mobilisation Panel -->
+    <div id="mobilisationPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="panel-title">SE MOBILISER<br>C'EST VOTER</div>
+            <div class="cta-section">
+                <button type="button" id="shareBtn" class="cta-button" onclick="openInfluPanel()">
+                    JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">📣</span>
+                </button>
+            </div>
+            <div class="cta-section">
+                <button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE.<br>DIS MOI COMMENT<span class="emoji">✊</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How-to-vote Panel -->
+    <div id="howPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="panel-title">TUTO</div>
+        </div>
+    </div>
+
+    <!-- Influ / Share Panel -->
+    <div id="influPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div id="influImageContainer" class="panel-body"></div>
+    </div>
+
+    <!-- Rejoins / Qomon Panel -->
+    <div id="rejoinPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div class="panel-body form-body">
+            <div class="qomon-form" data-base_id="103323d7-738d-4ff2-813b-c397d6980e38"></div>
+        </div>
     </div>
 
     <script src="https://scripts.qomon.org/forms/v1/setup.js"></script>

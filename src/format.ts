@@ -290,15 +290,10 @@ export function formatCityDetailHtml(
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
-            <!-- CTA Buttons -->
+            <!-- CTA Button -->
             <div class="cta-section">
-                <button type="button" id="shareBtn" class="cta-button" onclick="shareCity()">
-                    ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
-                </button>
-            </div>
-            <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openQomonModal()">
-                    ${labels.cta.rejoindre}<span class="emoji">${labels.cta.rejoindreEmoji}</span>
+                <button type="button" class="cta-button" onclick="openMobilisationPanel()">
+                    JE ME MOBILISE<span class="emoji">✊</span>
                 </button>
             </div>
 

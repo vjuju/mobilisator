@@ -158,15 +158,10 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
-            <!-- CTA Buttons -->
+            <!-- CTA Button -->
             <div class="cta-section">
-                <button type="button" id="shareBtn" class="cta-button" onclick="shareCity()">
-                    ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
-                </button>
-            </div>
-            <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openQomonModal()">
-                    ${labels.cta.rejoindre}<span class="emoji">${labels.cta.rejoindreEmoji}</span>
+                <button type="button" class="cta-button" onclick="openMobilisationPanel()">
+                    JE ME MOBILISE<span class="emoji">✊</span>
                 </button>
             </div>
 
@@ -371,9 +366,26 @@ function initApp() {
     });
   }
 }
+function updatePanelVisibility() {
+  const params = new URLSearchParams(window.location.search);
+  const jememobilise = params.get("jememobilise") === "true";
+  const how = params.get("how") === "true";
+  const influ = params.get("influ") === "true";
+  const jerejoins = params.get("jerejoins") === "true";
+  const setHidden = (id, hide) => {
+    const el = document.getElementById(id);
+    if (el)
+      el.classList.toggle("hidden", hide);
+  };
+  setHidden("mobilisationPanel", !(jememobilise && !how && !influ && !jerejoins));
+  setHidden("howPanel", !(jememobilise && how));
+  setHidden("influPanel", !(jememobilise && influ && !jerejoins));
+  setHidden("rejoinPanel", !(jememobilise && jerejoins));
+}
 async function handleRoute() {
   const path = window.location.pathname;
   const relativePath = path.startsWith(BASE_PATH) ? path.slice(BASE_PATH.length) : path.substring(1);
+  updatePanelVisibility();
   if (relativePath === "" || relativePath === "index.html") {
     const cityDetailDiv = document.getElementById("cityDetail");
     if (cityDetailDiv)
@@ -391,6 +403,66 @@ async function handleRoute() {
       landingText.classList.add("hidden");
     const slug = relativePath.replace(".html", "");
     await loadCityBySlug(slug);
+  }
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("jememobilise") === "true" && params.get("influ") === "true" && params.get("jerejoins") !== "true") {
+    const container = document.getElementById("influImageContainer");
+    if (container && container.innerHTML === "") {
+      container.innerHTML = `<p class="loading">Chargement...</p>`;
+      shareCity();
+    }
+  }
+}
+function openMobilisationPanel() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+function closeMobilisationPanel() {
+  window.history.back();
+}
+function openHowPanel() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("how", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+async function openInfluPanel() {
+  const btn = document.getElementById("shareBtn");
+  const container = document.getElementById("influImageContainer");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "Chargement...";
+  }
+  if (container)
+    container.innerHTML = `<p class="loading">Chargement...</p>`;
+  try {
+    await shareCity({ manageButtonState: false });
+  } finally {
+    const url = new URL(window.location.href);
+    url.searchParams.set("influ", "true");
+    window.history.pushState({}, "", url.toString());
+    updatePanelVisibility();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
+    }
+  }
+}
+var qomonFormInitialized = false;
+function openRejoinPanel() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("jerejoins", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+  if (!qomonFormInitialized) {
+    const qomonForm = document.querySelector("#rejoinPanel .qomon-form");
+    if (qomonForm) {
+      const clone = qomonForm.cloneNode(true);
+      qomonForm.parentNode?.replaceChild(clone, qomonForm);
+    }
+    qomonFormInitialized = true;
   }
 }
 function clearResults() {
@@ -556,33 +628,10 @@ function displayCityDetail(city) {
   cityDetailDiv.innerHTML = html;
 }
 function openQomonModal() {
-  let modal = document.getElementById("qomonModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "qomonModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-			<div class="modal-content">
-				<button type="button" class="modal-close" onclick="closeQomonModal()">&times;</button>
-				<div class="qomon-form" data-base_id="103323d7-738d-4ff2-813b-c397d6980e38"></div>
-			</div>
-		`;
-    document.body.appendChild(modal);
-    const qomonForm = modal.querySelector(".qomon-form");
-    if (qomonForm) {
-      const clone = qomonForm.cloneNode(true);
-      qomonForm.parentNode?.replaceChild(clone, qomonForm);
-    }
-  }
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
+  openRejoinPanel();
 }
 function closeQomonModal() {
-  const modal = document.getElementById("qomonModal");
-  if (modal) {
-    modal.classList.remove("show");
-    document.body.style.overflow = "";
-  }
+  window.history.back();
 }
 function openDetailModal(title, formula, sourceUrl) {
   let modal = document.getElementById("detailModal");
@@ -630,37 +679,43 @@ function openDetailModalByKey(key) {
     openDetailModal(data.title, data.formula, data.source);
   }
 }
+var getRejoinButtonHtml = () => `
+	<button type="button" class="cta-button" onclick="openRejoinPanel()">
+		J'AI POSTÉ.<br>JE REJOINS LE MOUVEMENT<span class="emoji">✊</span>
+	</button>
+`;
+var appendRejoinButtonWhenImageReady = (container, imageSelector = ".influ-image") => {
+  const maybeAppend = () => {
+    if (!container.querySelector(".influ-image"))
+      return;
+    if (container.querySelector("[data-rejoin-btn='true']"))
+      return;
+    container.insertAdjacentHTML("beforeend", `<div data-rejoin-btn="true">${getRejoinButtonHtml()}</div>`);
+  };
+  const img = container.querySelector(imageSelector);
+  if (!img) {
+    maybeAppend();
+    return;
+  }
+  if (img.complete && img.naturalWidth > 0) {
+    maybeAppend();
+    return;
+  }
+  img.addEventListener("load", maybeAppend, { once: true });
+  img.addEventListener("error", maybeAppend, { once: true });
+};
 function showShareModal(imageUrl) {
-  let modal = document.getElementById("shareModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "shareModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-			<div class="modal-content share-modal-content">
-				<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
-				<h3 class="share-modal-title">Image copiée !</h3>
-				<p class="share-modal-subtitle">Tu peux la coller en story</p>
-				<div class="share-modal-image-container">
-					<img class="share-modal-image" src="" alt="Image à partager">
-				</div>
-			</div>
+  const container = document.getElementById("influImageContainer");
+  if (container) {
+    container.innerHTML = `
+			<div class="influ-copy-text">IMAGE COPIÉE</div>
+			<div class="influ-copy-text">TU PEUX LA COLLER EN STORY</div>
+			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
 		`;
-    document.body.appendChild(modal);
-  }
-  const img = modal.querySelector(".share-modal-image");
-  if (img)
-    img.src = imageUrl;
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
-}
-function closeShareModal() {
-  const modal = document.getElementById("shareModal");
-  if (modal) {
-    modal.classList.remove("show");
-    document.body.style.overflow = "";
+    appendRejoinButtonWhenImageReady(container);
   }
 }
+function closeShareModal() {}
 var normalizeImageForClipboard = async (blob) => {
   try {
     const bitmap = await createImageBitmap(blob);
@@ -707,6 +762,55 @@ var canDecodeImageBlob = async (blob) => {
   } catch {
     return false;
   }
+};
+var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas context unavailable");
+  }
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, "#0f1f19");
+  gradient.addColorStop(1, "#000000");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '700 54px "Arial Black", Arial, sans-serif';
+  ctx.fillText("#RIENSANSNOUS", canvas.width / 2, 170);
+  let cityFontSize = 96;
+  ctx.font = `900 ${cityFontSize}px "Arial Black", Arial, sans-serif`;
+  const cityUpper = cityName.toUpperCase();
+  while (ctx.measureText(cityUpper).width > 900 && cityFontSize > 56) {
+    cityFontSize -= 4;
+    ctx.font = `900 ${cityFontSize}px "Arial Black", Arial, sans-serif`;
+  }
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(cityUpper, canvas.width / 2, 390);
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '900 220px "Arial Black", Arial, sans-serif';
+  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 760);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '700 66px "Arial Black", Arial, sans-serif';
+  ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 930);
+  ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1020);
+  ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1110);
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '700 74px "Arial Black", Arial, sans-serif';
+  ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1350);
+  ctx.fillText("ET TOI ?", canvas.width / 2, 1445);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '700 46px "Arial Black", Arial, sans-serif';
+  ctx.fillText("MOBILISATOR.FR", canvas.width / 2, 1690);
+  const blob = await new Promise((resolve) => canvas.toBlob((pngBlob) => resolve(pngBlob), "image/png"));
+  if (!blob) {
+    throw new Error("Client fallback image generation failed");
+  }
+  return blob;
 };
 var buildOgCandidateUrls = (citySlug) => {
   const encodedSlug = encodeURIComponent(citySlug);
@@ -815,23 +919,69 @@ var fetchOgImageWithDebug = async (citySlug) => {
   }
   throw new OgFetchError(`OG image fetch failed for slug "${citySlug}"`, attempts);
 };
-async function shareCity() {
+async function shareCity(options = {}) {
   if (!currentCityData) {
     console.error("No city data available for sharing");
     return;
   }
-  const { citySlug, cityName } = currentCityData;
+  const { manageButtonState = true } = options;
+  const { citySlug, cityName, votesDecisifs } = currentCityData;
   const paq = window._paq ?? [];
   paq.push(["trackEvent", "Share", "click", cityName]);
   const btn = document.getElementById("shareBtn");
-  if (btn) {
+  if (manageButtonState && btn) {
     btn.disabled = true;
     btn.innerHTML = "Chargement...";
   }
   await new Promise((r) => setTimeout(r, 0));
   try {
-    const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
-    console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
+    let imageBlob;
+    let attempts = [];
+    try {
+      const fetched = await fetchOgImageWithDebug(citySlug);
+      imageBlob = fetched.imageBlob;
+      attempts = fetched.attempts;
+      console.info("OG_DEBUG success", { citySlug, usedUrl: fetched.usedUrl, attempts });
+    } catch (error) {
+      attempts = error instanceof OgFetchError ? error.attempts : [
+        {
+          url: "(unknown)",
+          finalUrl: "",
+          status: 0,
+          ok: false,
+          contentType: "",
+          contentLength: "",
+          redirected: false,
+          blobSize: 0,
+          xOgImageMode: "",
+          xOgSlug: citySlug,
+          xOgError: String(error),
+          bodyPreview: ""
+        }
+      ];
+      const attemptsSummary = attempts.map((a) => ({
+        url: a.url,
+        finalUrl: a.finalUrl,
+        status: a.status,
+        contentType: a.contentType,
+        contentLength: a.contentLength,
+        redirected: a.redirected,
+        blobSize: a.blobSize,
+        xOgError: a.xOgError,
+        xOgImageMode: a.xOgImageMode,
+        bodyPreview: a.bodyPreview
+      }));
+      console.error("Error sharing [OG_DEBUG]:", {
+        citySlug,
+        pageUrl: window.location.href,
+        basePath: BASE_PATH,
+        error,
+        attempts
+      });
+      console.table(attemptsSummary);
+      imageBlob = await createClientFallbackImageBlob(cityName, votesDecisifs);
+      console.warn("Using client-side fallback image", { citySlug });
+    }
     const imageUrl = URL.createObjectURL(imageBlob);
     const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
     if (clipboardSupportsPng) {
@@ -848,80 +998,32 @@ async function shareCity() {
       showShareModalWithDownload(imageUrl, cityName);
     }
   } catch (error) {
-    const attempts = error instanceof OgFetchError ? error.attempts : [
-      {
-        url: "(unknown)",
-        finalUrl: "",
-        status: 0,
-        ok: false,
-        contentType: "",
-        contentLength: "",
-        redirected: false,
-        blobSize: 0,
-        xOgImageMode: "",
-        xOgSlug: citySlug,
-        xOgError: String(error),
-        bodyPreview: ""
-      }
-    ];
-    const attemptsSummary = attempts.map((a) => ({
-      url: a.url,
-      finalUrl: a.finalUrl,
-      status: a.status,
-      contentType: a.contentType,
-      contentLength: a.contentLength,
-      redirected: a.redirected,
-      blobSize: a.blobSize,
-      xOgError: a.xOgError,
-      xOgImageMode: a.xOgImageMode,
-      bodyPreview: a.bodyPreview
-    }));
-    console.error("Error sharing [OG_DEBUG]:", {
-      citySlug,
-      pageUrl: window.location.href,
-      basePath: BASE_PATH,
-      error,
-      attempts
-    });
-    console.table(attemptsSummary);
-    const first = attemptsSummary[0];
-    if (first) {
-      alert(`Erreur image OG (${first.status || "network"}). URL: ${first.finalUrl || first.url}
-Type: ${first.contentType || "n/a"}
-OG error: ${first.xOgError || "n/a"}`);
-      return;
+    const container = document.getElementById("influImageContainer");
+    if (container) {
+      container.innerHTML = `<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
     }
-    alert("Erreur lors du partage. Réessaie !");
+    alert(`Erreur lors du partage. Réessaie !
+${String(error)}`);
   } finally {
-    if (btn) {
+    if (manageButtonState && btn) {
       btn.disabled = false;
-      btn.innerHTML = `${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>`;
+      btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
     }
   }
 }
 function showShareModalWithDownload(imageUrl, cityName) {
-  let modal = document.getElementById("shareModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "shareModal";
-    modal.className = "modal";
-    document.body.appendChild(modal);
-  }
-  modal.innerHTML = `
-		<div class="modal-content share-modal-content">
-			<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
-			<h3 class="share-modal-title">Ton image est prête !</h3>
-			<p class="share-modal-subtitle">Télécharge-la et partage-la en story</p>
-			<div class="share-modal-image-container">
-				<img class="share-modal-image" src="${imageUrl}" alt="Image à partager">
-			</div>
-			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button share-download-button">
+  const container = document.getElementById("influImageContainer");
+  if (container) {
+    container.innerHTML = `
+			<div class="influ-title">Ton image est prête !</div>
+			<div class="influ-subtitle">Télécharge-la et partage-la en story</div>
+			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
+			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration: none; margin-top: 8px;">
 				TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span>
 			</a>
-		</div>
-	`;
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
+		`;
+    appendRejoinButtonWhenImageReady(container);
+  }
 }
 window.navigateToCityById = navigateToCityById;
 window.openQomonModal = openQomonModal;
@@ -931,6 +1033,11 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
+window.openMobilisationPanel = openMobilisationPanel;
+window.closeMobilisationPanel = closeMobilisationPanel;
+window.openHowPanel = openHowPanel;
+window.openInfluPanel = openInfluPanel;
+window.openRejoinPanel = openRejoinPanel;
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
