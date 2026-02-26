@@ -85,6 +85,10 @@
             container-name: city;
         }
 
+        #cityDetail:empty {
+            display: none;
+        }
+
         /* ── Search ── */
         .search-box {
             position: relative;
@@ -162,26 +166,34 @@
 
         /* ── Landing text ── */
         .landing-text {
+            flex: 1;
+            min-height: 0;
+            container-type: size;
+            container-name: landing;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
             text-align: center;
-            padding: 0 8px;
+            padding: 8px 8px;
         }
 
         .landing-text p {
             font-family: 'Folsom', Impact, sans-serif;
-            font-size: 18px;
+            font-size: clamp(13px, 5cqh, 18px);
             font-weight: 400;
             color: #fff;
-            line-height: 1.3;
-            margin-bottom: 90px;
+            line-height: 1.35;
+            margin-bottom: 0;
         }
 
         .lw18 {
-            font-size: 18px;
+            font-size: clamp(13px, 5cqh, 18px);
             color: #fff;
         }
 
         .lg24 {
-            font-size: 24px;
+            font-size: clamp(17px, 6.67cqh, 24px);
             color: #5ECBA1;
         }
 
