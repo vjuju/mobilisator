@@ -222,6 +222,16 @@ function initApp(): void {
 	// Initialize access gate handlers
 	initAccessGate();
 
+	// Nav brand click → navigate home (SPA)
+	const navBrand = document.getElementById("navBrand");
+	if (navBrand) {
+		navBrand.addEventListener("click", (e) => {
+			e.preventDefault();
+			window.history.pushState({}, "", BASE_PATH);
+			handleRoute();
+		});
+	}
+
 	// Check if access is granted
 	if (!hasAccess()) {
 		showAccessGate();
@@ -273,11 +283,18 @@ async function handleRoute(): Promise<void> {
 		: path.substring(1);
 
 	if (relativePath === "" || relativePath === "index.html") {
-		// Home page - clear city detail
+		// Home page - clear city detail, show landing text
 		const cityDetailDiv = document.getElementById("cityDetail");
 		if (cityDetailDiv) cityDetailDiv.innerHTML = "";
+		const landingText = document.getElementById("landingText");
+		if (landingText) landingText.classList.remove("hidden");
+		const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+		if (searchInput) searchInput.value = "";
+		clearResults();
 	} else {
 		// Extract slug from path (e.g., 76100-rouen)
+		const landingText = document.getElementById("landingText");
+		if (landingText) landingText.classList.add("hidden");
 		const slug = relativePath.replace(".html", "");
 		await loadCityBySlug(slug);
 	}
@@ -421,6 +438,10 @@ function displayCityDetail(city: City): void {
 	const cityDetailDiv = document.getElementById("cityDetail");
 
 	if (!cityDetailDiv) return;
+
+	// Hide landing text when city is shown
+	const landingText = document.getElementById("landingText");
+	if (landingText) landingText.classList.add("hidden");
 
 	// Update search input with city name
 	const searchInput = document.getElementById("searchInput") as HTMLInputElement;

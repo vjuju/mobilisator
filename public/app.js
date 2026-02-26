@@ -338,6 +338,14 @@ function debounce(func, delay) {
 }
 function initApp() {
   initAccessGate();
+  const navBrand = document.getElementById("navBrand");
+  if (navBrand) {
+    navBrand.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.history.pushState({}, "", BASE_PATH);
+      handleRoute();
+    });
+  }
   if (!hasAccess()) {
     showAccessGate();
     return;
@@ -370,7 +378,17 @@ async function handleRoute() {
     const cityDetailDiv = document.getElementById("cityDetail");
     if (cityDetailDiv)
       cityDetailDiv.innerHTML = "";
+    const landingText = document.getElementById("landingText");
+    if (landingText)
+      landingText.classList.remove("hidden");
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput)
+      searchInput.value = "";
+    clearResults();
   } else {
+    const landingText = document.getElementById("landingText");
+    if (landingText)
+      landingText.classList.add("hidden");
     const slug = relativePath.replace(".html", "");
     await loadCityBySlug(slug);
   }
@@ -477,6 +495,9 @@ function displayCityDetail(city) {
   const cityDetailDiv = document.getElementById("cityDetail");
   if (!cityDetailDiv)
     return;
+  const landingText = document.getElementById("landingText");
+  if (landingText)
+    landingText.classList.add("hidden");
   const searchInput = document.getElementById("searchInput");
   if (searchInput)
     searchInput.value = formatSearchInputValue(city.nom_standard, city.code_departement);
