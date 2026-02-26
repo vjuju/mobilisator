@@ -370,6 +370,8 @@ function updatePanelVisibility() {
   const params = new URLSearchParams(window.location.search);
   const jememobilise = params.get("jememobilise") === "true";
   const how = params.get("how") === "true";
+  const present = params.get("present") === "true";
+  const absent = params.get("absent") === "true";
   const influ = params.get("influ") === "true";
   const jerejoins = params.get("jerejoins") === "true";
   const setHidden = (id, hide) => {
@@ -378,7 +380,9 @@ function updatePanelVisibility() {
       el.classList.toggle("hidden", hide);
   };
   setHidden("mobilisationPanel", !(jememobilise && !how && !influ && !jerejoins));
-  setHidden("howPanel", !(jememobilise && how));
+  setHidden("howPanel", !(jememobilise && how && !present && !absent));
+  setHidden("howPresentPanel", !(jememobilise && how && present));
+  setHidden("howAbsentPanel", !(jememobilise && how && absent));
   setHidden("influPanel", !(jememobilise && influ && !jerejoins));
   setHidden("rejoinPanel", !(jememobilise && jerejoins));
 }
@@ -425,6 +429,18 @@ function closeMobilisationPanel() {
 function openHowPanel() {
   const url = new URL(window.location.href);
   url.searchParams.set("how", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+function openHowPresentPanel() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("present", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+function openHowAbsentPanel() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("absent", "true");
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
 }
@@ -681,7 +697,7 @@ function openDetailModalByKey(key) {
 }
 var getRejoinButtonHtml = () => `
 	<button type="button" class="cta-button" onclick="openRejoinPanel()">
-		J'AI POSTÉ.<br>JE REJOINS LE MOUVEMENT<span class="emoji">✊</span>
+		<span class="emoji">✅</span>J'AI POSTÉ.<br>JE REJOINS LE MOUVEMENT
 	</button>
 `;
 var appendRejoinButtonWhenImageReady = (container, imageSelector = ".influ-image") => {
@@ -708,7 +724,7 @@ function showShareModal(imageUrl) {
   const container = document.getElementById("influImageContainer");
   if (container) {
     container.innerHTML = `
-			<div class="influ-copy-text">IMAGE COPIÉE</div>
+			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
 			<div class="influ-copy-text">TU PEUX LA COLLER EN STORY</div>
 			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
 		`;
@@ -1036,6 +1052,8 @@ window.closeShareModal = closeShareModal;
 window.openMobilisationPanel = openMobilisationPanel;
 window.closeMobilisationPanel = closeMobilisationPanel;
 window.openHowPanel = openHowPanel;
+window.openHowPresentPanel = openHowPresentPanel;
+window.openHowAbsentPanel = openHowAbsentPanel;
 window.openInfluPanel = openInfluPanel;
 window.openRejoinPanel = openRejoinPanel;
 if (document.readyState === "loading") {

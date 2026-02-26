@@ -180,7 +180,7 @@
 
         .landing-text p {
             font-family: 'Folsom', Impact, sans-serif;
-            font-size: clamp(13px, 5cqh, 18px);
+            font-size: clamp(18px, 3cqh, 30px);
             font-weight: 400;
             color: #fff;
             line-height: 1.35;
@@ -188,7 +188,7 @@
         }
 
         .lw18 {
-            font-size: clamp(13px, 5cqh, 18px);
+            font-size: clamp(18px, 3cqh, 30px);
             color: #fff;
         }
 
@@ -679,7 +679,7 @@
 
         .back-chevron {
             color: #fff;
-            font-size: 36px;
+            font-size: 14px;
             line-height: 1;
         }
 
@@ -726,6 +726,14 @@
             line-height: 1.2;
         }
 
+        .panel-text {
+            font-family: Arial, sans-serif;
+            font-size: clamp(14px, 4cqh, 20px);
+            color: #ccc;
+            text-align: center;
+            line-height: 1.4;
+        }
+
         .influ-title {
             font-family: 'Folsom', Impact, sans-serif;
             font-size: clamp(16px, 5cqh, 32px);
@@ -764,7 +772,6 @@
             max-height: 58cqh;
             object-fit: contain;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(94, 203, 161, 0.3);
         }
 
         /* Footer Styles */
@@ -835,20 +842,16 @@
         </div>
         <div class="panel-body">
             <div class="panel-title">SE MOBILISER<br>C'EST VOTER</div>
-            <div class="cta-section">
-                <button type="button" id="shareBtn" class="cta-button" onclick="openInfluPanel()">
-                    JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">📣</span>
-                </button>
-            </div>
-            <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openHowPanel()">
-                    JE VOTE.<br>DIS MOI COMMENT<span class="emoji">✊</span>
-                </button>
-            </div>
+            <button type="button" id="shareBtn" class="cta-button" onclick="openInfluPanel()">
+                JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">📣</span>
+            </button>
+            <button type="button" class="cta-button" onclick="openHowPanel()">
+                JE VOTE.<br>DIS MOI COMMENT<span class="emoji">✊</span>
+            </button>
         </div>
     </div>
 
-    <!-- How-to-vote Panel -->
+    <!-- How-to-vote Panel (Infos 1) -->
     <div id="howPanel" class="panel hidden">
         <div class="panel-back">
             <button type="button" class="panel-back-link" onclick="history.back()">
@@ -857,7 +860,50 @@
             </button>
         </div>
         <div class="panel-body">
-            <div class="panel-title">TUTO</div>
+            <div class="panel-title">NOTE LES DATES</div>
+            <div class="panel-title text-green">15 ET 22 MARS</div>
+            <button type="button" class="cta-button" onclick="openHowPresentPanel()">
+                C'EST NOTÉ ET JE SERAI LÀ<span class="emoji">✅</span>
+            </button>
+            <button type="button" class="cta-button" onclick="openHowAbsentPanel()">
+                JE NE SERAI PAS DISPO<span class="emoji">😞</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- How Present Panel (Infos 2 — dispo) -->
+    <div id="howPresentPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="panel-title">VÉRIFIE TON BUREAU DE VOTE</div>
+            <a href="https://www.service-public.fr/particuliers/vosdroits/services-en-ligne-et-formulaires/ISE" target="_blank" rel="noopener" class="cta-button" style="text-decoration: none;">
+                SERVICE-PUBLIC.FR<span class="emoji">🗳️</span>
+            </a>
+            <button type="button" class="cta-button" onclick="history.back()">
+                J'Y SERAI.<span class="emoji">✊</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- How Absent Panel (Infos 2 — pas dispo) -->
+    <div id="howAbsentPanel" class="panel hidden">
+        <div class="panel-back">
+            <button type="button" class="panel-back-link" onclick="history.back()">
+                <span class="back-chevron" aria-hidden="true">‹</span>
+                <span class="back-label">RETOUR</span>
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="panel-title">TU PEUX ENCORE VOTER</div>
+            <div class="panel-text">Donne une procuration à un•e pote ou un•e parent</div>
+            <a href="https://www.maprocuration.gouv.fr" target="_blank" rel="noopener" class="cta-button" style="text-decoration: none;">
+                MAPROCURATION.GOUV.FR<span class="emoji">✊</span>
+            </a>
         </div>
     </div>
 
