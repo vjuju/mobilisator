@@ -5,5 +5,13 @@
 	"assets": {
 		"directory": "./public",
 		"not_found_handling": "single-page-application"
+	},
+	"env": {
+		"dev": {
+			"name": "mobilisator-dev",
+			"routes": [
+				{ "pattern": "dev.mobilisator.fr/*", "zone_name": "mobilisator.fr" }
+			]
+		}
 	}
 }
