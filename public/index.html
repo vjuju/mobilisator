@@ -60,7 +60,8 @@
         #mainContent {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
         }
 
         /* ── Container ── */
@@ -68,15 +69,27 @@
             flex: 1;
             max-width: 600px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 24px 20px 0;
             text-align: center;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        /* ── City detail container ── */
+        #cityDetail {
+            flex: 1;
+            min-height: 0;
+            container-type: size;
+            container-name: city;
         }
 
         /* ── Search ── */
         .search-box {
             position: relative;
-            margin: 0 auto 40px;
+            flex-shrink: 0;
+            margin: 0 auto 24px;
         }
 
         .search-input-wrapper {
@@ -178,62 +191,78 @@
 
         /* ── City Detail ── */
         .city-detail {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
             text-align: center;
         }
 
         .main-stat {
-            margin-bottom: 40px;
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
             color: #5ECBA1;
         }
 
         .main-number {
-            font-size: 140px;
+            font-size: clamp(32px, 20cqh, 120px);
             font-weight: 900;
             color: #5ECBA1;
             line-height: 1;
-            letter-spacing: -5px;
+            letter-spacing: -0.04em;
         }
 
         .main-label {
-            font-size: 28px;
+            font-size: clamp(12px, 4.5cqh, 26px);
             font-weight: 900;
             color: #5ECBA1;
             line-height: 1.2;
-            margin-top: 15px;
+            margin-top: 0.4em;
         }
 
         .secondary-stat {
-            margin: 50px 0;
+            flex: 2.5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
             color: #fff;
         }
 
         .secondary-number {
-            font-size: 100px;
+            font-size: clamp(26px, 14cqh, 90px);
             font-weight: 900;
             color: #fff;
             line-height: 1;
-            letter-spacing: -3px;
+            letter-spacing: -0.04em;
         }
 
         .secondary-label {
-            font-size: 22px;
+            font-size: clamp(12px, 3.8cqh, 20px);
             font-weight: 900;
             color: #fff;
             line-height: 1.2;
-            margin-top: 12px;
+            margin-top: 0.4em;
         }
 
         /* Aggregation Warning */
         .aggregation-warning {
+            flex-shrink: 0;
             background: rgba(255, 193, 7, 0.15);
             border: 1px solid rgba(255, 193, 7, 0.5);
             border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 30px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: clamp(10px, 1.8cqh, 13px);
             color: #ffc107;
-            line-height: 1.5;
+            line-height: 1.4;
             text-align: left;
         }
 
@@ -241,10 +270,10 @@
         .detail-link {
             display: inline-block;
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: clamp(10px, 2cqh, 14px);
             color: #5ECBA1;
             text-decoration: underline;
-            margin-top: 10px;
+            margin-top: 0.4em;
             cursor: pointer;
         }
 
@@ -340,7 +369,11 @@
 
         /* CTA Button Section */
         .cta-section {
-            margin-bottom: 60px;
+            flex: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
         }
 
         .cta-button {
@@ -348,12 +381,12 @@
             background: white;
             color: black;
             font-family: 'Folsom', Impact, sans-serif;
-            font-size: 36px;
+            font-size: clamp(14px, 4cqh, 32px);
             font-weight: 900;
             text-decoration: underline;
-            padding: 30px 50px;
-            border-radius: 20px;
-            border: 3px solid #333;
+            padding: 0.65em 1.2em;
+            border-radius: 12px;
+            border: 2px solid #333;
             cursor: pointer;
             transition: all 0.3s;
             line-height: 1.2;
