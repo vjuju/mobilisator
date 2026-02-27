@@ -2,3 +2,4 @@ node_modules
 .claude
 communes.json
 .DS_Store
+.wrangler/
