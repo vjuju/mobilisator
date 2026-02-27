@@ -326,6 +326,7 @@ export function formatCityDetailHtml(
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
+				<div class="stat-estimate">On est prêt estime à</div>
 				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
@@ -333,6 +334,7 @@ export function formatCityDetailHtml(
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
+				<div class="stat-estimate">On est prêt estime à</div>
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>

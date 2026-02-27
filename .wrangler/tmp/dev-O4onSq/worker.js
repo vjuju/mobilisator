@@ -22137,7 +22137,12 @@ async function handleOgImage(request, env2, slug) {
             el("div", { style: { fontSize: 100, color: "#000000", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, WebkitTextStroke: "3px #000000" } }, city.name.toUpperCase())
           )
         ),
-        el("div", { style: { fontSize: 260, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, marginTop: 140 } }, city.votes.toLocaleString("fr-FR")),
+        el(
+          "div",
+          { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 140 } },
+          el("div", { style: { fontSize: 44, color: "rgba(255,255,255,0.6)", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, marginBottom: 16 } }, "ON EST PR\xCAT ESTIME \xC0"),
+          el("div", { style: { fontSize: 260, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, city.votes.toLocaleString("fr-FR"))
+        ),
         el(
           "div",
           { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 30, gap: 4 } },

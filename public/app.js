@@ -172,6 +172,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
+				<div class="stat-estimate">On est prêt estime à</div>
 				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
@@ -179,6 +180,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
+				<div class="stat-estimate">On est prêt estime à</div>
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
@@ -834,18 +836,21 @@ var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
   }
   ctx.fillStyle = "#FFFFFF";
   ctx.fillText(cityUpper, canvas.width / 2, 390);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.font = "700 38px Arial, sans-serif";
+  ctx.fillText("ON EST PRÊT ESTIME À", canvas.width / 2, 700);
   ctx.fillStyle = "#5ECBA1";
   ctx.font = '900 220px "Arial Black", Arial, sans-serif';
-  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 760);
+  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 880);
   ctx.fillStyle = "#FFFFFF";
   ctx.font = '700 66px "Arial Black", Arial, sans-serif';
-  ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 930);
-  ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1020);
-  ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1110);
+  ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 1050);
+  ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1140);
+  ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1230);
   ctx.fillStyle = "#5ECBA1";
   ctx.font = '700 74px "Arial Black", Arial, sans-serif';
-  ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1350);
-  ctx.fillText("ET TOI ?", canvas.width / 2, 1445);
+  ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1400);
+  ctx.fillText("ET TOI ?", canvas.width / 2, 1490);
   ctx.fillStyle = "#FFFFFF";
   ctx.font = '700 46px "Arial Black", Arial, sans-serif';
   ctx.fillText("MOBILISATOR.FR", canvas.width / 2, 1690);
