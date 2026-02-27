@@ -136,10 +136,17 @@
             min-height: 0;
         }
 
+        /* Quand une ville est affichée, le container ne grandit plus */
+        #mainContent:has(#cityDetail:not(:empty)) .container {
+            flex: none;
+            padding-bottom: 0;
+        }
+
         /* ── City detail container ── */
         #cityDetail {
             flex: 1;
             min-height: 0;
+            width: 100%;
             container-type: size;
             container-name: city;
         }
@@ -928,8 +935,9 @@
                 <p><span class="lw18">En 2026,</span> <span class="lg24">RIEN</span><br><span class="lw18">NE DOIT SE DÉCIDER</span><br><span class="lg24">SANS LA JEUNESSE</span></p>
             </div>
 
-            <div id="cityDetail"></div>
         </div>
+
+        <div id="cityDetail"></div>
 
         <a href="https://www.instagram.com/quentin.utopia" target="_blank" rel="noopener" class="illu-credit">Illu : quentin.utopia</a>
 
