@@ -597,7 +597,7 @@ function displayCityDetail(city: City): void {
 	);
 
 	// Determine tagline
-	const mainTagline = getMainTagline(hasSecondTour);
+	const mainTagline = getMainTagline(hasSecondTour, city.nom_standard);
 
 	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
 

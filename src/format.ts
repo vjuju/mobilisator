@@ -107,8 +107,8 @@ export function computeVotesDecisifs(
 /**
  * Tagline universelle sous le nombre de votes décisifs
  */
-export function getMainTagline(_hasSecondTour: boolean): string {
-	return "votes qui auraient pu<br>faire la diff'";
+export function getMainTagline(_hasSecondTour: boolean, cityName: string): string {
+	return `votes auraient pu<br>faire la diff'<br>en 2020 à ${cityName}`;
 }
 
 // ============================================================================

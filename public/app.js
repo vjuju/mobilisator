@@ -58,8 +58,8 @@ function computeVotesDecisifs(tour1, tour2) {
   const exprim_s = tour1.Exprimés;
   return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprim_s), cas: 3 };
 }
-function getMainTagline(_hasSecondTour) {
-  return "votes qui auraient pu<br>faire la diff'";
+function getMainTagline(_hasSecondTour, cityName) {
+  return `votes auraient pu<br>faire la diff'<br>en 2020 à ${cityName}`;
 }
 function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
   return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
@@ -637,7 +637,7 @@ function displayCityDetail(city) {
   const nonVotants = city.Analyse["Non votants"];
   const partNeVotantPas = city.Analyse["Part ne votant pas"];
   const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
-  const mainTagline = getMainTagline(hasSecondTour);
+  const mainTagline = getMainTagline(hasSecondTour, city.nom_standard);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
   currentCityData = {
     citySlug: city.slug,
