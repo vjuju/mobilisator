@@ -1,4 +1,4 @@
-import type { ElectionResult as Resultat } from "./dtos/city";
+import type { ElectionResult as Resultat, TourData } from "./dtos/city";
 
 // ============================================================================
 // MESSAGES D'ERREUR ET DE CHARGEMENT
@@ -62,87 +62,135 @@ export const labels = {
 };
 
 // ============================================================================
+// CALCUL DES VOTES DÉCISIFS (runtime)
+// ============================================================================
+
+/**
+ * Calcule les votes décisifs selon les 3 cas possibles et retourne aussi le cas (1, 2 ou 3).
+ *
+ * Cas 1 : Une seule liste au premier tour → V + 1
+ * Cas 2 : Second tour → écart entre 1er et 2e + 1
+ * Cas 3 : Victoire au premier tour → 2×V₁ − Vₜ
+ */
+export function computeVotesDecisifs(
+	tour1: TourData,
+	tour2?: TourData,
+): { votesDecisifs: number; cas: 1 | 2 | 3 } {
+	if (tour2) {
+		// Cas 2 : changer la liste majoritaire au second tour
+		const sorted = [...tour2.resultats].sort((a, b) => b.Voix - a.Voix);
+		if (sorted.length >= 2) {
+			return { votesDecisifs: sorted[0].Voix - sorted[1].Voix + 1, cas: 2 };
+		}
+		return { votesDecisifs: 0, cas: 2 };
+	}
+
+	const sorted = [...tour1.resultats].sort((a, b) => b.Voix - a.Voix);
+	if (sorted.length === 0) return { votesDecisifs: 0, cas: 3 };
+
+	const gagnantVoix = sorted[0].Voix;
+
+	if (sorted.length === 1) {
+		// Cas 1 : une seule liste au premier tour
+		return { votesDecisifs: gagnantVoix + 1, cas: 1 };
+	}
+
+	// Cas 3 : transformer une victoire au premier tour en élection à deux tours
+	const exprimés = tour1.Exprimés;
+	return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprimés), cas: 3 };
+}
+
+// ============================================================================
 // TAGLINES PRINCIPALES
 // ============================================================================
 
 /**
- * Génère la tagline principale selon si le second tour a eu lieu ou non
+ * Tagline universelle sous le nombre de votes décisifs
  */
-export function getMainTagline(hasSecondTour: boolean): string {
-	if (hasSecondTour) {
-		return "votes suffisaient pour élire un autre maire";
-	}
-	return "votes suffisaient pour aller au second tour";
+export function getMainTagline(_hasSecondTour: boolean): string {
+	return "votes d'abstentionnistes qui auraient pu faire la diff'";
 }
 
 // ============================================================================
-// EXPLICATIONS DES VOTES DÉCISIFS
+// FORMULES DÉTAILLÉES DES VOTES DÉCISIFS (3 cas)
 // ============================================================================
 
 /**
- * Génère l'explication des votes décisifs
+ * Cas 1 : Une seule liste au premier tour — V + 1
  */
-export function formatExplanationDecisive(
+export function formatFormulaDecisiveCas1(
 	cityName: string,
 	codeDepartement: string,
+	firstPlaceVoix: number,
 	votesDecisifs: number,
-	hasSecondTour: boolean,
+	resultsTableHtml: string,
 ): string {
-	const formattedVotes = votesDecisifs.toLocaleString("fr-FR");
-
-	if (hasSecondTour) {
-		return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${formattedVotes} voix.`;
-	}
-	return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), la 1ère liste a obtenu ${formattedVotes} voix au-dessus de la majorité au premier tour.`;
+	return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
+<br><br>
+Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
+<br><br>
+<strong>Formule :</strong> Voix de la liste unique + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour :</strong>
+${resultsTableHtml}`;
 }
 
 /**
- * Génère la formule détaillée pour les votes décisifs (second tour)
+ * Cas 2 : Second tour — changer la liste majoritaire (écart + 1)
  */
-export function formatFormulaDecisiveSecondTour(
-	explanationDecisive: string,
+export function formatFormulaDecisiveCas2(
+	cityName: string,
+	codeDepartement: string,
 	firstPlaceVoix: number,
 	secondPlaceVoix: number,
 	votesDecisifs: number,
 	tourLabel: string,
 	resultsTableHtml: string,
 ): string {
-	return `${explanationDecisive}
+	const ecart = firstPlaceVoix - secondPlaceVoix;
+	return `À ${cityName} (${codeDepartement}) en 2020, la liste arrivée en tête au second tour l'a emporté avec ${ecart.toLocaleString("fr-FR")} voix d'avance.
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − Voix de la 2e liste au second tour
+Pour que la 2e liste passe devant, il aurait suffi d'ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes à son score.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
 <br><br>
 <strong>Détail :</strong>
 <br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
 <br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
-<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
 
 /**
- * Génère la formule détaillée pour les votes décisifs (premier tour)
+ * Cas 3 : Victoire au premier tour — forcer un second tour (2×V₁ − Vₜ)
  */
-export function formatFormulaDecisivePremierTour(
-	explanationDecisive: string,
+export function formatFormulaDecisiveCas3(
+	cityName: string,
+	codeDepartement: string,
 	firstPlaceVoix: number,
 	exprimes: number,
 	votesDecisifs: number,
 	tourLabel: string,
 	resultsTableHtml: string,
 ): string {
-	const moitieExprimes = Math.round(exprimes / 2);
-
-	return `${explanationDecisive}
+	const pourcentage = ((firstPlaceVoix / exprimes) * 100).toFixed(1);
+	return `À ${cityName} (${codeDepartement}) en 2020, la liste gagnante a remporté l'élection dès le premier tour avec ${pourcentage}% des suffrages exprimés (plus de 50%).
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
+Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires aux autres listes — ce qui aurait ramené la liste de tête à 50% ou moins.
+<br><br>
+<strong>Formule :</strong> 2 × Voix de la 1ère liste − Total des exprimés
 <br><br>
 <strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
-<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
-<br>• Marge au-dessus de la majorité : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Voix de la 1ère liste (V₁) : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Total des exprimés (Vₜ) : ${exprimes.toLocaleString("fr-FR")}
+<br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
 
 // ============================================================================

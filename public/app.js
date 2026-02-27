@@ -40,44 +40,70 @@ var labels = {
   detailLink: "Détail",
   sourceLabel: "Source :"
 };
-function getMainTagline(hasSecondTour) {
-  if (hasSecondTour) {
-    return "votes suffisaient pour élire un autre maire";
+function computeVotesDecisifs(tour1, tour2) {
+  if (tour2) {
+    const sorted2 = [...tour2.resultats].sort((a, b) => b.Voix - a.Voix);
+    if (sorted2.length >= 2) {
+      return { votesDecisifs: sorted2[0].Voix - sorted2[1].Voix + 1, cas: 2 };
+    }
+    return { votesDecisifs: 0, cas: 2 };
   }
-  return "votes suffisaient pour aller au second tour";
-}
-function formatExplanationDecisive(cityName, codeDepartement, votesDecisifs, hasSecondTour) {
-  const formattedVotes = votesDecisifs.toLocaleString("fr-FR");
-  if (hasSecondTour) {
-    return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${formattedVotes} voix.`;
+  const sorted = [...tour1.resultats].sort((a, b) => b.Voix - a.Voix);
+  if (sorted.length === 0)
+    return { votesDecisifs: 0, cas: 3 };
+  const gagnantVoix = sorted[0].Voix;
+  if (sorted.length === 1) {
+    return { votesDecisifs: gagnantVoix + 1, cas: 1 };
   }
-  return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), la 1ère liste a obtenu ${formattedVotes} voix au-dessus de la majorité au premier tour.`;
+  const exprim_s = tour1.Exprimés;
+  return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprim_s), cas: 3 };
 }
-function formatFormulaDecisiveSecondTour(explanationDecisive, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
-  return `${explanationDecisive}
+function getMainTagline(_hasSecondTour) {
+  return "votes d'abstentionnistes qui auraient pu faire la diff'";
+}
+function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
+  return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − Voix de la 2e liste au second tour
+Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
+<br><br>
+<strong>Formule :</strong> Voix de la liste unique + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour :</strong>
+${resultsTableHtml}`;
+}
+function formatFormulaDecisiveCas2(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
+  const ecart = firstPlaceVoix - secondPlaceVoix;
+  return `À ${cityName} (${codeDepartement}) en 2020, la liste arrivée en tête au second tour l'a emporté avec ${ecart.toLocaleString("fr-FR")} voix d'avance.
+<br><br>
+Pour que la 2e liste passe devant, il aurait suffi d'ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes à son score.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
 <br><br>
 <strong>Détail :</strong>
 <br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
 <br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
-<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
-function formatFormulaDecisivePremierTour(explanationDecisive, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
-  const moitieExprimes = Math.round(exprimes / 2);
-  return `${explanationDecisive}
+function formatFormulaDecisiveCas3(cityName, codeDepartement, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
+  const pourcentage = (firstPlaceVoix / exprimes * 100).toFixed(1);
+  return `À ${cityName} (${codeDepartement}) en 2020, la liste gagnante a remporté l'élection dès le premier tour avec ${pourcentage}% des suffrages exprimés (plus de 50%).
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
+Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires aux autres listes — ce qui aurait ramené la liste de tête à 50% ou moins.
+<br><br>
+<strong>Formule :</strong> 2 × Voix de la 1ère liste − Total des exprimés
 <br><br>
 <strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
-<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
-<br>• Marge au-dessus de la majorité : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Voix de la 1ère liste (V₁) : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Total des exprimés (Vₜ) : ${exprimes.toLocaleString("fr-FR")}
+<br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
 function formatExplanationNonVoting(cityName, codeDepartement, pop1839, partNeVotantPas, nonVotants, pop18Plus) {
   return `Lors des municipales de 2020, ${cityName} (${codeDepartement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${cityName} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
@@ -593,9 +619,8 @@ function displayCityDetail(city) {
     cityDetailDiv.innerHTML = `<p class="error">${messages.analyseNonDisponible}</p>`;
     return;
   }
-  const votesDecisifs = city.Analyse["Votes décisifs"];
   const hasSecondTour = !!city["Tour 2"];
-  const explanationDecisive = formatExplanationDecisive(city.nom_standard, city.code_departement, votesDecisifs, hasSecondTour);
+  const { votesDecisifs, cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
   const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
   const pop1839 = city.Analyse["Pop 18-39"];
   const pop18Plus = city.Analyse["Pop 18+"];
@@ -620,10 +645,12 @@ function displayCityDetail(city) {
   const secondPlace = resultats[1];
   const exprimes = tourDecisif.Exprimés;
   let formulaDecisive = "";
-  if (hasSecondTour && secondPlace) {
-    formulaDecisive = formatFormulaDecisiveSecondTour(explanationDecisive, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
+  if (cas === 1) {
+    formulaDecisive = formatFormulaDecisiveCas1(city.nom_standard, city.code_departement, firstPlace.Voix, votesDecisifs, resultsTable);
+  } else if (cas === 2 && secondPlace) {
+    formulaDecisive = formatFormulaDecisiveCas2(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
   } else {
-    formulaDecisive = formatFormulaDecisivePremierTour(explanationDecisive, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
+    formulaDecisive = formatFormulaDecisiveCas3(city.nom_standard, city.code_departement, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
   }
   const votants = tourDecisif.Votants;
   const formulaNonVotants = formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839);

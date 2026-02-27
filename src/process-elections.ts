@@ -206,42 +206,35 @@ const extractTourData = (row: Record<string, unknown>): Record<string, unknown> 
 	return tourData;
 };
 
-// Fonction pour calculer les votes décisifs
+// Fonction pour calculer les votes décisifs (3 cas)
 const calculateVotesDecisifs = (
 	tour1Data: Record<string, unknown>,
 	tour2Data?: Record<string, unknown>,
 ): number => {
 	if (tour2Data && tour2Data.resultats) {
-		// Cas où il y a un second tour : différence entre le 1er et 2ème candidat
-		const resultats = tour2Data.resultats as Array<{
-			Voix: number;
-		}>;
+		// Cas 2 : second tour — changer la liste majoritaire (écart + 1)
+		const resultats = tour2Data.resultats as Array<{ Voix: number }>;
 		if (resultats.length >= 2) {
-			// Trier par nombre de voix décroissant
 			const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
-			return sorted[0].Voix - sorted[1].Voix;
+			return sorted[0].Voix - sorted[1].Voix + 1;
 		}
-		// Si un seul candidat au second tour, retourner 0
 		return 0;
-	} else {
-		// Cas où il n'y a pas de second tour
-		// Calculer la différence entre les voix du gagnant et la moitié des exprimés
-		const resultats = tour1Data.resultats as Array<{
-			Voix: number;
-		}>;
-		if (resultats.length === 0) {
-			return 0;
-		}
-
-		// Trier par nombre de voix décroissant pour trouver le gagnant
-		const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
-		const gagnantVoix = sorted[0].Voix;
-		const exprimés = tour1Data.Exprimés as number;
-
-		// Différence entre les voix du gagnant et la moitié des exprimés
-		const voixAuDessusMajorite = gagnantVoix - exprimés / 2;
-		return Math.max(0, Math.round(voixAuDessusMajorite));
 	}
+
+	const resultats = tour1Data.resultats as Array<{ Voix: number }>;
+	if (resultats.length === 0) return 0;
+
+	const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
+	const gagnantVoix = sorted[0].Voix;
+
+	if (sorted.length === 1) {
+		// Cas 1 : une seule liste au premier tour (V + 1)
+		return gagnantVoix + 1;
+	}
+
+	// Cas 3 : victoire au premier tour — forcer un second tour (2×V₁ − Vₜ)
+	const exprimés = tour1Data.Exprimés as number;
+	return Math.max(0, 2 * gagnantVoix - exprimés);
 };
 
 console.log("📖 Reading elections_1.json...");

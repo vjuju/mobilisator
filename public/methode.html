@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Méthode de calcul - #RIENSANSNOUS</title>
+    <style>
+        @font-face {
+            font-family: 'Folsom';
+            src: url('/fonts/Folsom-Black.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            padding: 20px 40px;
+        }
+
+        .navbar h1 {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .navbar h1 a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .navbar h1 a:hover {
+            color: #5ECBA1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .page-title {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: #5ECBA1;
+            margin-bottom: 20px;
+        }
+
+        .page-intro {
+            font-size: 18px;
+            color: #ccc;
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        h2 {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #5ECBA1;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            padding-top: 24px;
+            border-top: 1px solid #333;
+        }
+
+        h2:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        h3 {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            margin-top: 36px;
+            margin-bottom: 14px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        ul {
+            margin-bottom: 15px;
+            padding-left: 25px;
+            color: #ccc;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: #5ECBA1;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+
+        a:hover {
+            color: #7EDBB5;
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        .highlight {
+            background: rgba(94, 203, 161, 0.08);
+            border-left: 3px solid #5ECBA1;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .highlight p {
+            margin-bottom: 8px;
+        }
+
+        .highlight p:last-child {
+            margin-bottom: 0;
+        }
+
+        .formula-block {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            color: #5ECBA1;
+        }
+
+        .example-block {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #444;
+            padding: 12px 16px;
+            margin: 12px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .example-block p {
+            color: #aaa;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .example-block p:last-child {
+            margin-bottom: 0;
+        }
+
+        .cas-label {
+            display: inline-block;
+            background: #5ECBA1;
+            color: #000;
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 14px;
+            padding: 3px 10px;
+            border-radius: 3px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .note-block {
+            background: rgba(94, 203, 161, 0.05);
+            border: 1px solid #1a3a2a;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-top: 40px;
+        }
+
+        .note-block p {
+            margin-bottom: 8px;
+        }
+
+        .note-block p:last-child {
+            margin-bottom: 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid #333;
+            margin-top: 60px;
+        }
+
+        .footer a {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #5ECBA1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1><a href="/">#RIENSANSNOUS</a></h1>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Comment ça se calcule ?</h1>
+
+        <p class="page-intro">
+            Sur ce site, on calcule le nombre minimal de votes supplémentaires qui auraient pu modifier la nature d'une élection municipale (communes de plus de 1 000 habitants).
+        </p>
+
+        <div class="highlight">
+            <p><strong>Deux principes de base :</strong></p>
+            <p>→ Nous ne retirons aucune voix aux listes existantes.</p>
+            <p>→ Nous simulons uniquement l'ajout de nouveaux votants — par exemple des abstentionnistes qui se mobilisent.</p>
+        </div>
+
+        <h2>Les trois cas que nous avons retenus</h2>
+
+        <h3><span class="cas-label">CAS 1</span><br>Une seule liste au premier tour</h3>
+
+        <p>Dans certaines communes, une seule liste se présente. Les électeurs n'ont pas réellement le choix entre plusieurs projets. Changer la nature de l'élection signifie alors : <strong>faire apparaître une autre liste capable de gagner</strong>.</p>
+
+        <p>Pour qu'une nouvelle liste gagne uniquement grâce à des votes supplémentaires, elle doit obtenir strictement plus de voix que la liste unique :</p>
+
+        <div class="formula-block">
+            Votes décisifs = Voix de la liste unique + 1
+        </div>
+
+        <div class="example-block">
+            <p><strong>Exemple :</strong> Si la liste unique obtient 1 200 voix, il faudrait au minimum <strong>1 201</strong> nouveaux votants pour qu'une autre liste puisse la battre.</p>
+        </div>
+
+        <h3><span class="cas-label">CAS 2</span><br>Changer la liste majoritaire au second tour</h3>
+
+        <p>Quand il y a plusieurs listes et qu'un second tour a lieu, la liste arrivée en tête remporte la mairie. On cherche le nombre minimal de votes supplémentaires qu'il aurait fallu ajouter à la liste arrivée deuxième pour qu'elle passe devant.</p>
+
+        <div class="formula-block">
+            Écart = Voix du 1er − Voix du 2e<br>
+            Votes décisifs = Écart + 1
+        </div>
+
+        <div class="example-block">
+            <p><strong>Exemple :</strong> Si la liste A a 2 500 voix et la liste B 2 420 voix :</p>
+            <p>Écart = 80 voix → Il faudrait <strong>81</strong> votes supplémentaires pour que la liste B gagne.</p>
+        </div>
+
+        <h3><span class="cas-label">CAS 3</span><br>Transformer une victoire au premier tour en élection à deux tours</h3>
+
+        <p>Au premier tour, une liste est élue directement si elle obtient plus de 50% des suffrages exprimés. On calcule combien de votes supplémentaires — attribués aux autres listes — auraient été nécessaires pour que la liste majoritaire passe à 50% ou moins, ce qui aurait déclenché un second tour.</p>
+
+        <div class="formula-block">
+            Votes décisifs = 2 × Voix de la 1ère liste − Total des exprimés
+        </div>
+
+        <div class="example-block">
+            <p><strong>Exemple :</strong> Si une liste obtient 5 200 voix sur 10 000 exprimés (52%) :</p>
+            <p>2 × 5 200 − 10 000 = <strong>400</strong> votes supplémentaires pour les autres listes auraient suffi pour qu'il y ait un second tour.</p>
+        </div>
+
+        <h2>Pourquoi seulement ces trois cas ?</h2>
+
+        <p>Il existe d'autres façons dont quelques votes peuvent faire la différence :</p>
+        <ul>
+            <li>Faire franchir le seuil de 10% (permettant à une liste de se maintenir au second tour)</li>
+            <li>Faire franchir le seuil de 5% (permettant de fusionner ou d'obtenir des sièges)</li>
+            <li>Modifier la répartition des sièges au conseil municipal</li>
+            <li>Faire basculer la majorité d'un seul siège</li>
+        </ul>
+        <p>Ces situations sont importantes, mais elles sont plus techniques à expliquer et moins intuitives pour un premier niveau de compréhension. Nous avons donc choisi de nous concentrer sur les cas les plus clairs et les plus parlants.</p>
+
+        <h2>Ce que ça montre</h2>
+
+        <p>Parfois, quelques dizaines de voix suffisent à changer le résultat d'une élection. Parfois, il en faudrait des milliers.</p>
+
+        <p>Mais dans tous les cas, ces calculs permettent de répondre à une question simple :</p>
+
+        <div class="highlight">
+            <p><strong>Combien de personnes auraient dû se mobiliser pour que l'histoire soit différente ?</strong></p>
+            <p>Et souvent, la réponse est : beaucoup moins qu'on ne l'imagine.</p>
+        </div>
+
+        <div class="note-block">
+            <p><strong>Sources des données :</strong> Résultats des élections municipales 2020 et données de recensement INSEE, via <a href="https://www.data.gouv.fr" target="_blank" rel="noopener">data.gouv.fr</a>.</p>
+            <p>Le code source de ce site est disponible en open source sur <a href="https://github.com/vjuju/mobilisator" target="_blank" rel="noopener">GitHub</a>.</p>
+        </div>
+
+        <footer class="footer">
+            <a href="/">Retour à l'accueil</a>
+        </footer>
+    </div>
+
+    <!-- Matomo (exemption : sans cookies + respect DNT) -->
+    <script>
+      var _paq = window._paq = window._paq || [];
+      _paq.push(['disableCookies']);
+      _paq.push(['setDoNotTrack', true]);
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u = "https://stats.mobilisator.fr/matomo/";
+        _paq.push(['setTrackerUrl', u + 'matomo.php']);
+        _paq.push(['setSiteId', '1']);
+        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+        g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+      })();
+    </script>
+    <!-- End Matomo -->
+</body>
+</html>

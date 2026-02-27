@@ -3,10 +3,11 @@ import { normalizeText } from "./utils";
 import {
 	messages,
 	labels,
+	computeVotesDecisifs,
 	getMainTagline,
-	formatExplanationDecisive,
-	formatFormulaDecisiveSecondTour,
-	formatFormulaDecisivePremierTour,
+	formatFormulaDecisiveCas1,
+	formatFormulaDecisiveCas2,
+	formatFormulaDecisiveCas3,
 	formatExplanationNonVoting,
 	formatFormulaNonVotants,
 	formatResultsTable,
@@ -573,16 +574,10 @@ function displayCityDetail(city: City): void {
 		return;
 	}
 
-	const votesDecisifs = city.Analyse["Votes décisifs"];
 	const hasSecondTour = !!city["Tour 2"];
 
-	// Build explanation for decisive votes
-	const explanationDecisive = formatExplanationDecisive(
-		city.nom_standard,
-		city.code_departement,
-		votesDecisifs,
-		hasSecondTour,
-	);
+	// Compute votes décisifs at runtime using the new 3-case formula
+	const { votesDecisifs, cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
 
 	// Build election source URL
 	const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
@@ -601,7 +596,7 @@ function displayCityDetail(city: City): void {
 		pop18Plus,
 	);
 
-	// Determine tagline based on whether there was a second round
+	// Determine tagline
 	const mainTagline = getMainTagline(hasSecondTour);
 
 	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
@@ -623,15 +618,24 @@ function displayCityDetail(city: City): void {
 
 	const resultsTable = formatResultsTable(resultats);
 
-	// Build formula explanations for the detail dialogs
+	// Build formula explanations for the detail dialogs (3 cases)
 	const firstPlace = resultats[0];
 	const secondPlace = resultats[1];
 	const exprimes = tourDecisif.Exprimés;
 
 	let formulaDecisive = "";
-	if (hasSecondTour && secondPlace) {
-		formulaDecisive = formatFormulaDecisiveSecondTour(
-			explanationDecisive,
+	if (cas === 1) {
+		formulaDecisive = formatFormulaDecisiveCas1(
+			city.nom_standard,
+			city.code_departement,
+			firstPlace.Voix,
+			votesDecisifs,
+			resultsTable,
+		);
+	} else if (cas === 2 && secondPlace) {
+		formulaDecisive = formatFormulaDecisiveCas2(
+			city.nom_standard,
+			city.code_departement,
 			firstPlace.Voix,
 			secondPlace.Voix,
 			votesDecisifs,
@@ -639,8 +643,9 @@ function displayCityDetail(city: City): void {
 			resultsTable,
 		);
 	} else {
-		formulaDecisive = formatFormulaDecisivePremierTour(
-			explanationDecisive,
+		formulaDecisive = formatFormulaDecisiveCas3(
+			city.nom_standard,
+			city.code_departement,
 			firstPlace.Voix,
 			exprimes,
 			votesDecisifs,
