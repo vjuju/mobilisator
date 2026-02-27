@@ -35,11 +35,27 @@ var labels = {
     rejoindreEmoji: "✊"
   },
   stats: {
-    jeunesNonVotants: "jeunes de 18-39 ans<br>n'ont pas voté"
+    jeunesNonVotants: "jeunes de 18-39 ans<br>n'ont pas voté,<br>selon nos estimations"
   },
   detailLink: "Détail",
   sourceLabel: "Source :"
 };
+function scaledNumberFontSizes(nonVotants, votesDecisifs) {
+  const CAP = 15;
+  const MID = 14;
+  let sizeRatio = 1;
+  if (votesDecisifs > 0 && nonVotants > 0) {
+    const cityRatio = nonVotants / votesDecisifs;
+    const t = Math.min(1, Math.log10(Math.max(1, cityRatio)) / Math.log10(CAP));
+    sizeRatio = 1 + t;
+  }
+  const mainCqh = (MID / Math.sqrt(sizeRatio)).toFixed(1);
+  const secondaryCqh = (MID * Math.sqrt(sizeRatio)).toFixed(1);
+  return {
+    main: `clamp(26px, ${mainCqh}cqh, 100px)`,
+    secondary: `clamp(26px, ${secondaryCqh}cqh, 120px)`
+  };
+}
 function computeVotesDecisifs(tour1, tour2) {
   if (tour2) {
     const sorted2 = [...tour2.resultats].sort((a, b) => b.Voix - a.Voix);
@@ -166,22 +182,23 @@ function formatAggregationWarning(communesAgregees) {
 	`;
 }
 function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning) {
+  const fontSizes = scaledNumberFontSizes(nonVotants1839, votesDecisifs);
   return `
         <div class="city-detail">
 			${aggregationWarning}
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
-				<div class="stat-estimate">On est prêt estime que</div>
-				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
+
+				<div class="main-number" style="font-size:${fontSizes.main}">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
 			</div>
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
-				<div class="stat-estimate">On est prêt estime que</div>
-                <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
+
+                <div class="secondary-number" style="font-size:${fontSizes.secondary}">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
