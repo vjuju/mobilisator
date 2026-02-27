@@ -338,7 +338,7 @@ async function handleRoute(): Promise<void> {
 	) {
 		const container = document.getElementById("influImageContainer");
 		if (container && container.innerHTML === "") {
-			container.innerHTML = `<p class="loading">Chargement...</p>`;
+			container.innerHTML = INFLU_LOADING_HTML;
 			void shareCity();
 		}
 	}
@@ -374,30 +374,21 @@ function openAgendaPanel(): void {
 	updatePanelVisibility();
 }
 
+const INFLU_LOADING_HTML = `<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+
 // Open influ/share panel and trigger share flow
 async function openInfluPanel(): Promise<void> {
 	matomoTrack("CTA", "informer_potes");
-	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
 	const container = document.getElementById("influImageContainer");
-	if (btn) {
-		btn.disabled = true;
-		btn.innerHTML = "Chargement...";
-	}
-	if (container) container.innerHTML = `<p class="loading">Chargement...</p>`;
+	if (container) container.innerHTML = INFLU_LOADING_HTML;
 
-	try {
-		await shareCity({ manageButtonState: false });
-	} finally {
-		const url = new URL(window.location.href);
-		url.searchParams.set("jememobilise", "true");
-		url.searchParams.set("influ", "true");
-		window.history.pushState({}, "", url.toString());
-		updatePanelVisibility();
-		if (btn) {
-			btn.disabled = false;
-			btn.innerHTML = `J'INFORME MES POTES<span class="emoji">📣</span>`;
-		}
-	}
+	const url = new URL(window.location.href);
+	url.searchParams.set("jememobilise", "true");
+	url.searchParams.set("influ", "true");
+	window.history.pushState({}, "", url.toString());
+	updatePanelVisibility();
+
+	await shareCity();
 }
 
 // Track Qomon form init
@@ -1076,25 +1067,16 @@ const fetchOgImageWithDebug = async (
 };
 
 // Share city data via clipboard with generated image (server-side via Cloudflare Pages Function)
-async function shareCity(
-	options: { manageButtonState?: boolean } = {},
-): Promise<void> {
+async function shareCity(): Promise<void> {
 	if (!currentCityData) {
 		console.error("No city data available for sharing");
 		return;
 	}
 
-	const { manageButtonState = true } = options;
 	const { citySlug, cityName, votesDecisifs } = currentCityData;
 
 	// Track share button click in Matomo
 	matomoTrack("Share", "partager");
-
-	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
-	if (manageButtonState && btn) {
-		btn.disabled = true;
-		btn.innerHTML = "Chargement...";
-	}
 	// Yield to the browser to repaint before starting the fetch
 	await new Promise<void>((r) => setTimeout(r, 0));
 
@@ -1180,11 +1162,6 @@ async function shareCity(
 				`<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
 		}
 		alert(`Erreur lors du partage. Réessaie !\n${String(error)}`);
-	} finally {
-		if (manageButtonState && btn) {
-			btn.disabled = false;
-			btn.innerHTML = `J'INFORME MES POTES<span class="emoji">📣</span>`;
-		}
 	}
 }
 

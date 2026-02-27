@@ -463,7 +463,7 @@ async function handleRoute() {
   if (params.get("jememobilise") === "true" && params.get("influ") === "true" && params.get("jerejoins") !== "true") {
     const container = document.getElementById("influImageContainer");
     if (container && container.innerHTML === "") {
-      container.innerHTML = `<p class="loading">Chargement...</p>`;
+      container.innerHTML = INFLU_LOADING_HTML;
       shareCity();
     }
   }
@@ -492,29 +492,18 @@ function openAgendaPanel() {
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
 }
+var INFLU_LOADING_HTML = `<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
 async function openInfluPanel() {
   matomoTrack("CTA", "informer_potes");
-  const btn = document.getElementById("shareBtn");
   const container = document.getElementById("influImageContainer");
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = "Chargement...";
-  }
   if (container)
-    container.innerHTML = `<p class="loading">Chargement...</p>`;
-  try {
-    await shareCity({ manageButtonState: false });
-  } finally {
-    const url = new URL(window.location.href);
-    url.searchParams.set("jememobilise", "true");
-    url.searchParams.set("influ", "true");
-    window.history.pushState({}, "", url.toString());
-    updatePanelVisibility();
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
-    }
-  }
+    container.innerHTML = INFLU_LOADING_HTML;
+  const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
+  url.searchParams.set("influ", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+  await shareCity();
 }
 var qomonFormInitialized = false;
 function openRejoinPanel() {
@@ -994,19 +983,13 @@ var fetchOgImageWithDebug = async (citySlug) => {
   }
   throw new OgFetchError(`OG image fetch failed for slug "${citySlug}"`, attempts);
 };
-async function shareCity(options = {}) {
+async function shareCity() {
   if (!currentCityData) {
     console.error("No city data available for sharing");
     return;
   }
-  const { manageButtonState = true } = options;
   const { citySlug, cityName, votesDecisifs } = currentCityData;
   matomoTrack("Share", "partager");
-  const btn = document.getElementById("shareBtn");
-  if (manageButtonState && btn) {
-    btn.disabled = true;
-    btn.innerHTML = "Chargement...";
-  }
   await new Promise((r) => setTimeout(r, 0));
   try {
     let imageBlob;
@@ -1078,11 +1061,6 @@ async function shareCity(options = {}) {
     }
     alert(`Erreur lors du partage. Réessaie !
 ${String(error)}`);
-  } finally {
-    if (manageButtonState && btn) {
-      btn.disabled = false;
-      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
-    }
   }
 }
 function showShareModalWithDownload(imageUrl, cityName) {
