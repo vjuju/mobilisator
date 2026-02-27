@@ -108,7 +108,7 @@ export function computeVotesDecisifs(
  * Tagline universelle sous le nombre de votes décisifs
  */
 export function getMainTagline(_hasSecondTour: boolean): string {
-	return "votes d'abstentionnistes qui auraient pu faire la diff'";
+	return "votes qui auraient pu<br>faire la diff'";
 }
 
 // ============================================================================
@@ -326,7 +326,7 @@ export function formatCityDetailHtml(
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
-				<div class="stat-estimate">On est prêt estime à</div>
+				<div class="stat-estimate">On est prêt estime que</div>
 				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
@@ -334,16 +334,22 @@ export function formatCityDetailHtml(
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
-				<div class="stat-estimate">On est prêt estime à</div>
+				<div class="stat-estimate">On est prêt estime que</div>
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
-            <!-- CTA Button -->
+            <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openMobilisationPanel()">
-                    JE ME MOBILISE<span class="emoji">✊</span>
+                <button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">🗳️</span>
+                </button>
+                <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
+                    J'INFORME MES POTES<span class="emoji">📣</span>
+                </button>
+                <button type="button" class="cta-button" onclick="openRejoinPanel()">
+                    JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
             </div>
 

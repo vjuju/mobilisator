@@ -220,19 +220,31 @@
     </nav>
 
     <div class="container">
-        <h1 class="page-title">Comment ça se calcule ?</h1>
+        <h1 class="page-title">Méthode</h1>
 
-        <p class="page-intro">
-            Sur ce site, on calcule le nombre minimal de votes supplémentaires qui auraient pu modifier la nature d'une élection municipale (communes de plus de 1 000 habitants).
-        </p>
+        <h2>À quoi sert le Mobilisator ?</h2>
+
+        <p>Le Mobilisator est un outil pédagogique basé uniquement sur des données publiques officielles (Ministère de l'Intérieur, INSEE).</p>
+
+        <p>Il permet de comparer, pour chaque commune, en 2020 :</p>
+        <ul>
+            <li>le nombre minimal de voix qui auraient pu modifier le résultat d'une élection municipale</li>
+            <li>une estimation du nombre de personnes âgées de 18 à 39 ans n'ayant pas voté</li>
+        </ul>
+
+        <div class="highlight">
+            <p>Ces chiffres sont des <strong>estimations statistiques</strong>. Ils ne remplacent pas les résultats officiels et ne constituent pas une analyse politique.</p>
+        </div>
+
+        <h2>Comment calculons-nous les "votes décisifs" ?</h2>
+
+        <p>On calcule le nombre minimal de votes supplémentaires qui auraient pu modifier la nature d'une élection municipale (communes de plus de 1 000 habitants).</p>
 
         <div class="highlight">
             <p><strong>Deux principes de base :</strong></p>
             <p>→ Nous ne retirons aucune voix aux listes existantes.</p>
-            <p>→ Nous simulons uniquement l'ajout de nouveaux votants — par exemple des abstentionnistes qui se mobilisent.</p>
+            <p>→ Nous simulons uniquement l'ajout de nouveaux votants.</p>
         </div>
-
-        <h2>Les trois cas que nous avons retenus</h2>
 
         <h3><span class="cas-label">CAS 1</span><br>Une seule liste au premier tour</h3>
 
@@ -275,30 +287,28 @@
             <p>2 × 5 200 − 10 000 = <strong>400</strong> votes supplémentaires pour les autres listes auraient suffi pour qu'il y ait un second tour.</p>
         </div>
 
-        <h2>Pourquoi seulement ces trois cas ?</h2>
+        <h2>Comment estimons-nous le nombre de non-votants de 18 à 39 ans ?</h2>
 
-        <p>Il existe d'autres façons dont quelques votes peuvent faire la différence :</p>
-        <ul>
-            <li>Faire franchir le seuil de 10% (permettant à une liste de se maintenir au second tour)</li>
-            <li>Faire franchir le seuil de 5% (permettant de fusionner ou d'obtenir des sièges)</li>
-            <li>Modifier la répartition des sièges au conseil municipal</li>
-            <li>Faire basculer la majorité d'un seul siège</li>
-        </ul>
-        <p>Ces situations sont importantes, mais elles sont plus techniques à expliquer et moins intuitives pour un premier niveau de compréhension. Nous avons donc choisi de nous concentrer sur les cas les plus clairs et les plus parlants.</p>
+        <p>Les données officielles ne publient pas le nombre de votants par âge à l'échelle communale. Nous procédons donc en deux étapes :</p>
 
-        <h2>Ce que ça montre</h2>
+        <ol style="margin-bottom: 15px; padding-left: 25px; color: #ccc;">
+            <li style="margin-bottom: 8px;">Nous calculons le taux de participation global de la commune à partir des chiffres officiels.</li>
+            <li style="margin-bottom: 8px;">Nous appliquons ce taux à la population de 18 à 39 ans issue du recensement INSEE.</li>
+        </ol>
 
-        <p>Parfois, quelques dizaines de voix suffisent à changer le résultat d'une élection. Parfois, il en faudrait des milliers.</p>
+        <p>Cette méthode repose sur une hypothèse simple : le taux de participation est identique entre tranches d'âge dans une même commune. En réalité, les jeunes votent en moyenne moins que les personnes âgées. <strong>Notre estimation est donc probablement prudente.</strong></p>
 
-        <p>Mais dans tous les cas, ces calculs permettent de répondre à une question simple :</p>
+        <h2>Transparence</h2>
+
+        <p>Toutes les données utilisées sont publiques et accessibles via <a href="https://www.data.gouv.fr" target="_blank" rel="noopener">data.gouv.fr</a>.</p>
+
+        <p>L'outil ne soutient aucun parti ni candidat — il soutient le vote des jeunes.</p>
 
         <div class="highlight">
-            <p><strong>Combien de personnes auraient dû se mobiliser pour que l'histoire soit différente ?</strong></p>
-            <p>Et souvent, la réponse est : beaucoup moins qu'on ne l'imagine.</p>
+            <p>Il illustre un mécanisme mathématique : certaines élections se jouent parfois à un nombre de voix réduit.</p>
         </div>
 
         <div class="note-block">
-            <p><strong>Sources des données :</strong> Résultats des élections municipales 2020 et données de recensement INSEE, via <a href="https://www.data.gouv.fr" target="_blank" rel="noopener">data.gouv.fr</a>.</p>
             <p>Le code source de ce site est disponible en open source sur <a href="https://github.com/vjuju/mobilisator" target="_blank" rel="noopener">GitHub</a>.</p>
         </div>
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - #RIENSANSNOUS</title>
+    <style>
+        @font-face {
+            font-family: 'Folsom';
+            src: url('/fonts/Folsom-Black.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            padding: 20px 40px;
+        }
+
+        .navbar h1 {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .navbar h1 a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .navbar h1 a:hover {
+            color: #5ECBA1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .page-title {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: #5ECBA1;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-family: 'Folsom', Impact, sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            margin-top: 40px;
+            margin-bottom: 14px;
+            padding-top: 28px;
+            border-top: 1px solid #222;
+            line-height: 1.3;
+        }
+
+        h2:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: #ccc;
+        }
+
+        ul, ol {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            color: #ccc;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        a {
+            color: #5ECBA1;
+            text-decoration: underline;
+        }
+
+        a:hover {
+            color: #7EDBB5;
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid #333;
+            margin-top: 60px;
+        }
+
+        .footer a {
+            color: #666;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #5ECBA1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1><a href="/">#RIENSANSNOUS</a></h1>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">FAQ</h1>
+
+        <h2>Vos chiffres sont-ils officiels ?</h2>
+        <p>Les données utilisées sont officielles (Ministère de l'Intérieur et INSEE).</p>
+        <p>Les indicateurs affichés par le Mobilisator sont des <strong>estimations statistiques</strong> construites à partir de ces données publiques.</p>
+        <p>Les résultats électoraux officiels restent ceux publiés par le Ministère de l'Intérieur.</p>
+
+        <h2>Que signifie exactement "votes qui auraient pu faire la diff'" ?</h2>
+        <p>Il s'agit du nombre minimal de voix supplémentaires qui auraient mathématiquement suffi à modifier l'issue d'un scrutin.</p>
+        <p>Ce calcul dépend du tour décisif :</p>
+        <ul>
+            <li>En cas de second tour : nombre de voix supplémentaires nécessaires pour que la liste arrivée deuxième passe devant la première.</li>
+            <li>En cas de premier tour : nombre de voix supplémentaires nécessaires pour empêcher la majorité absolue.</li>
+        </ul>
+        <p>Ce terme est pédagogique. Il ne correspond pas à une catégorie juridique.</p>
+
+        <h2>Est-ce que vous affirmez que les jeunes auraient changé le résultat ?</h2>
+        <p>Non. Le Mobilisator ne modélise aucun comportement électoral.</p>
+        <p>Il ne prétend pas qu'une tranche d'âge aurait voté d'une manière spécifique.</p>
+        <p>Il compare deux ordres de grandeur :</p>
+        <ul>
+            <li>un écart de voix,</li>
+            <li>un volume estimé de non-participation.</li>
+        </ul>
+        <p>L'interprétation politique appartient aux citoyens.</p>
+
+        <h2>Pourquoi vous concentrez-vous sur les 18–39 ans ?</h2>
+        <p>Il s'agit d'une tranche d'âge significative démographiquement et régulièrement étudiée dans les analyses de participation électorale.</p>
+        <p>Le choix de cette tranche vise à illustrer un enjeu de participation, pas à attribuer une orientation politique.</p>
+        <p>Le Mobilisator est porté par l'association On Est Prêt, un mouvement citoyen historiquement engagé dans la mobilisation des jeunes générations sur les enjeux démocratiques et écologiques. Il est donc cohérent que l'outil s'intéresse à une tranche d'âge correspondant à son public principal.</p>
+
+        <h2>Comment estimez-vous les non-votants par âge alors que ces données ne sont pas publiées ?</h2>
+        <p>Les données de participation ne sont pas ventilées par âge au niveau communal.</p>
+        <p>Nous procédons donc en deux étapes :</p>
+        <ol>
+            <li>Calcul du taux de participation communal à partir des inscrits et des votants (données officielles).</li>
+            <li>Application de ce taux à la population de 18–39 ans issue du recensement INSEE.</li>
+        </ol>
+        <p>Cette méthode repose sur une hypothèse simplificatrice : un taux de participation identique entre tranches d'âge.</p>
+
+        <h2>Cette hypothèse est-elle réaliste ?</h2>
+        <p>Elle est simplificatrice. Les études nationales montrent que les jeunes votent en moyenne moins que les personnes âgées.</p>
+        <p>En appliquant le taux global à toutes les tranches d'âge, notre méthode tend probablement à <strong>sous-estimer l'abstention réelle des jeunes</strong>.</p>
+        <p>Il s'agit donc d'une estimation prudente.</p>
+
+        <h2>Pourquoi utiliser la population INSEE plutôt que les inscrits par âge ?</h2>
+        <p>Les données officielles ne publient pas le nombre d'inscrits par tranche d'âge à l'échelle communale.</p>
+        <p>Nous utilisons donc les données démographiques disponibles les plus fiables à cette échelle.</p>
+        <p>La limite de cette approximation est explicitée dans notre <a href="/methode.html">méthodologie</a>.</p>
+
+        <h2>Votre méthode est-elle reproductible ?</h2>
+        <p>Oui. Toutes les données utilisées sont publiques et accessibles sur <a href="https://www.data.gouv.fr" target="_blank" rel="noopener">data.gouv.fr</a>.</p>
+        <p>Les calculs reposent sur des opérations arithmétiques simples à partir de ces données, réalisés par nos développeurs On Est Prêt.</p>
+
+        <h2>Remettez-vous en cause la légitimité des élus ?</h2>
+        <p>Non. Les résultats officiels sont incontestables.</p>
+        <p>Le Mobilisator n'a pas vocation à contester une élection — il illustre le fait que certaines élections peuvent se jouer à des écarts faibles.</p>
+
+        <h2>Pourquoi ne pas intégrer davantage de variables (sociologie, reports de voix, etc.) ?</h2>
+        <p>Ce n'est pas l'objet de l'outil. Le Mobilisator n'est ni un modèle prédictif ni une simulation électorale.</p>
+        <p>Il se limite volontairement à deux indicateurs simples et transparents.</p>
+
+        <h2>Pourquoi ne pas utiliser les données d'enquêtes post-électorales ?</h2>
+        <p>Les enquêtes nationales ne permettent pas une ventilation fiable à l'échelle communale.</p>
+        <p>Le Mobilisator repose exclusivement sur des données administratives publiques disponibles pour toutes les communes.</p>
+
+        <h2>Est-ce un outil de mobilisation politique ?</h2>
+        <p>Le Mobilisator est un outil pédagogique sur la participation électorale.</p>
+        <p>Il appartient à chaque citoyen d'en tirer les conclusions qu'il souhaite.</p>
+
+        <h2>Acceptez-vous la critique méthodologique ?</h2>
+        <p>Oui. La méthode est publique, explicite et assumée dans ses limites.</p>
+        <p>Toute amélioration fondée sur des données officielles supplémentaires serait intégrable.</p>
+
+        <h2>Votre outil est-il partisan ?</h2>
+        <p>Le Mobilisator ne soutient aucun parti ni candidat. Il est partisan de la participation démocratique et du vote.</p>
+        <p>On Est Prêt défend l'idée que plus la participation est large, notamment chez les jeunes, plus la démocratie est représentative et robuste.</p>
+        <p>L'outil ne dit pas pour qui voter. Il rappelle simplement que voter compte, à l'heure où on se bat pour des causes progressistes.</p>
+
+        <footer class="footer">
+            <a href="/">Retour à l'accueil</a>
+        </footer>
+    </div>
+
+    <!-- Matomo (exemption : sans cookies + respect DNT) -->
+    <script>
+      var _paq = window._paq = window._paq || [];
+      _paq.push(['disableCookies']);
+      _paq.push(['setDoNotTrack', true]);
+      _paq.push(['trackPageView']);
+      _paq.push(['enableLinkTracking']);
+      (function() {
+        var u = "https://stats.mobilisator.fr/matomo/";
+        _paq.push(['setTrackerUrl', u + 'matomo.php']);
+        _paq.push(['setSiteId', '1']);
+        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+        g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+      })();
+    </script>
+    <!-- End Matomo -->
+</body>
+</html>

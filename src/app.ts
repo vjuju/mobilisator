@@ -280,8 +280,7 @@ function updatePanelVisibility(): void {
 	const params = new URLSearchParams(window.location.search);
 	const jememobilise = params.get("jememobilise") === "true";
 	const how = params.get("how") === "true";
-	const present = params.get("present") === "true";
-	const absent = params.get("absent") === "true";
+	const agenda = params.get("agenda") === "true";
 	const influ = params.get("influ") === "true";
 	const jerejoins = params.get("jerejoins") === "true";
 
@@ -290,12 +289,15 @@ function updatePanelVisibility(): void {
 		if (el) el.classList.toggle("hidden", hide);
 	};
 
-	setHidden("mobilisationPanel", !(jememobilise && !how && !influ && !jerejoins));
-	setHidden("howPanel", !(jememobilise && how && !present && !absent));
-	setHidden("howPresentPanel", !(jememobilise && how && present));
-	setHidden("howAbsentPanel", !(jememobilise && how && absent));
+	setHidden("howPanel", !(jememobilise && how && !agenda));
+	setHidden("agendaPanel", !(jememobilise && how && agenda));
 	setHidden("influPanel", !(jememobilise && influ && !jerejoins));
 	setHidden("rejoinPanel", !(jememobilise && jerejoins));
+
+	// Toggle navbar: show back button when any panel is open
+	const anyPanelOpen = jememobilise && (how || influ || jerejoins);
+	setHidden("navBrand", anyPanelOpen);
+	setHidden("navBack", !anyPanelOpen);
 }
 
 // Handle routing based on current URL
@@ -342,45 +344,39 @@ async function handleRoute(): Promise<void> {
 	}
 }
 
-// Open the mobilisation panel
-function openMobilisationPanel(): void {
-	const url = new URL(window.location.href);
-	url.searchParams.set("jememobilise", "true");
-	window.history.pushState({}, "", url.toString());
-	updatePanelVisibility();
-}
-
-// Close all panels (legacy compat)
-function closeMobilisationPanel(): void {
-	window.history.back();
+// Matomo event tracking helper — sets custom dimension 1 (Ville) then sends the event
+function matomoTrack(category: string, action: string): void {
+	const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
+	if (currentCityData?.cityName) {
+		paq.push(["setCustomDimension", 1, currentCityData.cityName]);
+	}
+	paq.push(["trackEvent", category, action, currentCityData?.cityName ?? ""]);
 }
 
 // Open how-to-vote panel
 function openHowPanel(): void {
+	matomoTrack("CTA", "comment_voter");
 	const url = new URL(window.location.href);
+	url.searchParams.set("jememobilise", "true");
 	url.searchParams.set("how", "true");
 	window.history.pushState({}, "", url.toString());
 	updatePanelVisibility();
 }
 
-// Open how-present panel (voter is available)
-function openHowPresentPanel(): void {
+// Open agenda panel (calendar options)
+function openAgendaPanel(): void {
+	matomoTrack("Comment voter", "agenda");
 	const url = new URL(window.location.href);
-	url.searchParams.set("present", "true");
-	window.history.pushState({}, "", url.toString());
-	updatePanelVisibility();
-}
-
-// Open how-absent panel (voter is not available)
-function openHowAbsentPanel(): void {
-	const url = new URL(window.location.href);
-	url.searchParams.set("absent", "true");
+	url.searchParams.set("jememobilise", "true");
+	url.searchParams.set("how", "true");
+	url.searchParams.set("agenda", "true");
 	window.history.pushState({}, "", url.toString());
 	updatePanelVisibility();
 }
 
 // Open influ/share panel and trigger share flow
 async function openInfluPanel(): Promise<void> {
+	matomoTrack("CTA", "informer_potes");
 	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
 	const container = document.getElementById("influImageContainer");
 	if (btn) {
@@ -393,12 +389,13 @@ async function openInfluPanel(): Promise<void> {
 		await shareCity({ manageButtonState: false });
 	} finally {
 		const url = new URL(window.location.href);
+		url.searchParams.set("jememobilise", "true");
 		url.searchParams.set("influ", "true");
 		window.history.pushState({}, "", url.toString());
 		updatePanelVisibility();
 		if (btn) {
 			btn.disabled = false;
-			btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">📣</span>`;
+			btn.innerHTML = `J'INFORME MES POTES<span class="emoji">📣</span>`;
 		}
 	}
 }
@@ -408,7 +405,9 @@ let qomonFormInitialized = false;
 
 // Open Qomon rejoins panel
 function openRejoinPanel(): void {
+	matomoTrack("CTA", "se_mobiliser");
 	const url = new URL(window.location.href);
+	url.searchParams.set("jememobilise", "true");
 	url.searchParams.set("jerejoins", "true");
 	window.history.pushState({}, "", url.toString());
 	updatePanelVisibility();
@@ -524,6 +523,7 @@ async function navigateToCityById(id: number): Promise<void> {
 		paq.push(["setDocumentTitle", city.nom_standard]);
 		paq.push(["trackPageView"]);
 		displayCityDetail(city);
+		matomoTrack("Search", "ville_selectionnee");
 		clearResults();
 		// Update search input with city name
 		const searchInput = document.getElementById("searchInput") as HTMLInputElement;
@@ -610,6 +610,10 @@ function displayCityDetail(city: City): void {
 		nonVotants1839,
 		hasSecondTour,
 	};
+
+	// Set Matomo custom dimension 1 = Ville
+	const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
+	paq.push(["setCustomDimension", 1, city.nom_standard]);
 
 	// Build results table for the decisive tour
 	const tourDecisif = hasSecondTour ? city["Tour 2"]! : city["Tour 1"];
@@ -765,7 +769,7 @@ interface DetailDataItem {
 
 const getRejoinButtonHtml = (): string => `
 	<button type="button" class="cta-button" onclick="openRejoinPanel()">
-		<span class="emoji">✅</span>J'AI POSTÉ.<br>JE REJOINS LE MOUVEMENT
+		JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
 	</button>
 `;
 
@@ -803,7 +807,7 @@ function showShareModal(imageUrl: string): void {
 	if (container) {
 		container.innerHTML = `
 			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
-			<div class="influ-copy-text">TU PEUX LA COLLER EN STORY</div>
+			<div class="influ-copy-text" style="color:#5ECBA1">TU PEUX LA COLLER EN STORY</div>
 			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
 		`;
 		appendRejoinButtonWhenImageReady(container);
@@ -920,7 +924,7 @@ const createClientFallbackImageBlob = async (
 
 	ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
 	ctx.font = '700 38px Arial, sans-serif';
-	ctx.fillText("ON EST PRÊT ESTIME À", canvas.width / 2, 700);
+	ctx.fillText("ON EST PRÊT ESTIME QUE", canvas.width / 2, 700);
 
 	ctx.fillStyle = "#5ECBA1";
 	ctx.font = '900 220px "Arial Black", Arial, sans-serif';
@@ -1084,8 +1088,7 @@ async function shareCity(
 	const { citySlug, cityName, votesDecisifs } = currentCityData;
 
 	// Track share button click in Matomo
-	const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
-	paq.push(["trackEvent", "Share", "click", cityName]);
+	matomoTrack("Share", "partager");
 
 	const btn = document.getElementById("shareBtn") as HTMLButtonElement | null;
 	if (manageButtonState && btn) {
@@ -1180,7 +1183,7 @@ async function shareCity(
 	} finally {
 		if (manageButtonState && btn) {
 			btn.disabled = false;
-			btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">📣</span>`;
+			btn.innerHTML = `J'INFORME MES POTES<span class="emoji">📣</span>`;
 		}
 	}
 }
@@ -1212,13 +1215,11 @@ declare global {
 		closeDetailModal: () => void;
 		shareCity: () => Promise<void>;
 		closeShareModal: () => void;
-		openMobilisationPanel: () => void;
-		closeMobilisationPanel: () => void;
 		openHowPanel: () => void;
-		openHowPresentPanel: () => void;
-		openHowAbsentPanel: () => void;
+		openAgendaPanel: () => void;
 		openInfluPanel: () => Promise<void>;
 		openRejoinPanel: () => void;
+		trackMatomoEvent: (category: string, action: string) => void;
 		detailData?: Record<string, DetailDataItem>;
 		init?: () => void; // Qomon setup.js global init function
 	}
@@ -1232,13 +1233,11 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
-window.openMobilisationPanel = openMobilisationPanel;
-window.closeMobilisationPanel = closeMobilisationPanel;
 window.openHowPanel = openHowPanel;
-window.openHowPresentPanel = openHowPresentPanel;
-window.openHowAbsentPanel = openHowAbsentPanel;
+window.openAgendaPanel = openAgendaPanel;
 window.openInfluPanel = openInfluPanel;
 window.openRejoinPanel = openRejoinPanel;
+window.trackMatomoEvent = matomoTrack;
 
 // Initialize when DOM is ready
 if (document.readyState === "loading") {

@@ -59,7 +59,7 @@ function computeVotesDecisifs(tour1, tour2) {
   return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprim_s), cas: 3 };
 }
 function getMainTagline(_hasSecondTour) {
-  return "votes d'abstentionnistes qui auraient pu faire la diff'";
+  return "votes qui auraient pu<br>faire la diff'";
 }
 function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
   return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
@@ -172,7 +172,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
-				<div class="stat-estimate">On est prêt estime à</div>
+				<div class="stat-estimate">On est prêt estime que</div>
 				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
@@ -180,16 +180,22 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
-				<div class="stat-estimate">On est prêt estime à</div>
+				<div class="stat-estimate">On est prêt estime que</div>
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
-            <!-- CTA Button -->
+            <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openMobilisationPanel()">
-                    JE ME MOBILISE<span class="emoji">✊</span>
+                <button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">\uD83D\uDDF3️</span>
+                </button>
+                <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
+                    J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>
+                </button>
+                <button type="button" class="cta-button" onclick="openRejoinPanel()">
+                    JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
             </div>
 
@@ -398,8 +404,7 @@ function updatePanelVisibility() {
   const params = new URLSearchParams(window.location.search);
   const jememobilise = params.get("jememobilise") === "true";
   const how = params.get("how") === "true";
-  const present = params.get("present") === "true";
-  const absent = params.get("absent") === "true";
+  const agenda = params.get("agenda") === "true";
   const influ = params.get("influ") === "true";
   const jerejoins = params.get("jerejoins") === "true";
   const setHidden = (id, hide) => {
@@ -407,12 +412,13 @@ function updatePanelVisibility() {
     if (el)
       el.classList.toggle("hidden", hide);
   };
-  setHidden("mobilisationPanel", !(jememobilise && !how && !influ && !jerejoins));
-  setHidden("howPanel", !(jememobilise && how && !present && !absent));
-  setHidden("howPresentPanel", !(jememobilise && how && present));
-  setHidden("howAbsentPanel", !(jememobilise && how && absent));
+  setHidden("howPanel", !(jememobilise && how && !agenda));
+  setHidden("agendaPanel", !(jememobilise && how && agenda));
   setHidden("influPanel", !(jememobilise && influ && !jerejoins));
   setHidden("rejoinPanel", !(jememobilise && jerejoins));
+  const anyPanelOpen = jememobilise && (how || influ || jerejoins);
+  setHidden("navBrand", anyPanelOpen);
+  setHidden("navBack", !anyPanelOpen);
 }
 async function handleRoute() {
   const path = window.location.pathname;
@@ -445,34 +451,32 @@ async function handleRoute() {
     }
   }
 }
-function openMobilisationPanel() {
-  const url = new URL(window.location.href);
-  url.searchParams.set("jememobilise", "true");
-  window.history.pushState({}, "", url.toString());
-  updatePanelVisibility();
-}
-function closeMobilisationPanel() {
-  window.history.back();
+function matomoTrack(category, action) {
+  const paq = window._paq ?? [];
+  if (currentCityData?.cityName) {
+    paq.push(["setCustomDimension", 1, currentCityData.cityName]);
+  }
+  paq.push(["trackEvent", category, action, currentCityData?.cityName ?? ""]);
 }
 function openHowPanel() {
+  matomoTrack("CTA", "comment_voter");
   const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
   url.searchParams.set("how", "true");
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
 }
-function openHowPresentPanel() {
+function openAgendaPanel() {
+  matomoTrack("Comment voter", "agenda");
   const url = new URL(window.location.href);
-  url.searchParams.set("present", "true");
-  window.history.pushState({}, "", url.toString());
-  updatePanelVisibility();
-}
-function openHowAbsentPanel() {
-  const url = new URL(window.location.href);
-  url.searchParams.set("absent", "true");
+  url.searchParams.set("jememobilise", "true");
+  url.searchParams.set("how", "true");
+  url.searchParams.set("agenda", "true");
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
 }
 async function openInfluPanel() {
+  matomoTrack("CTA", "informer_potes");
   const btn = document.getElementById("shareBtn");
   const container = document.getElementById("influImageContainer");
   if (btn) {
@@ -485,18 +489,21 @@ async function openInfluPanel() {
     await shareCity({ manageButtonState: false });
   } finally {
     const url = new URL(window.location.href);
+    url.searchParams.set("jememobilise", "true");
     url.searchParams.set("influ", "true");
     window.history.pushState({}, "", url.toString());
     updatePanelVisibility();
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
+      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
     }
   }
 }
 var qomonFormInitialized = false;
 function openRejoinPanel() {
+  matomoTrack("CTA", "se_mobiliser");
   const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
   url.searchParams.set("jerejoins", "true");
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
@@ -584,6 +591,7 @@ async function navigateToCityById(id) {
     paq.push(["setDocumentTitle", city.nom_standard]);
     paq.push(["trackPageView"]);
     displayCityDetail(city);
+    matomoTrack("Search", "ville_selectionnee");
     clearResults();
     const searchInput = document.getElementById("searchInput");
     if (searchInput)
@@ -639,6 +647,8 @@ function displayCityDetail(city) {
     nonVotants1839,
     hasSecondTour
   };
+  const paq = window._paq ?? [];
+  paq.push(["setCustomDimension", 1, city.nom_standard]);
   const tourDecisif = hasSecondTour ? city["Tour 2"] : city["Tour 1"];
   const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
   const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
@@ -726,7 +736,7 @@ function openDetailModalByKey(key) {
 }
 var getRejoinButtonHtml = () => `
 	<button type="button" class="cta-button" onclick="openRejoinPanel()">
-		<span class="emoji">✅</span>J'AI POSTÉ.<br>JE REJOINS LE MOUVEMENT
+		JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
 	</button>
 `;
 var appendRejoinButtonWhenImageReady = (container, imageSelector = ".influ-image") => {
@@ -754,7 +764,7 @@ function showShareModal(imageUrl) {
   if (container) {
     container.innerHTML = `
 			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
-			<div class="influ-copy-text">TU PEUX LA COLLER EN STORY</div>
+			<div class="influ-copy-text" style="color:#5ECBA1">TU PEUX LA COLLER EN STORY</div>
 			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
 		`;
     appendRejoinButtonWhenImageReady(container);
@@ -838,7 +848,7 @@ var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
   ctx.fillText(cityUpper, canvas.width / 2, 390);
   ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
   ctx.font = "700 38px Arial, sans-serif";
-  ctx.fillText("ON EST PRÊT ESTIME À", canvas.width / 2, 700);
+  ctx.fillText("ON EST PRÊT ESTIME QUE", canvas.width / 2, 700);
   ctx.fillStyle = "#5ECBA1";
   ctx.font = '900 220px "Arial Black", Arial, sans-serif';
   ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 880);
@@ -974,8 +984,7 @@ async function shareCity(options = {}) {
   }
   const { manageButtonState = true } = options;
   const { citySlug, cityName, votesDecisifs } = currentCityData;
-  const paq = window._paq ?? [];
-  paq.push(["trackEvent", "Share", "click", cityName]);
+  matomoTrack("Share", "partager");
   const btn = document.getElementById("shareBtn");
   if (manageButtonState && btn) {
     btn.disabled = true;
@@ -1055,7 +1064,7 @@ ${String(error)}`);
   } finally {
     if (manageButtonState && btn) {
       btn.disabled = false;
-      btn.innerHTML = `JE VOTE.<br>J'INFLU' MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
+      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
     }
   }
 }
@@ -1081,13 +1090,11 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
-window.openMobilisationPanel = openMobilisationPanel;
-window.closeMobilisationPanel = closeMobilisationPanel;
 window.openHowPanel = openHowPanel;
-window.openHowPresentPanel = openHowPresentPanel;
-window.openHowAbsentPanel = openHowAbsentPanel;
+window.openAgendaPanel = openAgendaPanel;
 window.openInfluPanel = openInfluPanel;
 window.openRejoinPanel = openRejoinPanel;
+window.trackMatomoEvent = matomoTrack;
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {

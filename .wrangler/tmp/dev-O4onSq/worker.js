@@ -22140,7 +22140,7 @@ async function handleOgImage(request, env2, slug) {
         el(
           "div",
           { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 140 } },
-          el("div", { style: { fontSize: 44, color: "rgba(255,255,255,0.6)", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, marginBottom: 16 } }, "ON EST PR\xCAT ESTIME \xC0"),
+          el("div", { style: { fontSize: 44, color: "rgba(255,255,255,0.6)", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, marginBottom: 16 } }, "ON EST PR\xCAT ESTIME QUE"),
           el("div", { style: { fontSize: 260, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, city.votes.toLocaleString("fr-FR"))
         ),
         el(
