@@ -211,17 +211,25 @@ const calculateVotesDecisifs = (
 	tour1Data: Record<string, unknown>,
 	tour2Data?: Record<string, unknown>,
 ): number => {
+	// Helper : filtre les résultats dont Voix est un nombre valide
+	const validVoix = (arr: Array<{ Voix: number }>) =>
+		arr.filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix));
+
 	if (tour2Data && tour2Data.resultats) {
 		// Cas 2 : second tour — changer la liste majoritaire (écart + 1)
-		const resultats = tour2Data.resultats as Array<{ Voix: number }>;
+		const resultats = validVoix(tour2Data.resultats as Array<{ Voix: number }>);
 		if (resultats.length >= 2) {
 			const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
 			return sorted[0].Voix - sorted[1].Voix + 1;
 		}
+		// Cas 2b : liste unique au second tour — on utilise l'écart du Tour 1
+		const r1 = validVoix(tour1Data.resultats as Array<{ Voix: number }>);
+		const s1 = [...r1].sort((a, b) => b.Voix - a.Voix);
+		if (s1.length >= 2) return s1[0].Voix - s1[1].Voix + 1;
 		return 0;
 	}
 
-	const resultats = tour1Data.resultats as Array<{ Voix: number }>;
+	const resultats = validVoix(tour1Data.resultats as Array<{ Voix: number }>);
 	if (resultats.length === 0) return 0;
 
 	const sorted = [...resultats].sort((a, b) => b.Voix - a.Voix);
@@ -232,9 +240,15 @@ const calculateVotesDecisifs = (
 		return gagnantVoix + 1;
 	}
 
-	// Cas 3 : victoire au premier tour — forcer un second tour (2×V₁ − Vₜ)
+	// Cas 3 : victoire au premier tour avec majorité absolue → combien de voix aux autres
+	// pour passer la liste de tête sous les 50% et forcer un 2e tour (2×V₁ − Vₜ)
 	const exprimés = tour1Data.Exprimés as number;
-	return Math.max(0, 2 * gagnantVoix - exprimés);
+	const majority = 2 * gagnantVoix - exprimés;
+	if (majority > 0) return majority;
+
+	// Cas 3b : pas de majorité absolue mais pas de second tour (règles spécifiques,
+	// listes retirées, etc.) → écart entre 1ère et 2e liste + 1
+	return sorted[0].Voix - sorted[1].Voix + 1;
 };
 
 console.log("📖 Reading elections_1.json...");

@@ -8,6 +8,8 @@ import {
 	formatFormulaDecisiveCas1,
 	formatFormulaDecisiveCas2,
 	formatFormulaDecisiveCas3,
+	formatFormulaDecisiveCas3b,
+	formatFormulaDecisiveCas2b,
 	formatExplanationNonVoting,
 	formatFormulaNonVotants,
 	formatResultsTable,
@@ -637,6 +639,33 @@ function displayCityDetail(city: City): void {
 			tourLabel,
 			resultsTable,
 		);
+	} else if (cas === "3b" && secondPlace) {
+		formulaDecisive = formatFormulaDecisiveCas3b(
+			city.nom_standard,
+			city.code_departement,
+			firstPlace.Voix,
+			secondPlace.Voix,
+			votesDecisifs,
+			resultsTable,
+		);
+	} else if (cas === "2b") {
+		// For Cas 2b, the formula uses Tour 1 data (Tour 2 had a single list)
+		const tour1Resultats = [...city["Tour 1"].resultats]
+			.filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix))
+			.sort((a, b) => b.Voix - a.Voix);
+		const tour1Table = formatResultsTable(tour1Resultats);
+		const tour1First = tour1Resultats[0];
+		const tour1Second = tour1Resultats[1];
+		if (tour1First && tour1Second) {
+			formulaDecisive = formatFormulaDecisiveCas2b(
+				city.nom_standard,
+				city.code_departement,
+				tour1First.Voix,
+				tour1Second.Voix,
+				votesDecisifs,
+				tour1Table,
+			);
+		}
 	} else {
 		formulaDecisive = formatFormulaDecisiveCas3(
 			city.nom_standard,

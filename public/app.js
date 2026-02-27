@@ -58,13 +58,17 @@ function scaledNumberFontSizes(nonVotants, votesDecisifs) {
 }
 function computeVotesDecisifs(tour1, tour2) {
   if (tour2) {
-    const sorted2 = [...tour2.resultats].sort((a, b) => b.Voix - a.Voix);
+    const sorted2 = [...tour2.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
     if (sorted2.length >= 2) {
       return { votesDecisifs: sorted2[0].Voix - sorted2[1].Voix + 1, cas: 2 };
     }
-    return { votesDecisifs: 0, cas: 2 };
+    const sorted1 = [...tour1.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
+    if (sorted1.length >= 2) {
+      return { votesDecisifs: sorted1[0].Voix - sorted1[1].Voix + 1, cas: "2b" };
+    }
+    return { votesDecisifs: 0, cas: "2b" };
   }
-  const sorted = [...tour1.resultats].sort((a, b) => b.Voix - a.Voix);
+  const sorted = [...tour1.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
   if (sorted.length === 0)
     return { votesDecisifs: 0, cas: 3 };
   const gagnantVoix = sorted[0].Voix;
@@ -72,7 +76,11 @@ function computeVotesDecisifs(tour1, tour2) {
     return { votesDecisifs: gagnantVoix + 1, cas: 1 };
   }
   const exprim_s = tour1.Exprimés;
-  return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprim_s), cas: 3 };
+  const majority = 2 * gagnantVoix - exprim_s;
+  if (majority > 0) {
+    return { votesDecisifs: majority, cas: 3 };
+  }
+  return { votesDecisifs: sorted[0].Voix - sorted[1].Voix + 1, cas: "3b" };
 }
 function getMainTagline(_hasSecondTour, cityName) {
   return `votes auraient pu<br>faire la diff'<br>en 2020 à ${cityName}`;
@@ -120,6 +128,38 @@ Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLo
 <br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
 <br><br><strong>Résultats du ${tourLabel} :</strong>
 ${resultsTableHtml}`;
+}
+function formatFormulaDecisiveCas3b(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, resultsTableHtml) {
+  const ecart = firstPlaceVoix - secondPlaceVoix;
+  return `À ${cityName} (${codeDepartement}) en 2020, les élections municipales ne se sont pas tenues en deux tours bien qu'aucune liste n'ait obtenu la majorité absolue au premier tour.
+<br><br>
+Par analogie avec les communes ayant eu un second tour, on calcule l'écart entre la première et la deuxième liste pour estimer le nombre de votes qui auraient pu inverser l'ordre d'arrivée.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour :</strong>
+${resultsTableHtml}`;
+}
+function formatFormulaDecisiveCas2b(cityName, codeDepartement, tour1FirstPlaceVoix, tour1SecondPlaceVoix, votesDecisifs, tour1ResultsTableHtml) {
+  const ecart = tour1FirstPlaceVoix - tour1SecondPlaceVoix;
+  return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au second tour : toutes les autres listes s'étaient retirées ou fusionnées avant le second tour.
+<br><br>
+En l'absence d'adversaire au second tour, on remonte au premier tour pour estimer les votes décisifs : l'écart entre la première et la deuxième liste au 1er tour indique combien de votes auraient pu modifier l'ordre d'arrivée avant les désistements.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste au 1er tour) + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste (1er tour) : ${tour1FirstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Voix de la 2e liste (1er tour) : ${tour1SecondPlaceVoix.toLocaleString("fr-FR")}
+<br>• Écart : ${tour1FirstPlaceVoix.toLocaleString("fr-FR")} − ${tour1SecondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour :</strong>
+${tour1ResultsTableHtml}`;
 }
 function formatExplanationNonVoting(cityName, codeDepartement, pop1839, partNeVotantPas, nonVotants, pop18Plus) {
   return `Lors des municipales de 2020, ${cityName} (${codeDepartement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${cityName} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
@@ -667,6 +707,16 @@ function displayCityDetail(city) {
     formulaDecisive = formatFormulaDecisiveCas1(city.nom_standard, city.code_departement, firstPlace.Voix, votesDecisifs, resultsTable);
   } else if (cas === 2 && secondPlace) {
     formulaDecisive = formatFormulaDecisiveCas2(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
+  } else if (cas === "3b" && secondPlace) {
+    formulaDecisive = formatFormulaDecisiveCas3b(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, resultsTable);
+  } else if (cas === "2b") {
+    const tour1Resultats = [...city["Tour 1"].resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
+    const tour1Table = formatResultsTable(tour1Resultats);
+    const tour1First = tour1Resultats[0];
+    const tour1Second = tour1Resultats[1];
+    if (tour1First && tour1Second) {
+      formulaDecisive = formatFormulaDecisiveCas2b(city.nom_standard, city.code_departement, tour1First.Voix, tour1Second.Voix, votesDecisifs, tour1Table);
+    }
   } else {
     formulaDecisive = formatFormulaDecisiveCas3(city.nom_standard, city.code_departement, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
   }
