@@ -40,44 +40,70 @@ var labels = {
   detailLink: "Détail",
   sourceLabel: "Source :"
 };
-function getMainTagline(hasSecondTour) {
-  if (hasSecondTour) {
-    return "votes suffisaient pour élire un autre maire";
+function computeVotesDecisifs(tour1, tour2) {
+  if (tour2) {
+    const sorted2 = [...tour2.resultats].sort((a, b) => b.Voix - a.Voix);
+    if (sorted2.length >= 2) {
+      return { votesDecisifs: sorted2[0].Voix - sorted2[1].Voix + 1, cas: 2 };
+    }
+    return { votesDecisifs: 0, cas: 2 };
   }
-  return "votes suffisaient pour aller au second tour";
-}
-function formatExplanationDecisive(cityName, codeDepartement, votesDecisifs, hasSecondTour) {
-  const formattedVotes = votesDecisifs.toLocaleString("fr-FR");
-  if (hasSecondTour) {
-    return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), l'écart de voix au second tour entre la 1ère et la 2e liste était de ${formattedVotes} voix.`;
+  const sorted = [...tour1.resultats].sort((a, b) => b.Voix - a.Voix);
+  if (sorted.length === 0)
+    return { votesDecisifs: 0, cas: 3 };
+  const gagnantVoix = sorted[0].Voix;
+  if (sorted.length === 1) {
+    return { votesDecisifs: gagnantVoix + 1, cas: 1 };
   }
-  return `Lors des municipales de 2020, à ${cityName} (${codeDepartement}), la 1ère liste a obtenu ${formattedVotes} voix au-dessus de la majorité au premier tour.`;
+  const exprim_s = tour1.Exprimés;
+  return { votesDecisifs: Math.max(0, 2 * gagnantVoix - exprim_s), cas: 3 };
 }
-function formatFormulaDecisiveSecondTour(explanationDecisive, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
-  return `${explanationDecisive}
+function getMainTagline(_hasSecondTour, cityName) {
+  return `votes auraient pu<br>faire la diff'<br>en 2020 à ${cityName}`;
+}
+function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
+  return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − Voix de la 2e liste au second tour
+Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
+<br><br>
+<strong>Formule :</strong> Voix de la liste unique + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour :</strong>
+${resultsTableHtml}`;
+}
+function formatFormulaDecisiveCas2(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
+  const ecart = firstPlaceVoix - secondPlaceVoix;
+  return `À ${cityName} (${codeDepartement}) en 2020, la liste arrivée en tête au second tour l'a emporté avec ${ecart.toLocaleString("fr-FR")} voix d'avance.
+<br><br>
+Pour que la 2e liste passe devant, il aurait suffi d'ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes à son score.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
 <br><br>
 <strong>Détail :</strong>
 <br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
 <br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
-<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
-function formatFormulaDecisivePremierTour(explanationDecisive, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
-  const moitieExprimes = Math.round(exprimes / 2);
-  return `${explanationDecisive}
+function formatFormulaDecisiveCas3(cityName, codeDepartement, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
+  const pourcentage = (firstPlaceVoix / exprimes * 100).toFixed(1);
+  return `À ${cityName} (${codeDepartement}) en 2020, la liste gagnante a remporté l'élection dès le premier tour avec ${pourcentage}% des suffrages exprimés (plus de 50%).
 <br><br>
-<strong>Formule :</strong> Voix de la 1ère liste − (Exprimés ÷ 2) au premier tour
+Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires aux autres listes — ce qui aurait ramené la liste de tête à 50% ou moins.
+<br><br>
+<strong>Formule :</strong> 2 × Voix de la 1ère liste − Total des exprimés
 <br><br>
 <strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Exprimés : ${exprimes.toLocaleString("fr-FR")}
-<br>• Majorité (Exprimés ÷ 2) : ${moitieExprimes.toLocaleString("fr-FR")}
-<br>• Marge au-dessus de la majorité : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${moitieExprimes.toLocaleString("fr-FR")} = ${votesDecisifs.toLocaleString("fr-FR")} voix
-		<br><br><strong>Résultats du ${tourLabel} :</strong>
-		${resultsTableHtml}`;
+<br>• Voix de la 1ère liste (V₁) : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Total des exprimés (Vₜ) : ${exprimes.toLocaleString("fr-FR")}
+<br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du ${tourLabel} :</strong>
+${resultsTableHtml}`;
 }
 function formatExplanationNonVoting(cityName, codeDepartement, pop1839, partNeVotantPas, nonVotants, pop18Plus) {
   return `Lors des municipales de 2020, ${cityName} (${codeDepartement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${cityName} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
@@ -146,6 +172,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
+				<div class="stat-estimate">On est prêt estime que</div>
 				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
@@ -153,6 +180,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
+				<div class="stat-estimate">On est prêt estime que</div>
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
@@ -160,13 +188,14 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" id="shareBtn" class="cta-button" onclick="shareCity()">
-                    ${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>
+                <button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">\uD83D\uDDF3️</span>
                 </button>
-            </div>
-            <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openQomonModal()">
-                    ${labels.cta.rejoindre}<span class="emoji">${labels.cta.rejoindreEmoji}</span>
+                <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
+                    J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>
+                </button>
+                <button type="button" class="cta-button" onclick="openRejoinPanel()">
+                    JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
             </div>
 
@@ -338,6 +367,14 @@ function debounce(func, delay) {
 }
 function initApp() {
   initAccessGate();
+  const navBrand = document.getElementById("navBrand");
+  if (navBrand) {
+    navBrand.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.history.pushState({}, "", BASE_PATH);
+      handleRoute();
+    });
+  }
   if (!hasAccess()) {
     showAccessGate();
     return;
@@ -363,16 +400,120 @@ function initApp() {
     });
   }
 }
+function updatePanelVisibility() {
+  const params = new URLSearchParams(window.location.search);
+  const jememobilise = params.get("jememobilise") === "true";
+  const how = params.get("how") === "true";
+  const agenda = params.get("agenda") === "true";
+  const influ = params.get("influ") === "true";
+  const jerejoins = params.get("jerejoins") === "true";
+  const setHidden = (id, hide) => {
+    const el = document.getElementById(id);
+    if (el)
+      el.classList.toggle("hidden", hide);
+  };
+  setHidden("howPanel", !(jememobilise && how && !agenda));
+  setHidden("agendaPanel", !(jememobilise && how && agenda));
+  setHidden("influPanel", !(jememobilise && influ && !jerejoins));
+  setHidden("rejoinPanel", !(jememobilise && jerejoins));
+  const anyPanelOpen = jememobilise && (how || influ || jerejoins);
+  setHidden("navBrand", anyPanelOpen);
+  setHidden("navBack", !anyPanelOpen);
+}
 async function handleRoute() {
   const path = window.location.pathname;
   const relativePath = path.startsWith(BASE_PATH) ? path.slice(BASE_PATH.length) : path.substring(1);
+  updatePanelVisibility();
   if (relativePath === "" || relativePath === "index.html") {
     const cityDetailDiv = document.getElementById("cityDetail");
     if (cityDetailDiv)
       cityDetailDiv.innerHTML = "";
+    const landingText = document.getElementById("landingText");
+    if (landingText)
+      landingText.classList.remove("hidden");
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput)
+      searchInput.value = "";
+    clearResults();
   } else {
+    const landingText = document.getElementById("landingText");
+    if (landingText)
+      landingText.classList.add("hidden");
     const slug = relativePath.replace(".html", "");
     await loadCityBySlug(slug);
+  }
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("jememobilise") === "true" && params.get("influ") === "true" && params.get("jerejoins") !== "true") {
+    const container = document.getElementById("influImageContainer");
+    if (container && container.innerHTML === "") {
+      container.innerHTML = `<p class="loading">Chargement...</p>`;
+      shareCity();
+    }
+  }
+}
+function matomoTrack(category, action) {
+  const paq = window._paq ?? [];
+  if (currentCityData?.cityName) {
+    paq.push(["setCustomDimension", 1, currentCityData.cityName]);
+  }
+  paq.push(["trackEvent", category, action, currentCityData?.cityName ?? ""]);
+}
+function openHowPanel() {
+  matomoTrack("CTA", "comment_voter");
+  const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
+  url.searchParams.set("how", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+function openAgendaPanel() {
+  matomoTrack("Comment voter", "agenda");
+  const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
+  url.searchParams.set("how", "true");
+  url.searchParams.set("agenda", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+}
+async function openInfluPanel() {
+  matomoTrack("CTA", "informer_potes");
+  const btn = document.getElementById("shareBtn");
+  const container = document.getElementById("influImageContainer");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = "Chargement...";
+  }
+  if (container)
+    container.innerHTML = `<p class="loading">Chargement...</p>`;
+  try {
+    await shareCity({ manageButtonState: false });
+  } finally {
+    const url = new URL(window.location.href);
+    url.searchParams.set("jememobilise", "true");
+    url.searchParams.set("influ", "true");
+    window.history.pushState({}, "", url.toString());
+    updatePanelVisibility();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
+    }
+  }
+}
+var qomonFormInitialized = false;
+function openRejoinPanel() {
+  matomoTrack("CTA", "se_mobiliser");
+  const url = new URL(window.location.href);
+  url.searchParams.set("jememobilise", "true");
+  url.searchParams.set("jerejoins", "true");
+  window.history.pushState({}, "", url.toString());
+  updatePanelVisibility();
+  if (!qomonFormInitialized) {
+    const qomonForm = document.querySelector("#rejoinPanel .qomon-form");
+    if (qomonForm) {
+      const clone = qomonForm.cloneNode(true);
+      qomonForm.parentNode?.replaceChild(clone, qomonForm);
+    }
+    qomonFormInitialized = true;
   }
 }
 function clearResults() {
@@ -450,6 +591,7 @@ async function navigateToCityById(id) {
     paq.push(["setDocumentTitle", city.nom_standard]);
     paq.push(["trackPageView"]);
     displayCityDetail(city);
+    matomoTrack("Search", "ville_selectionnee");
     clearResults();
     const searchInput = document.getElementById("searchInput");
     if (searchInput)
@@ -477,6 +619,9 @@ function displayCityDetail(city) {
   const cityDetailDiv = document.getElementById("cityDetail");
   if (!cityDetailDiv)
     return;
+  const landingText = document.getElementById("landingText");
+  if (landingText)
+    landingText.classList.add("hidden");
   const searchInput = document.getElementById("searchInput");
   if (searchInput)
     searchInput.value = formatSearchInputValue(city.nom_standard, city.code_departement);
@@ -484,16 +629,15 @@ function displayCityDetail(city) {
     cityDetailDiv.innerHTML = `<p class="error">${messages.analyseNonDisponible}</p>`;
     return;
   }
-  const votesDecisifs = city.Analyse["Votes décisifs"];
   const hasSecondTour = !!city["Tour 2"];
-  const explanationDecisive = formatExplanationDecisive(city.nom_standard, city.code_departement, votesDecisifs, hasSecondTour);
+  const { votesDecisifs, cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
   const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
   const pop1839 = city.Analyse["Pop 18-39"];
   const pop18Plus = city.Analyse["Pop 18+"];
   const nonVotants = city.Analyse["Non votants"];
   const partNeVotantPas = city.Analyse["Part ne votant pas"];
   const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
-  const mainTagline = getMainTagline(hasSecondTour);
+  const mainTagline = getMainTagline(hasSecondTour, city.nom_standard);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
   currentCityData = {
     citySlug: city.slug,
@@ -503,6 +647,8 @@ function displayCityDetail(city) {
     nonVotants1839,
     hasSecondTour
   };
+  const paq = window._paq ?? [];
+  paq.push(["setCustomDimension", 1, city.nom_standard]);
   const tourDecisif = hasSecondTour ? city["Tour 2"] : city["Tour 1"];
   const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
   const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
@@ -511,10 +657,12 @@ function displayCityDetail(city) {
   const secondPlace = resultats[1];
   const exprimes = tourDecisif.Exprimés;
   let formulaDecisive = "";
-  if (hasSecondTour && secondPlace) {
-    formulaDecisive = formatFormulaDecisiveSecondTour(explanationDecisive, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
+  if (cas === 1) {
+    formulaDecisive = formatFormulaDecisiveCas1(city.nom_standard, city.code_departement, firstPlace.Voix, votesDecisifs, resultsTable);
+  } else if (cas === 2 && secondPlace) {
+    formulaDecisive = formatFormulaDecisiveCas2(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
   } else {
-    formulaDecisive = formatFormulaDecisivePremierTour(explanationDecisive, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
+    formulaDecisive = formatFormulaDecisiveCas3(city.nom_standard, city.code_departement, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
   }
   const votants = tourDecisif.Votants;
   const formulaNonVotants = formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839);
@@ -535,33 +683,10 @@ function displayCityDetail(city) {
   cityDetailDiv.innerHTML = html;
 }
 function openQomonModal() {
-  let modal = document.getElementById("qomonModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "qomonModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-			<div class="modal-content">
-				<button type="button" class="modal-close" onclick="closeQomonModal()">&times;</button>
-				<div class="qomon-form" data-base_id="103323d7-738d-4ff2-813b-c397d6980e38"></div>
-			</div>
-		`;
-    document.body.appendChild(modal);
-    const qomonForm = modal.querySelector(".qomon-form");
-    if (qomonForm) {
-      const clone = qomonForm.cloneNode(true);
-      qomonForm.parentNode?.replaceChild(clone, qomonForm);
-    }
-  }
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
+  openRejoinPanel();
 }
 function closeQomonModal() {
-  const modal = document.getElementById("qomonModal");
-  if (modal) {
-    modal.classList.remove("show");
-    document.body.style.overflow = "";
-  }
+  window.history.back();
 }
 function openDetailModal(title, formula, sourceUrl) {
   let modal = document.getElementById("detailModal");
@@ -609,37 +734,43 @@ function openDetailModalByKey(key) {
     openDetailModal(data.title, data.formula, data.source);
   }
 }
+var getRejoinButtonHtml = () => `
+	<button type="button" class="cta-button" onclick="openRejoinPanel()">
+		JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
+	</button>
+`;
+var appendRejoinButtonWhenImageReady = (container, imageSelector = ".influ-image") => {
+  const maybeAppend = () => {
+    if (!container.querySelector(".influ-image"))
+      return;
+    if (container.querySelector("[data-rejoin-btn='true']"))
+      return;
+    container.insertAdjacentHTML("beforeend", `<div data-rejoin-btn="true">${getRejoinButtonHtml()}</div>`);
+  };
+  const img = container.querySelector(imageSelector);
+  if (!img) {
+    maybeAppend();
+    return;
+  }
+  if (img.complete && img.naturalWidth > 0) {
+    maybeAppend();
+    return;
+  }
+  img.addEventListener("load", maybeAppend, { once: true });
+  img.addEventListener("error", maybeAppend, { once: true });
+};
 function showShareModal(imageUrl) {
-  let modal = document.getElementById("shareModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "shareModal";
-    modal.className = "modal";
-    modal.innerHTML = `
-			<div class="modal-content share-modal-content">
-				<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
-				<h3 class="share-modal-title">Image copiée !</h3>
-				<p class="share-modal-subtitle">Tu peux la coller en story</p>
-				<div class="share-modal-image-container">
-					<img class="share-modal-image" src="" alt="Image à partager">
-				</div>
-			</div>
+  const container = document.getElementById("influImageContainer");
+  if (container) {
+    container.innerHTML = `
+			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
+			<div class="influ-copy-text" style="color:#5ECBA1">TU PEUX LA COLLER EN STORY</div>
+			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
 		`;
-    document.body.appendChild(modal);
-  }
-  const img = modal.querySelector(".share-modal-image");
-  if (img)
-    img.src = imageUrl;
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
-}
-function closeShareModal() {
-  const modal = document.getElementById("shareModal");
-  if (modal) {
-    modal.classList.remove("show");
-    document.body.style.overflow = "";
+    appendRejoinButtonWhenImageReady(container);
   }
 }
+function closeShareModal() {}
 var normalizeImageForClipboard = async (blob) => {
   try {
     const bitmap = await createImageBitmap(blob);
@@ -686,6 +817,58 @@ var canDecodeImageBlob = async (blob) => {
   } catch {
     return false;
   }
+};
+var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas context unavailable");
+  }
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, "#0f1f19");
+  gradient.addColorStop(1, "#000000");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '700 54px "Arial Black", Arial, sans-serif';
+  ctx.fillText("#RIENSANSNOUS", canvas.width / 2, 170);
+  let cityFontSize = 96;
+  ctx.font = `900 ${cityFontSize}px "Arial Black", Arial, sans-serif`;
+  const cityUpper = cityName.toUpperCase();
+  while (ctx.measureText(cityUpper).width > 900 && cityFontSize > 56) {
+    cityFontSize -= 4;
+    ctx.font = `900 ${cityFontSize}px "Arial Black", Arial, sans-serif`;
+  }
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(cityUpper, canvas.width / 2, 390);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+  ctx.font = "700 38px Arial, sans-serif";
+  ctx.fillText("ON EST PRÊT ESTIME QUE", canvas.width / 2, 700);
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '900 220px "Arial Black", Arial, sans-serif';
+  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 880);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '700 66px "Arial Black", Arial, sans-serif';
+  ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 1050);
+  ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1140);
+  ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1230);
+  ctx.fillStyle = "#5ECBA1";
+  ctx.font = '700 74px "Arial Black", Arial, sans-serif';
+  ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1400);
+  ctx.fillText("ET TOI ?", canvas.width / 2, 1490);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '700 46px "Arial Black", Arial, sans-serif';
+  ctx.fillText("MOBILISATOR.FR", canvas.width / 2, 1690);
+  const blob = await new Promise((resolve) => canvas.toBlob((pngBlob) => resolve(pngBlob), "image/png"));
+  if (!blob) {
+    throw new Error("Client fallback image generation failed");
+  }
+  return blob;
 };
 var buildOgCandidateUrls = (citySlug) => {
   const encodedSlug = encodeURIComponent(citySlug);
@@ -794,23 +977,68 @@ var fetchOgImageWithDebug = async (citySlug) => {
   }
   throw new OgFetchError(`OG image fetch failed for slug "${citySlug}"`, attempts);
 };
-async function shareCity() {
+async function shareCity(options = {}) {
   if (!currentCityData) {
     console.error("No city data available for sharing");
     return;
   }
-  const { citySlug, cityName } = currentCityData;
-  const paq = window._paq ?? [];
-  paq.push(["trackEvent", "Share", "click", cityName]);
+  const { manageButtonState = true } = options;
+  const { citySlug, cityName, votesDecisifs } = currentCityData;
+  matomoTrack("Share", "partager");
   const btn = document.getElementById("shareBtn");
-  if (btn) {
+  if (manageButtonState && btn) {
     btn.disabled = true;
     btn.innerHTML = "Chargement...";
   }
   await new Promise((r) => setTimeout(r, 0));
   try {
-    const { imageBlob, attempts, usedUrl } = await fetchOgImageWithDebug(citySlug);
-    console.info("OG_DEBUG success", { citySlug, usedUrl, attempts });
+    let imageBlob;
+    let attempts = [];
+    try {
+      const fetched = await fetchOgImageWithDebug(citySlug);
+      imageBlob = fetched.imageBlob;
+      attempts = fetched.attempts;
+      console.info("OG_DEBUG success", { citySlug, usedUrl: fetched.usedUrl, attempts });
+    } catch (error) {
+      attempts = error instanceof OgFetchError ? error.attempts : [
+        {
+          url: "(unknown)",
+          finalUrl: "",
+          status: 0,
+          ok: false,
+          contentType: "",
+          contentLength: "",
+          redirected: false,
+          blobSize: 0,
+          xOgImageMode: "",
+          xOgSlug: citySlug,
+          xOgError: String(error),
+          bodyPreview: ""
+        }
+      ];
+      const attemptsSummary = attempts.map((a) => ({
+        url: a.url,
+        finalUrl: a.finalUrl,
+        status: a.status,
+        contentType: a.contentType,
+        contentLength: a.contentLength,
+        redirected: a.redirected,
+        blobSize: a.blobSize,
+        xOgError: a.xOgError,
+        xOgImageMode: a.xOgImageMode,
+        bodyPreview: a.bodyPreview
+      }));
+      console.error("Error sharing [OG_DEBUG]:", {
+        citySlug,
+        pageUrl: window.location.href,
+        basePath: BASE_PATH,
+        error,
+        attempts
+      });
+      console.table(attemptsSummary);
+      imageBlob = await createClientFallbackImageBlob(cityName, votesDecisifs);
+      console.warn("Using client-side fallback image", { citySlug });
+    }
     const imageUrl = URL.createObjectURL(imageBlob);
     const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
     if (clipboardSupportsPng) {
@@ -827,80 +1055,32 @@ async function shareCity() {
       showShareModalWithDownload(imageUrl, cityName);
     }
   } catch (error) {
-    const attempts = error instanceof OgFetchError ? error.attempts : [
-      {
-        url: "(unknown)",
-        finalUrl: "",
-        status: 0,
-        ok: false,
-        contentType: "",
-        contentLength: "",
-        redirected: false,
-        blobSize: 0,
-        xOgImageMode: "",
-        xOgSlug: citySlug,
-        xOgError: String(error),
-        bodyPreview: ""
-      }
-    ];
-    const attemptsSummary = attempts.map((a) => ({
-      url: a.url,
-      finalUrl: a.finalUrl,
-      status: a.status,
-      contentType: a.contentType,
-      contentLength: a.contentLength,
-      redirected: a.redirected,
-      blobSize: a.blobSize,
-      xOgError: a.xOgError,
-      xOgImageMode: a.xOgImageMode,
-      bodyPreview: a.bodyPreview
-    }));
-    console.error("Error sharing [OG_DEBUG]:", {
-      citySlug,
-      pageUrl: window.location.href,
-      basePath: BASE_PATH,
-      error,
-      attempts
-    });
-    console.table(attemptsSummary);
-    const first = attemptsSummary[0];
-    if (first) {
-      alert(`Erreur image OG (${first.status || "network"}). URL: ${first.finalUrl || first.url}
-Type: ${first.contentType || "n/a"}
-OG error: ${first.xOgError || "n/a"}`);
-      return;
+    const container = document.getElementById("influImageContainer");
+    if (container) {
+      container.innerHTML = `<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
     }
-    alert("Erreur lors du partage. Réessaie !");
+    alert(`Erreur lors du partage. Réessaie !
+${String(error)}`);
   } finally {
-    if (btn) {
+    if (manageButtonState && btn) {
       btn.disabled = false;
-      btn.innerHTML = `${labels.cta.partager}<span class="emoji">${labels.cta.partagerEmoji}</span>`;
+      btn.innerHTML = `J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>`;
     }
   }
 }
 function showShareModalWithDownload(imageUrl, cityName) {
-  let modal = document.getElementById("shareModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "shareModal";
-    modal.className = "modal";
-    document.body.appendChild(modal);
-  }
-  modal.innerHTML = `
-		<div class="modal-content share-modal-content">
-			<button type="button" class="modal-close" onclick="closeShareModal()">&times;</button>
-			<h3 class="share-modal-title">Ton image est prête !</h3>
-			<p class="share-modal-subtitle">Télécharge-la et partage-la en story</p>
-			<div class="share-modal-image-container">
-				<img class="share-modal-image" src="${imageUrl}" alt="Image à partager">
-			</div>
-			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button share-download-button">
+  const container = document.getElementById("influImageContainer");
+  if (container) {
+    container.innerHTML = `
+			<div class="influ-title">Ton image est prête !</div>
+			<div class="influ-subtitle">Télécharge-la et partage-la en story</div>
+			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
+			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration: none; margin-top: 8px;">
 				TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span>
 			</a>
-		</div>
-	`;
-  modal.classList.add("show");
-  document.body.style.overflow = "hidden";
+		`;
+    appendRejoinButtonWhenImageReady(container);
+  }
 }
 window.navigateToCityById = navigateToCityById;
 window.openQomonModal = openQomonModal;
@@ -910,6 +1090,11 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
+window.openHowPanel = openHowPanel;
+window.openAgendaPanel = openAgendaPanel;
+window.openInfluPanel = openInfluPanel;
+window.openRejoinPanel = openRejoinPanel;
+window.trackMatomoEvent = matomoTrack;
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {

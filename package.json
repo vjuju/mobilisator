@@ -12,7 +12,9 @@
 		"fetch:elections": "bun run fetch:elections_1 && bun run fetch:elections_2 && bun run fetch:population && bun run clean:elections",
 		"fetch:images": "bun run src/fetch-images.ts",
 		"dev": "bun run src/server.ts",
-		"dev:pages": "wrangler pages dev ./public"
+		"dev:pages": "wrangler pages dev ./public",
+		"deploy": "wrangler deploy",
+		"deploy:dev": "wrangler deploy --env dev"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.10",

@@ -39,6 +39,12 @@ const server = Bun.serve({
 			return new Response(fileToServe, { headers });
 		}
 
+		// Do not SPA-fallback OG routes in local dev:
+		// they are handled by Cloudflare Pages Functions/Worker in production.
+		if (pathname.startsWith("/og/") || pathname.startsWith("/api/og/")) {
+			return new Response("Not Found", { status: 404 });
+		}
+
 		// File doesn't exist, serve index.html for SPA routing
 		return new Response(file(join(PUBLIC_DIR, "index.html")));
 	},
