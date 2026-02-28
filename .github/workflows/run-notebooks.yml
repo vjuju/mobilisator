@@ -1,0 +1,40 @@
+name: Validate notebooks (CI)
+
+on:
+  pull_request:
+    paths:
+      - "analyzer/notebooks/**.ipynb"
+      - "analyzer/requirements.txt"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r analyzer/requirements.txt
+
+      - name: Execute notebooks (dry-run validation)
+        run: |
+          mkdir -p /tmp/executed
+          failed=0
+          for nb in analyzer/notebooks/*.ipynb; do
+            name=$(basename "$nb" .ipynb)
+            echo "=== Running $name ==="
+            jupyter nbconvert \
+              --to notebook \
+              --execute \
+              --ExecutePreprocessor.timeout=300 \
+              --output "/tmp/executed/${name}.ipynb" \
+              "$nb" || { echo "FAILED: $name"; failed=1; }
+          done
+          exit $failed
