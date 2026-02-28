@@ -1,0 +1,123 @@
+name: Execute notebooks & publish HTML
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "analyzer/notebooks/**.ipynb"
+      - "analyzer/requirements.txt"
+      - ".github/workflows/run-notebooks.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  run-notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r analyzer/requirements.txt
+
+      - name: Create output directories
+        run: mkdir -p analyzer/outputs analyzer/html
+
+      - name: Execute notebooks
+        run: |
+          for nb in analyzer/notebooks/*.ipynb; do
+            name=$(basename "$nb" .ipynb)
+            echo "=== Running $name ==="
+            jupyter nbconvert \
+              --to notebook \
+              --execute \
+              --ExecutePreprocessor.timeout=300 \
+              --output "analyzer/notebooks/${name}_executed.ipynb" \
+              "$nb" || echo "WARNING: $name failed, continuing"
+          done
+
+      - name: Convert to HTML
+        run: |
+          for nb in analyzer/notebooks/*_executed.ipynb; do
+            name=$(basename "$nb" _executed.ipynb)
+            jupyter nbconvert \
+              --to html \
+              --no-input \
+              --output "analyzer/html/${name}.html" \
+              "$nb" || true
+          done
+
+          # Generate index page
+          cat > analyzer/html/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Mobilisator — Analyses</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+              h1 { color: #1a56db; }
+              .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; text-decoration: none; color: inherit; display: block; }
+              .card:hover { background: #f9fafb; border-color: #1a56db; }
+              .badge { font-size: 0.75rem; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; }
+              footer { margin-top: 3rem; font-size: 0.85rem; color: #6b7280; }
+            </style>
+          </head>
+          <body>
+            <h1>Mobilisator — Analyses électorales</h1>
+            <p>Notebooks Jupyter exécutés automatiquement à chaque mise à jour.</p>
+            <a class="card" href="01_exploration.html">
+              <strong>01 — Exploration du jeu de données</strong>
+              <span class="badge">Exploration</span>
+              <p>Vue d'ensemble des 9 989 communes, distributions clés, statistiques descriptives.</p>
+            </a>
+            <a class="card" href="02_abstention.html">
+              <strong>02 — Analyse de l'abstention</strong>
+              <span class="badge">Abstention</span>
+              <p>Abstention par département, corrélation avec la taille, non-votants 18-39 ans.</p>
+            </a>
+            <a class="card" href="03_partis.html">
+              <strong>03 — Résultats par nuance politique</strong>
+              <span class="badge">Partis</span>
+              <p>Distribution des voix, nuances dominantes, scores selon taille des communes.</p>
+            </a>
+            <footer>
+              Données : <a href="https://www.data.gouv.fr">data.gouv.fr</a> —
+              Généré le $(date -u '+%Y-%m-%d %H:%M UTC')
+            </footer>
+          </body>
+          </html>
+          EOF
+
+      - name: Embed plots in HTML (make self-contained)
+        run: |
+          # Already handled by nbconvert --to html (embeds images as base64)
+          echo "HTML generation complete"
+          ls -lh analyzer/html/
+
+      - name: Upload HTML artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notebook-reports
+          path: analyzer/html/
+          retention-days: 90
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: analyzer/html
+          destination_dir: analyzer
+          keep_files: true
