@@ -55,19 +55,19 @@ jobs:
 
       - name: Convert notebooks to HTML
         run: |
-          mkdir -p public/analyzer
+          mkdir -p public/analysis
           for nb in /tmp/executed/*.ipynb; do
             name=$(basename "$nb" .ipynb)
             jupyter nbconvert \
               --to html \
               --no-input \
-              --output "public/analyzer/${name}.html" \
+              --output "public/analysis/${name}.html" \
               "$nb" || true
           done
 
-      - name: Generate analyzer index page
+      - name: Generate analysis index page
         run: |
-          cat > public/analyzer/index.html << 'HTMLEOF'
+          cat > public/analysis/index.html << 'HTMLEOF'
           <!DOCTYPE html>
           <html lang="fr">
           <head>
@@ -133,7 +133,7 @@ jobs:
       - name: Debug - list public
         run: |
           ls -la public
-          ls -la public/analyzer || echo "no analyzer dir"
+          ls -la public/analysis || echo "no analysis dir"
           ls -la public/cities | head -40
 
       - uses: actions/configure-pages@v5
