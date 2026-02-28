@@ -45,6 +45,12 @@ const server = Bun.serve({
 			return new Response("Not Found", { status: 404 });
 		}
 
+		// Do not SPA-fallback /analysis routes: they serve static notebook HTML
+		// generated in CI and should not silently fall through to the SPA.
+		if (pathname.startsWith("/analysis")) {
+			return new Response("Not Found", { status: 404 });
+		}
+
 		// File doesn't exist, serve index.html for SPA routing
 		return new Response(file(join(PUBLIC_DIR, "index.html")));
 	},
