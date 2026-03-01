@@ -103,7 +103,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 		// /analysis/* routes serve static HTML generated in CI.
 		// env.ASSETS.fetch() does not apply pretty-URL resolution, so try
 		// appending .html before giving up (e.g. /analysis/01_exploration → .html).
-		if (requestUrl.pathname.startsWith("/analysis")) {
+		if (requestUrl.pathname.startsWith("/analysis") || requestUrl.pathname.startsWith("/analyzer")) {
 			if (!requestUrl.pathname.endsWith(".html") && !requestUrl.pathname.endsWith("/")) {
 				const htmlUrl = new URL(request.url);
 				htmlUrl.pathname = requestUrl.pathname + ".html";

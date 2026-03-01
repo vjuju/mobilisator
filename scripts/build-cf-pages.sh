@@ -21,68 +21,50 @@ bun run build:app
 # ---------------------------------------------------------------------------
 # 3. Install Python dependencies
 # ---------------------------------------------------------------------------
-mkdir -p public/analysis
-DEBUG_LOG="public/analysis/build-debug.txt"
-
-{
 echo "=== Python environment ==="
-echo "Date: $(date -u)"
-echo "CWD: $(pwd)"
-python3 --version 2>&1
-python3 -m pip install -r analyzer/requirements.txt --quiet 2>&1
-python3 -m ipykernel install --user --name python3 --display-name "Python 3" 2>&1 || true
-echo "jupyter importable: $(python3 -c 'import jupyter; print("yes")' 2>/dev/null || echo 'NO')"
-echo "Available kernels:"
-python3 -m jupyter kernelspec list 2>&1 || echo "(failed)"
-echo "Notebooks in repo:"
-ls -la analyzer/notebooks/ 2>&1
+python3 --version
+python3 -m pip install -r analyzer/requirements.txt --quiet
+python3 -m ipykernel install --user --name python3 --display-name "Python 3" || true
+echo "mistune: $(python3 -c 'import mistune; print(mistune.__version__)' 2>/dev/null || echo 'not found')"
 
 # ---------------------------------------------------------------------------
 # 4. Execute notebooks
 # ---------------------------------------------------------------------------
-echo ""
 echo "=== Executing notebooks ==="
 NB_EXEC_DIR="/tmp/nb-executed"
 mkdir -p "$NB_EXEC_DIR"
 
-for nb in analyzer/notebooks/*.ipynb; do
+for nb in notebooks/01_exploration.ipynb notebooks/02_abstention.ipynb notebooks/03_partis.ipynb; do
+  nb="analyzer/$nb"
   [ -f "$nb" ] || continue
   name=$(basename "$nb" .ipynb)
-  echo "  → executing $name ..."
+  echo "  → $name"
   python3 -m jupyter nbconvert \
     --to notebook \
     --execute \
     --ExecutePreprocessor.timeout=300 \
     --output-dir "$NB_EXEC_DIR" \
-    "$nb" 2>&1 && echo "    ✓ $name OK" || echo "    ✗ $name FAILED"
+    "$nb" && echo "    ✓ executed" || echo "    ✗ FAILED"
 done
 
-echo ""
-echo "Executed notebooks in /tmp/nb-executed/:"
-ls -la "$NB_EXEC_DIR/" 2>&1 || echo "  (none)"
+ls -la "$NB_EXEC_DIR/" 2>/dev/null || echo "  (no executed notebooks)"
 
 # ---------------------------------------------------------------------------
 # 5. Convert executed notebooks to HTML
 # ---------------------------------------------------------------------------
-echo ""
 echo "=== Converting to HTML ==="
+mkdir -p public/analysis
 
 for nb in "$NB_EXEC_DIR"/*.ipynb; do
   [ -f "$nb" ] || continue
   name=$(basename "$nb" .ipynb)
-  echo "  → converting $name ..."
+  echo "  → $name"
   python3 -m jupyter nbconvert \
     --to html \
     --no-input \
     --output-dir "public/analysis" \
-    "$nb" 2>&1 && echo "    ✓ $name.html OK" || echo "    ✗ $name.html FAILED"
+    "$nb" && echo "    ✓ $name.html" || echo "    ✗ FAILED"
 done
-
-echo ""
-echo "=== Final public/analysis/ ==="
-ls -la public/analysis/ 2>&1
-
-} 2>&1 | tee "$DEBUG_LOG"
 
 # ---------------------------------------------------------------------------
 # 6. Generate analysis index page
