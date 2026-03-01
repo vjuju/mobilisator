@@ -21,8 +21,10 @@ bun run build:app
 # ---------------------------------------------------------------------------
 # 3. Install Python dependencies
 # ---------------------------------------------------------------------------
-echo "=== Installing Python dependencies ==="
+echo "=== Python environment ==="
+python3 --version
 python3 -m pip install -r analyzer/requirements.txt --quiet
+echo "  jupyter importable: $(python3 -c 'import jupyter; print("yes")' 2>/dev/null || echo 'NO — pip install may have failed')"
 
 # ---------------------------------------------------------------------------
 # 4. Execute notebooks
@@ -33,14 +35,21 @@ mkdir -p /tmp/nb-executed
 for nb in analyzer/notebooks/*.ipynb; do
   [ -f "$nb" ] || continue
   name=$(basename "$nb" .ipynb)
-  echo "  → $name"
-  jupyter nbconvert \
+  echo "  → executing $name ..."
+  if python3 -m jupyter nbconvert \
     --to notebook \
     --execute \
     --ExecutePreprocessor.timeout=300 \
     --output "/tmp/nb-executed/${name}.ipynb" \
-    "$nb" || echo "  WARNING: $name failed, skipping"
+    "$nb" 2>&1; then
+    echo "    ✓ $name executed"
+  else
+    echo "    ✗ $name FAILED — skipping HTML conversion"
+  fi
 done
+
+echo "Executed notebooks:"
+ls -la /tmp/nb-executed/ 2>/dev/null || echo "  (none)"
 
 # ---------------------------------------------------------------------------
 # 5. Convert executed notebooks to HTML
@@ -51,12 +60,12 @@ mkdir -p public/analysis
 for nb in /tmp/nb-executed/*.ipynb; do
   [ -f "$nb" ] || continue
   name=$(basename "$nb" .ipynb)
-  echo "  → $name"
-  jupyter nbconvert \
+  echo "  → converting $name to HTML ..."
+  python3 -m jupyter nbconvert \
     --to html \
     --no-input \
-    --output "public/analysis/${name}.html" \
-    "$nb" || true
+    --output-dir "public/analysis" \
+    "$nb" && echo "    ✓ $name.html written" || echo "    ✗ HTML conversion failed for $name"
 done
 
 # ---------------------------------------------------------------------------
