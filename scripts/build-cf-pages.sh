@@ -24,13 +24,18 @@ bun run build:app
 echo "=== Python environment ==="
 python3 --version
 python3 -m pip install -r analyzer/requirements.txt --quiet
+# Register the IPython kernel so nbconvert can find it
+python3 -m ipykernel install --user --name python3 --display-name "Python 3" || true
 echo "  jupyter importable: $(python3 -c 'import jupyter; print("yes")' 2>/dev/null || echo 'NO — pip install may have failed')"
+echo "  Available kernels:"
+python3 -m jupyter kernelspec list 2>/dev/null || echo "  (kernelspec list failed)"
 
 # ---------------------------------------------------------------------------
 # 4. Execute notebooks
 # ---------------------------------------------------------------------------
 echo "=== Executing notebooks ==="
-mkdir -p /tmp/nb-executed
+NB_EXEC_DIR="/tmp/nb-executed"
+mkdir -p "$NB_EXEC_DIR"
 
 for nb in analyzer/notebooks/*.ipynb; do
   [ -f "$nb" ] || continue
@@ -40,7 +45,7 @@ for nb in analyzer/notebooks/*.ipynb; do
     --to notebook \
     --execute \
     --ExecutePreprocessor.timeout=300 \
-    --output "/tmp/nb-executed/${name}.ipynb" \
+    --output-dir "$NB_EXEC_DIR" \
     "$nb" 2>&1; then
     echo "    ✓ $name executed"
   else
