@@ -27,108 +27,14 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build
-        run: bun run build:pages
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
 
-      - name: Install Python dependencies
-        run: pip install -r analyzer/requirements.txt
-
-      - name: Execute notebooks
-        run: |
-          mkdir -p /tmp/executed
-          for nb in analyzer/notebooks/*.ipynb; do
-            name=$(basename "$nb" .ipynb)
-            echo "=== Running $name ==="
-            jupyter nbconvert \
-              --to notebook \
-              --execute \
-              --ExecutePreprocessor.timeout=300 \
-              --output "/tmp/executed/${name}.ipynb" \
-              "$nb" || echo "WARNING: $name failed, continuing"
-          done
-
-      - name: Convert notebooks to HTML
-        run: |
-          mkdir -p public/analysis
-          for nb in /tmp/executed/*.ipynb; do
-            name=$(basename "$nb" .ipynb)
-            jupyter nbconvert \
-              --to html \
-              --no-input \
-              --output "public/analysis/${name}.html" \
-              "$nb" || true
-          done
-
-      - name: Generate analysis index page
-        run: |
-          cat > public/analysis/index.html << 'HTMLEOF'
-          <!DOCTYPE html>
-          <html lang="fr">
-          <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Mobilisator — Analyses</title>
-            <style>
-              * { box-sizing: border-box; margin: 0; padding: 0; }
-              body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; }
-              header { background: #1a56db; color: white; padding: 1.5rem 2rem; }
-              header h1 { font-size: 1.5rem; font-weight: 700; }
-              header p { opacity: 0.85; margin-top: 0.25rem; font-size: 0.9rem; }
-              main { max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
-              .grid { display: grid; gap: 1rem; }
-              .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.25rem 1.5rem; text-decoration: none; color: inherit; display: block; transition: box-shadow .15s, border-color .15s; }
-              .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); border-color: #1a56db; }
-              .card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
-              .card-header strong { font-size: 1rem; }
-              .badge { font-size: 0.7rem; font-weight: 600; background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 12px; white-space: nowrap; }
-              .card p { font-size: 0.875rem; color: #64748b; line-height: 1.5; }
-              footer { text-align: center; margin: 3rem 0 2rem; font-size: 0.8rem; color: #94a3b8; }
-              footer a { color: #1a56db; text-decoration: none; }
-            </style>
-          </head>
-          <body>
-            <header>
-              <h1>Mobilisator — Analyses électorales</h1>
-              <p>Notebooks Jupyter exécutés automatiquement sur les données des municipales (9 989 communes)</p>
-            </header>
-            <main>
-              <div class="grid">
-                <a class="card" href="01_exploration.html">
-                  <div class="card-header">
-                    <strong>01 — Exploration du jeu de données</strong>
-                    <span class="badge">Exploration</span>
-                  </div>
-                  <p>Vue d'ensemble des 9 989 communes : distributions de l'abstention, de la population, du nombre de listes. Statistiques descriptives globales.</p>
-                </a>
-                <a class="card" href="02_abstention.html">
-                  <div class="card-header">
-                    <strong>02 — Analyse de l'abstention</strong>
-                    <span class="badge">Abstention</span>
-                  </div>
-                  <p>Abstention moyenne par département, corrélation avec la taille des communes, profil des non-votants 18–39 ans, comparaison Tour 1 / Tour 2.</p>
-                </a>
-                <a class="card" href="03_partis.html">
-                  <div class="card-header">
-                    <strong>03 — Résultats par nuance politique</strong>
-                    <span class="badge">Partis</span>
-                  </div>
-                  <p>Voix totales par nuance politique, nuance dominante par département, scores moyens selon la taille des communes.</p>
-                </a>
-              </div>
-            </main>
-            <footer>
-              Données : <a href="https://www.data.gouv.fr">data.gouv.fr</a> &mdash;
-              Généré automatiquement via GitHub Actions
-            </footer>
-          </body>
-          </html>
-          HTMLEOF
+      - name: Build (app + notebooks)
+        run: bun run build:pages
 
       - name: Debug - list public
         run: |

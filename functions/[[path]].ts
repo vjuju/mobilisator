@@ -100,6 +100,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 	// Serve static assets; fall back to index.html for SPA routing (404 → SPA)
 	const assetResponse = await env.ASSETS.fetch(request as unknown as Request);
 	if (assetResponse.status === 404) {
+		// Do not SPA-fallback /analysis routes: they serve static HTML
+		// generated in CI and should not silently fall through to the SPA.
+		if (requestUrl.pathname.startsWith("/analysis")) {
+			return new Response("Not Found", { status: 404 });
+		}
 		return env.ASSETS.fetch(new URL("/index.html", request.url).toString());
 	}
 	return assetResponse;
