@@ -32,6 +32,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: analyzer/requirements.txt
 
       - name: Build (app + notebooks)
         run: bun run build:pages
