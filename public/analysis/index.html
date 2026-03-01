@@ -1,69 +1,3 @@
-#!/bin/bash
-# Build script for Cloudflare Pages.
-# Runs the JS build + Jupyter notebook execution + HTML export.
-set -e
-
-# ---------------------------------------------------------------------------
-# 1. Ensure Bun is available (CF Pages environment doesn't include it natively)
-# ---------------------------------------------------------------------------
-if ! command -v bun &> /dev/null; then
-  echo "Installing Bun..."
-  curl -fsSL https://bun.sh/install | bash
-  export PATH="$HOME/.bun/bin:$PATH"
-fi
-
-# ---------------------------------------------------------------------------
-# 2. Build TypeScript app
-# ---------------------------------------------------------------------------
-echo "=== Building app.ts ==="
-bun run build:app
-
-# ---------------------------------------------------------------------------
-# 3. Install Python dependencies
-# ---------------------------------------------------------------------------
-echo "=== Installing Python dependencies ==="
-python3 -m pip install -r analyzer/requirements.txt --quiet
-
-# ---------------------------------------------------------------------------
-# 4. Execute notebooks
-# ---------------------------------------------------------------------------
-echo "=== Executing notebooks ==="
-mkdir -p /tmp/nb-executed
-
-for nb in analyzer/notebooks/*.ipynb; do
-  [ -f "$nb" ] || continue
-  name=$(basename "$nb" .ipynb)
-  echo "  → $name"
-  jupyter nbconvert \
-    --to notebook \
-    --execute \
-    --ExecutePreprocessor.timeout=300 \
-    --output "/tmp/nb-executed/${name}.ipynb" \
-    "$nb" || echo "  WARNING: $name failed, skipping"
-done
-
-# ---------------------------------------------------------------------------
-# 5. Convert executed notebooks to HTML
-# ---------------------------------------------------------------------------
-echo "=== Converting notebooks to HTML ==="
-mkdir -p public/analysis
-
-for nb in /tmp/nb-executed/*.ipynb; do
-  [ -f "$nb" ] || continue
-  name=$(basename "$nb" .ipynb)
-  echo "  → $name"
-  jupyter nbconvert \
-    --to html \
-    --no-input \
-    --output "public/analysis/${name}.html" \
-    "$nb" || true
-done
-
-# ---------------------------------------------------------------------------
-# 6. Generate analysis index page
-# ---------------------------------------------------------------------------
-echo "=== Generating analysis/index.html ==="
-cat > public/analysis/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -124,8 +58,3 @@ cat > public/analysis/index.html << 'HTMLEOF'
   </footer>
 </body>
 </html>
-HTMLEOF
-
-echo "=== Build complete ==="
-echo "Analysis pages:"
-ls -la public/analysis/ || echo "(none generated)"
