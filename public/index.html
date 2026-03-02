@@ -1056,7 +1056,7 @@
 
     <script src="https://scripts.qomon.org/forms/v1/setup.js"></script>
     <script src="app.js"></script>
-    <!-- Matomo (exemption : sans cookies + respect DNT) -->
+    <!-- Analytics -->
     <script>
       var _paq = window._paq = window._paq || [];
       _paq.push(['disableCookies']);
@@ -1064,13 +1064,13 @@
       _paq.push(['trackPageView']);
       _paq.push(['enableLinkTracking']);
       (function() {
-        var u = "https://stats.mobilisator.fr/matomo/";
-        _paq.push(['setTrackerUrl', u + 'matomo.php']);
+        var u = "/a/";
+        _paq.push(['setTrackerUrl', u + 'collect']);
         _paq.push(['setSiteId', '1']);
         var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-        g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+        g.async = true; g.src = u + 'js'; s.parentNode.insertBefore(g, s);
       })();
     </script>
-    <!-- End Matomo -->
+    <!-- End Analytics -->
 </body>
 </html>
