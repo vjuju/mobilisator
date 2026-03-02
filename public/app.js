@@ -496,6 +496,8 @@ async function handleRoute() {
     if (searchInput)
       searchInput.value = "";
     clearResults();
+    document.title = "#RIENSANSNOUS - Municipales 2020";
+    document.getElementById("canonicalTag")?.setAttribute("href", "https://mobilisator.fr/");
   } else {
     const landingText = document.getElementById("landingText");
     if (landingText)
@@ -689,6 +691,8 @@ function displayCityDetail(city) {
   const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
   const mainTagline = getMainTagline(cas, votesDecisifs);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
+  document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS`;
+  document.getElementById("canonicalTag")?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
   currentCityData = {
     citySlug: city.slug,
     cityName: city.nom_standard,

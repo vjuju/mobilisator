@@ -322,6 +322,8 @@ async function handleRoute(): Promise<void> {
 		const searchInput = document.getElementById("searchInput") as HTMLInputElement;
 		if (searchInput) searchInput.value = "";
 		clearResults();
+		document.title = "#RIENSANSNOUS - Municipales 2020";
+		(document.getElementById("canonicalTag") as HTMLLinkElement | null)?.setAttribute("href", "https://mobilisator.fr/");
 	} else {
 		// Extract slug from path (e.g., 76100-rouen)
 		const landingText = document.getElementById("landingText");
@@ -593,6 +595,10 @@ function displayCityDetail(city: City): void {
 	const mainTagline = getMainTagline(cas, votesDecisifs);
 
 	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
+
+	// Update page title and canonical for SEO
+	document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS`;
+	(document.getElementById("canonicalTag") as HTMLLinkElement | null)?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
 
 	// Store current city data for sharing
 	currentCityData = {
