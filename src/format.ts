@@ -170,15 +170,14 @@ export function computeVotesDecisifs(
  * Gère le singulier quand votesDecisifs === 1.
  */
 export function getMainTagline(
-	cityName: string,
 	cas: 1 | 2 | "2b" | 3 | "3b",
 	votesDecisifs: number,
 ): string {
 	const verb = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
 	if (cas === 1 || cas === 2 || cas === "2b") {
-		return `${verb}<br>faire élire un·e autre maire<br>en 2020 à ${cityName}`;
+		return `${verb}<br>faire élire un·e autre maire<br>en 2020`;
 	}
-	return `${verb}<br>faire la diff'<br>en 2020 à ${cityName}`;
+	return `${verb}<br>faire la diff' aux municipales<br>en 2020`;
 }
 
 // ============================================================================

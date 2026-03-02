@@ -304,17 +304,13 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE ÉLIRE"),
 						el("div", {
 							style: { fontSize: 58, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-						}, "UN·E AUTRE MAIRE"),
+						}, "UN·E AUTRE MAIRE EN 2020"),
 					]
 					: [
 						el("div", {
 							style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE LA DIFF'"),
+						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE LA DIFF' AUX MUNICIPALES EN 2020"),
 					]),
-				// Last line: fixed ending
-				el("div", {
-					style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-				}, "EN 2020 AUX MUNICIPALES"),
 			),
 				// "JE VOTE EN 2026. / ET TOI ?"
 			el("div", {
@@ -322,7 +318,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 			},
 				el("div", {
 					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-				}, "JE VOTE LE 15 ET 22 MARS"),
+				}, "JE VOTE"),
+				el("div", {
+					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "LE 15 ET 22 MARS."),
 				el("div", {
 					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
 				}, "ET TOI ?"),

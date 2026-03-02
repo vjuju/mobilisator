@@ -590,7 +590,7 @@ function displayCityDetail(city: City): void {
 	);
 
 	// Determine tagline
-	const mainTagline = getMainTagline(city.nom_standard, cas, votesDecisifs);
+	const mainTagline = getMainTagline(cas, votesDecisifs);
 
 	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
 
