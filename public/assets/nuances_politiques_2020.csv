@@ -1,0 +1,48 @@
+type,bloc,nuance,libelle,partis
+individuelle,EXG,EXG,Extrême gauche,"Lutte ouvrière; Nouveau Parti Anticapitaliste; Parti ouvrier indépendant; autres partis ou candidats d'extrême gauche sans affiliation partisane"
+individuelle,GAU,COM,Parti communiste français,Parti communiste français
+individuelle,GAU,FI,La France insoumise,La France insoumise
+individuelle,GAU,SOC,Parti socialiste,Parti socialiste
+individuelle,GAU,GEN,Génération.s,Génération.s
+individuelle,GAU,RDG,Parti radical de gauche,Parti radical de gauche
+individuelle,GAU,DVG,Divers gauche,"Place publique; Nouvelle Donne; Mouvement Républicain et Citoyen; Mouvement des progressistes; autres partis ou candidats de gauche sans affiliation partisane"
+individuelle,GAU,VEC,Europe Ecologie-Les Verts,Europe Ecologie-Les Verts
+individuelle,AUT,ECO,Ecologiste,"Union des démocrates et des écologistes; Alliance Ecologiste Indépendante; Rassemblement citoyen-CAP 21; Confédération pour l'Homme, l'animal, la planète; autres partis ou candidats écologistes (hors Europe Ecologie-Les Verts)"
+individuelle,AUT,ANM,Animaliste,Parti animaliste
+individuelle,AUT,DIV,Divers,"Union Populaire Républicaine; Parti du vote blanc; Parti Pirate; Rassemblement des Contribuables Français (et autres mouvements anti-fiscalistes); Solidarité et Progrès; partis socioprofessionnels; autres candidats inclassables"
+individuelle,AUT,REG,Régionaliste,"Régionalistes, indépendantistes et autonomistes"
+individuelle,AUT,GJ,Gilets jaunes,Candidats se réclamant du mouvement dit des Gilets Jaunes
+individuelle,CENT,REM,La République en Marche,La République en Marche
+individuelle,CENT,MDM,Modem,Mouvement démocrate
+individuelle,CENT,UDI,Union des Démocrates et Indépendants,Union des Démocrates et Indépendants
+individuelle,CENT,AGR,Agir,"Agir, la droite constructive"
+individuelle,CENT,MR,Mouvement radical/social-libéral,Mouvement radical/social-libéral
+individuelle,CENT,DVC,Divers centre,"Alliance centriste; autres partis ou candidats centristes sans affiliation partisane"
+individuelle,DTE,LR,Les Républicains,Les Républicains
+individuelle,DTE,DVD,Divers droite,"Les centristes; Mouvement pour la France; Parti chrétien démocrate; Centre National des Indépendants et des Paysans; Alliance Royale; Chasse, pêche, nature et tradition; La France qui ose; Parti Libéral Démocrate; autres partis ou candidats de droite sans affiliation partisane"
+individuelle,DTE,DLF,Debout la France,Debout la France
+individuelle,EXD,RN,Rassemblement National,Rassemblement National
+individuelle,EXD,EXD,Extrême droite,"Les Patriotes; Comités Jeanne; Mouvement National Républicain; Les identitaires; Ligue du Sud; Parti de la France; Souveraineté, Identité et Libertés (SIEL); Front des patriotes républicains; Civitas; autres partis ou candidats d'extrême droite sans affiliation partisane"
+liste,EXG,LEXG,Extrême gauche,"Lutte ouvrière; Nouveau Parti Anticapitaliste; Parti ouvrier indépendant; ou autres listes présentées par un parti d'extrême gauche"
+liste,GAU,LCOM,Parti communiste français,Listes du Parti communiste français
+liste,GAU,LFI,La France insoumise,Listes de La France insoumise
+liste,GAU,LSOC,Parti socialiste,Listes du Parti socialiste
+liste,GAU,LRDG,Parti radical de gauche,Listes du Parti radical de gauche
+liste,GAU,LDVG,Divers gauche,"Listes soutenues par un parti de gauche ayant une nuance de liste (sans investiture) ou investies par un ou plusieurs autres partis de gauche (Génération.s; Place publique; Nouvelle Donne; Mouvement Républicain et Citoyen; Mouvement des progressistes; autres). Autres listes de sensibilité de gauche (dont listes dissidentes)."
+liste,GAU,LUG,Union de la gauche,"Listes d'union investies par plusieurs partis du bloc de gauche, dont le Parti socialiste"
+liste,GAU,LVEC,Europe Ecologie-Les Verts,Listes d'Europe Ecologie-Les Verts
+liste,AUT,LECO,Ecologiste,"Union des démocrates et des écologistes; Alliance Ecologiste Indépendante; Rassemblement citoyen-CAP 21; Confédération pour l'Homme, l'animal, la planète; ou autres listes écologistes (hors Europe Ecologie-Les Verts)"
+liste,AUT,LDIV,Divers,"Listes inclassables; Union Populaire Républicaine; Parti animaliste; Parti du vote blanc; Parti Pirate; Rassemblement des Contribuables Français (et autres mouvements anti-fiscalistes); Solidarité et Progrès; partis socioprofessionnels; etc."
+liste,AUT,LREG,Régionaliste,"Listes régionalistes, indépendantistes ou autonomistes"
+liste,AUT,LGJ,Gilets jaunes,Listes se réclamant du mouvement dit des Gilets Jaunes
+liste,CENT,LREM,La République en marche,Listes de La République en marche
+liste,CENT,LMDM,Modem,Listes du Mouvement démocrate
+liste,CENT,LUDI,Union des Démocrates et Indépendants,Listes de l'Union des Démocrates et Indépendants
+liste,CENT,LUC,Union du centre,"Listes d'union investies par plusieurs partis du bloc du centre, dont La République en Marche"
+liste,CENT,LDVC,Divers centre,"Listes soutenues par un parti du centre ayant une nuance de liste (sans investiture) ou investies par un ou plusieurs autres partis du centre (Agir; Mouvement Radical/Social Libéral; autres partis du centre). Autres listes de sensibilité centriste (dont listes dissidentes)."
+liste,DTE,LLR,Les Républicains,Listes des Républicains
+liste,DTE,LUD,Union de la droite,"Listes d'union investies par plusieurs partis du bloc de droite, dont Les Républicains"
+liste,DTE,LDVD,Divers droite,"Listes soutenues par un parti de droite ayant une nuance de liste (sans investiture) ou investies par un ou plusieurs autres partis de droite (Les centristes; Mouvement pour la France; Parti chrétien démocrate; Centre National des Indépendants et des Paysans; Alliance Royale; Chasse, pêche, nature et tradition; La France qui ose; Parti Libéral Démocrate; autres). Autres listes de sensibilité de droite (dont listes dissidentes)."
+liste,DTE,LDLF,Debout la France,Listes de Debout la France
+liste,EXD,LRN,Rassemblement National,Listes du Rassemblement National
+liste,EXD,LEXD,Extrême droite,"Listes présentées par un parti d'extrême droite (Les Patriotes; Comités Jeanne; Mouvement National Républicain; Les identitaires; Ligue du Sud; Parti de la France; Souveraineté, Identité et Libertés (SIEL); Front des patriotes républicains; Civitas; autres)."
