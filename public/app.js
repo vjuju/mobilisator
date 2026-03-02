@@ -82,8 +82,12 @@ function computeVotesDecisifs(tour1, tour2) {
   }
   return { votesDecisifs: sorted[0].Voix - sorted[1].Voix + 1, cas: "3b" };
 }
-function getMainTagline(_hasSecondTour, cityName) {
-  return `votes auraient pu<br>faire la diff'<br>en 2020 à ${cityName}`;
+function getMainTagline(cityName, cas, votesDecisifs) {
+  const verb = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
+  if (cas === 1 || cas === 2 || cas === "2b") {
+    return `${verb}<br>faire élire un·e autre maire<br>en 2020 à ${cityName}`;
+  }
+  return `${verb}<br>faire la diff'<br>en 2020 à ${cityName}`;
 }
 function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
   return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
@@ -683,7 +687,7 @@ function displayCityDetail(city) {
   const nonVotants = city.Analyse["Non votants"];
   const partNeVotantPas = city.Analyse["Part ne votant pas"];
   const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
-  const mainTagline = getMainTagline(hasSecondTour, city.nom_standard);
+  const mainTagline = getMainTagline(city.nom_standard, cas, votesDecisifs);
   const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
   currentCityData = {
     citySlug: city.slug,
@@ -977,7 +981,7 @@ var fetchOgImageWithDebug = async (citySlug) => {
   for (const url of candidates) {
     let response;
     try {
-      response = await fetch(url, { cache: "no-store", redirect: "follow" });
+      response = await fetch(url, { redirect: "follow" });
     } catch (error) {
       attempts.push({
         url,

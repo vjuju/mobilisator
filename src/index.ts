@@ -1,6 +1,7 @@
 import { rm } from "node:fs/promises";
 
 import type { City, ElectionEntry, FullCity } from "./dtos/city";
+import { computeVotesDecisifs } from "./format";
 import { fullCityToCity, normalizeText } from "./utils";
 
 // Strip leading French articles (Le, La, Les, L') from city names
@@ -188,12 +189,14 @@ const cityImagesFile = Bun.file("./city-images.json");
 const cityImages: Record<number, { thumbUrl?: string; url?: string; author?: string; license?: string }> =
 	(await cityImagesFile.exists()) ? await cityImagesFile.json() : {};
 
-const shareData: Record<string, { name: string; votes: number; thumbUrl: string; url: string; author: string; license: string }> = {};
+const shareData: Record<string, { name: string; votes: number; cas: number | string; thumbUrl: string; url: string; author: string; license: string }> = {};
 for (const city of Object.values(allCitiesData)) {
 	const img = cityImages[city.id] ?? {};
+	const { cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
 	shareData[city.slug] = {
 		name: city.nom_standard,
 		votes: city.Analyse["Votes décisifs"],
+		cas,
 		thumbUrl: img.thumbUrl ?? "",
 		url: img.url ?? "",
 		author: img.author ?? "",

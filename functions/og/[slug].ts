@@ -4,6 +4,8 @@ import type { PagesFunction } from "@cloudflare/workers-types";
 interface ShareData {
 	name: string;
 	votes: number;
+	/** cas from computeVotesDecisifs: 1 | 2 | "2b" | 3 | "3b" */
+	cas?: number | string;
 	thumbUrl: string;
 	url: string;
 	author: string;
@@ -294,11 +296,22 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 						style: { fontSize: 60, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
 					}, "18-39 ANS"),
 				),
-				// Line 2
-				el("div", {
-					style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-				}, "AURAIENT FAIT LA DIFF'"),
-				// Line 3: dynamic city name
+				// Line 2 (+ optional line 2b): action tagline — depends on cas
+				...(city.cas === 1 || city.cas === 2 || city.cas === "2b"
+					? [
+						el("div", {
+							style: { fontSize: 58, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE ÉLIRE"),
+						el("div", {
+							style: { fontSize: 58, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+						}, "UN·E AUTRE MAIRE"),
+					]
+					: [
+						el("div", {
+							style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE LA DIFF'"),
+					]),
+				// Last line: dynamic city name
 				el("div", {
 					style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
 				}, `À ${city.name.toUpperCase()} EN 2020`),
