@@ -1062,6 +1062,27 @@
     {"@context":"https://schema.org","@type":"WebSite","name":"#RIENSANSNOUS","url":"https://mobilisator.fr","description":"Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville.","inLanguage":"fr-FR","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://mobilisator.fr/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
     </script>
     <script src="https://scripts.qomon.org/forms/v1/setup.js"></script>
+    <script>
+      // Patch Qomon form: their email pattern is invalid under the browser's
+      // Unicode-set regex (v flag). Remove broken pattern attrs so the browser
+      // falls back to its built-in type="email" validation.
+      (function patchQomonPatterns() {
+        function fixPatterns(root) {
+          root.querySelectorAll('input[pattern]').forEach(function(input) {
+            try { new RegExp(input.getAttribute('pattern'), 'v'); }
+            catch (_) { input.removeAttribute('pattern'); }
+          });
+        }
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(m) {
+            m.addedNodes.forEach(function(n) {
+              if (n.nodeType === 1) fixPatterns(n);
+            });
+          });
+        });
+        observer.observe(document.body, { subtree: true, childList: true });
+      })();
+    </script>
     <script src="app.js"></script>
     <!-- Analytics -->
     <script>
