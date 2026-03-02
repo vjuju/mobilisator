@@ -493,11 +493,17 @@ async function handleRoute() {
     if (landingText)
       landingText.classList.remove("hidden");
     const searchInput = document.getElementById("searchInput");
-    if (searchInput)
-      searchInput.value = "";
-    clearResults();
     document.title = "#RIENSANSNOUS - Municipales 2020";
     document.getElementById("canonicalTag")?.setAttribute("href", "https://mobilisator.fr/");
+    const qParam = new URLSearchParams(window.location.search).get("q");
+    if (qParam && searchInput) {
+      searchInput.value = qParam;
+      await searchCities();
+    } else {
+      if (searchInput)
+        searchInput.value = "";
+      clearResults();
+    }
   } else {
     const landingText = document.getElementById("landingText");
     if (landingText)

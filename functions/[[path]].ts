@@ -76,6 +76,28 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 				`<meta name="description" content="${escapeAttr(description)}">`,
 			);
 
+		// Build JSON-LD structured data for rich results
+		const jsonLd = {
+			"@context": "https://schema.org",
+			"@type": "WebPage",
+			"name": title,
+			"description": description,
+			"url": request.url,
+			"inLanguage": "fr-FR",
+			"isPartOf": {
+				"@type": "WebSite",
+				"name": "#RIENSANSNOUS",
+				"url": "https://mobilisator.fr",
+			},
+			"breadcrumb": {
+				"@type": "BreadcrumbList",
+				"itemListElement": [
+					{ "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://mobilisator.fr" },
+					{ "@type": "ListItem", "position": 2, "name": city?.name ?? slug, "item": request.url },
+				],
+			},
+		};
+
 		// Inject og:image and remaining tags before </head>
 		html = html.replace(
 			"</head>",
@@ -89,6 +111,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 <meta name="twitter:description" content="${escapeAttr(description)}">
 <meta name="twitter:image" content="${ogImageUrl}">
 <link rel="canonical" href="${request.url}">
+<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 </head>`,
 		);
 
