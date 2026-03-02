@@ -1,0 +1,35 @@
+# Cloudflare Pages custom response headers
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+# ── HTML entry point ────────────────────────────────────────────────────────
+# Never cache index.html in the browser so that deploys propagate instantly.
+/index.html
+  Cache-Control: no-cache
+
+# Root "/" and city slug paths all serve index.html via SPA fallback,
+# but Cloudflare Pages applies this rule only to the literal /index.html asset.
+
+# ── Application bundle ───────────────────────────────────────────────────────
+# app.js is rebuilt on every deploy; the filename is stable but the content
+# changes. Cloudflare Pages invalidates the CDN cache on deploy, so
+# "immutable" is safe: browsers will re-fetch only after a new deploy pushes
+# a new HTML that references the updated file (the file hash is not in the
+# filename here, so we use a long but non-immutable TTL instead).
+/app.js
+  Cache-Control: public, max-age=3600
+
+# ── Static data files (cities/) ─────────────────────────────────────────────
+# All files under /cities/ are generated at build time and versioned by deploy.
+# Cloudflare Pages invalidates CDN on deploy, so browsers can cache these for
+# a full day without risk of stale data.
+/cities/*
+  Cache-Control: public, max-age=86400
+
+# ── Fonts ────────────────────────────────────────────────────────────────────
+# Font files never change between deploys (same filename = same content).
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ── Static assets (images, CSV, PDF, …) ─────────────────────────────────────
+/assets/*
+  Cache-Control: public, max-age=86400

@@ -63,6 +63,7 @@ function toWikimediaThumb(url: string, width = 600): string {
 const fetchInlineImage = async (url: string): Promise<string | null> => {
 	try {
 		const resp = await fetch(url, {
+			signal: AbortSignal.timeout(4000),
 			headers: {
 				Accept: "image/*,*/*;q=0.8",
 				"User-Agent": OG_IMAGE_UA,

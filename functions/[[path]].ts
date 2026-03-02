@@ -93,7 +93,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
 		);
 
 		return new Response(html, {
-			headers: { "Content-Type": "text/html; charset=utf-8" },
+			headers: {
+				"Content-Type": "text/html; charset=utf-8",
+				// Allow Cloudflare edge to cache the rewritten HTML per city for 5 min;
+				// browsers re-validate after 1 min. Prevents the Worker from re-running
+				// on every bot crawl of the same city URL.
+				"Cache-Control": "public, max-age=60, s-maxage=300",
+			},
 		});
 	}
 

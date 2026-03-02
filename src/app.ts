@@ -1033,7 +1033,7 @@ const fetchOgImageWithDebug = async (
 	for (const url of candidates) {
 		let response: Response;
 		try {
-			response = await fetch(url, { cache: "no-store", redirect: "follow" });
+			response = await fetch(url, { redirect: "follow" });
 		} catch (error) {
 				attempts.push({
 					url,
