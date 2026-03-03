@@ -31,7 +31,10 @@
         }
 
         .navbar {
-            padding: 20px 40px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 20px 24px;
         }
 
         .navbar h1 {
@@ -48,6 +51,13 @@
 
         .navbar h1 a:hover {
             color: #5ECBA1;
+        }
+
+        .navbar-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: block;
         }
 
         .container {
@@ -136,6 +146,8 @@
 <body>
     <nav class="navbar">
         <h1><a href="/">#RIENSANSNOUS</a></h1>
+        <img src="/assets/LogoOEP.png" alt="On Est Prêt" class="navbar-logo">
+        <div></div>
     </nav>
 
     <div class="container">
@@ -243,13 +255,12 @@
       _paq.push(['disableCookies']);
       _paq.push(['setDoNotTrack', true]);
       _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
       (function() {
-        var u = "https://stats.mobilisator.fr/matomo/";
-        _paq.push(['setTrackerUrl', u + 'matomo.php']);
+        var u = "/a/";
+        _paq.push(['setTrackerUrl', u + 'collect']);
         _paq.push(['setSiteId', '1']);
         var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
-        g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+        g.async = true; g.src = u + 'js'; s.parentNode.insertBefore(g, s);
       })();
     </script>
     <!-- End Matomo -->
