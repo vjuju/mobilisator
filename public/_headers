@@ -31,5 +31,8 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # ── Static assets (images, CSV, PDF, …) ─────────────────────────────────────
+# Assets are stable across deploys (same filename = same content).
+# Cloudflare CDN cache is invalidated on each deploy; for browser cache,
+# rename the file if the content changes.
 /assets/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=31536000, immutable

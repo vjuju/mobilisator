@@ -6,10 +6,19 @@
     <title>#RIENSANSNOUS - Municipales 2020</title>
     <link rel="canonical" id="canonicalTag" href="https://mobilisator.fr/">
     <meta name="description" id="metaDescription" content="Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville. #RIENSANSNOUS">
+    <link rel="preload" href="/fonts/Folsom-Black.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preconnect" href="https://scripts.qomon.org">
+    <link rel="preconnect" href="https://cdn-form.qomon.org">
+    <link rel="icon" href="/assets/LogoOEP.png" type="image/png">
+    <link rel="apple-touch-icon" href="/assets/LogoOEP.png">
     <meta property="og:title" content="#RIENSANSNOUS - Municipales 2020">
     <meta property="og:description" content="Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville.">
     <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:image" content="https://mobilisator.fr/assets/LogoOEP.png">
+    <meta property="og:image:width" content="500">
+    <meta property="og:image:height" content="500">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="https://mobilisator.fr/assets/LogoOEP.png">
     <style>
         @font-face {
             font-family: 'Folsom';
@@ -66,13 +75,16 @@
             right: 0;
             width: 100vw;
             height: 100vh;
-            background-image: url('/assets/Vote%20blanc%20transparent.png');
             background-repeat: no-repeat;
             background-position: right 0px bottom 66px;
             background-size: auto 90vmin;
             opacity: 0.2;
             pointer-events: none;
             z-index: 0;
+        }
+
+        body.bg-ready::after {
+            background-image: url('/assets/Vote%20blanc%20transparent.png');
         }
 
         /* ── Navbar ── */
@@ -1024,7 +1036,7 @@
             <a href="https://www.service-public.fr/particuliers/vosdroits/services-en-ligne-et-formulaires/ISE" target="_blank" rel="noopener" class="cta-button" style="text-decoration: none;" onclick="trackMatomoEvent('Comment voter', 'bureau_de_vote')">
                 JE VÉRIFIE MON BUREAU DE VOTE<span class="emoji">🗳️</span>
             </a>
-            <a href="https://ma-procuration-citoyenne.fr/" target="_blank" rel="noopener" class="cta-button" style="text-decoration: none;" onclick="trackMatomoEvent('Comment voter', 'procuration')">
+            <a href="https://www.maprocuration.gouv.fr/" target="_blank" rel="noopener" class="cta-button" style="text-decoration: none;" onclick="trackMatomoEvent('Comment voter', 'procuration')">
                 JE FAIS UNE PROCURATION EN 2 MIN<span class="emoji">✊</span>
             </a>
             <button type="button" class="cta-button" onclick="openAgendaPanel()">
@@ -1083,7 +1095,7 @@
         observer.observe(document.body, { subtree: true, childList: true });
       })();
     </script>
-    <script src="app.js"></script>
+    <script defer src="app.js"></script>
     <!-- Analytics -->
     <script>
       var _paq = window._paq = window._paq || [];
@@ -1099,6 +1111,7 @@
       })();
     </script>
     <!-- End Analytics -->
+    <script>requestAnimationFrame(function(){requestAnimationFrame(function(){document.body.classList.add('bg-ready');})});</script>
     <script>
       (function loadQomonLast() {
         function injectQomonScript() {
