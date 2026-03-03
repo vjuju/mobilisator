@@ -282,15 +282,8 @@ function openAgendaPanel(): void {
 	updatePanelVisibility();
 }
 
-const getInfluLoadingHtml = (): string => {
-	const slug = currentCityData?.citySlug ?? "";
-	const name = currentCityData?.cityName ?? "ville";
-	const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
-	return `
-		<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
-		<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">📥</span></a>
-	`;
-};
+const getInfluLoadingHtml = (): string =>
+	`<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
 
 // Open influ/share panel and trigger share flow
 async function openInfluPanel(): Promise<void> {
@@ -1118,14 +1111,8 @@ async function shareCity(): Promise<void> {
 	} catch (error) {
 		const container = document.getElementById("influImageContainer");
 		if (container) {
-			const slug = currentCityData?.citySlug ?? "";
-			const name = currentCityData?.cityName ?? "ville";
-			const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
-			container.innerHTML = `
-				<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>
-				<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">📥</span></a>
-				${getRejoinButtonHtml()}
-			`;
+			container.innerHTML =
+				`<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
 		}
 		alert(`Erreur lors du partage. Réessaie !\n${String(error)}`);
 	}

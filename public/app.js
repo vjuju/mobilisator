@@ -464,15 +464,7 @@ function openAgendaPanel() {
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
 }
-var getInfluLoadingHtml = () => {
-  const slug = currentCityData?.citySlug ?? "";
-  const name = currentCityData?.cityName ?? "ville";
-  const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
-  return `
-		<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
-		<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span></a>
-	`;
-};
+var getInfluLoadingHtml = () => `<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
 async function openInfluPanel() {
   matomoTrack("CTA", "informer_potes");
   const container = document.getElementById("influImageContainer");
@@ -1062,14 +1054,7 @@ async function shareCity() {
   } catch (error) {
     const container = document.getElementById("influImageContainer");
     if (container) {
-      const slug = currentCityData?.citySlug ?? "";
-      const name = currentCityData?.cityName ?? "ville";
-      const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
-      container.innerHTML = `
-				<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>
-				<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span></a>
-				${getRejoinButtonHtml()}
-			`;
+      container.innerHTML = `<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
     }
     alert(`Erreur lors du partage. Réessaie !
 ${String(error)}`);
