@@ -402,9 +402,6 @@ async function openInfluPanel(): Promise<void> {
 	await shareCity();
 }
 
-// Track Qomon form init
-let qomonFormInitialized = false;
-
 // Open Qomon rejoins panel
 function openRejoinPanel(): void {
 	matomoTrack("CTA", "se_mobiliser");
@@ -413,14 +410,6 @@ function openRejoinPanel(): void {
 	url.searchParams.set("jerejoins", "true");
 	window.history.pushState({}, "", url.toString());
 	updatePanelVisibility();
-	if (!qomonFormInitialized) {
-		const qomonForm = document.querySelector("#rejoinPanel .qomon-form");
-		if (qomonForm) {
-			const clone = qomonForm.cloneNode(true);
-			qomonForm.parentNode?.replaceChild(clone, qomonForm);
-		}
-		qomonFormInitialized = true;
-	}
 }
 
 // Clear search results

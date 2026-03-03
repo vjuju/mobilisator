@@ -557,7 +557,6 @@ async function openInfluPanel() {
   updatePanelVisibility();
   await shareCity();
 }
-var qomonFormInitialized = false;
 function openRejoinPanel() {
   matomoTrack("CTA", "se_mobiliser");
   const url = new URL(window.location.href);
@@ -565,14 +564,6 @@ function openRejoinPanel() {
   url.searchParams.set("jerejoins", "true");
   window.history.pushState({}, "", url.toString());
   updatePanelVisibility();
-  if (!qomonFormInitialized) {
-    const qomonForm = document.querySelector("#rejoinPanel .qomon-form");
-    if (qomonForm) {
-      const clone = qomonForm.cloneNode(true);
-      qomonForm.parentNode?.replaceChild(clone, qomonForm);
-    }
-    qomonFormInitialized = true;
-  }
 }
 function clearResults() {
   const results = document.getElementById("results");

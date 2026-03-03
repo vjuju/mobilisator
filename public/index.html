@@ -1056,15 +1056,12 @@
 
     <!-- Rejoins / Qomon Panel -->
     <div id="rejoinPanel" class="panel hidden">
-        <div class="panel-body form-body">
-            <div class="qomon-form" data-base_id="103323d7-738d-4ff2-813b-c397d6980e38"></div>
-        </div>
+        <div class="panel-body form-body"><div class="qomon-form" data-base_id="103323d7-738d-4ff2-813b-c397d6980e38"></div></div>
     </div>
 
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebSite","name":"#RIENSANSNOUS","url":"https://mobilisator.fr","description":"Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville.","inLanguage":"fr-FR","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://mobilisator.fr/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
     </script>
-    <script src="https://scripts.qomon.org/forms/v1/setup.js"></script>
     <script>
       // Patch Qomon form: their email pattern is invalid under the browser's
       // Unicode-set regex (v flag). Remove broken pattern attrs so the browser
@@ -1093,7 +1090,6 @@
       _paq.push(['disableCookies']);
       _paq.push(['setDoNotTrack', true]);
       _paq.push(['trackPageView']);
-      _paq.push(['enableLinkTracking']);
       (function() {
         var u = "/a/";
         _paq.push(['setTrackerUrl', u + 'collect']);
@@ -1103,5 +1099,23 @@
       })();
     </script>
     <!-- End Analytics -->
+    <script>
+      (function loadQomonLast() {
+        function injectQomonScript() {
+          if (document.querySelector('script[data-qomon-setup="true"]')) return;
+          var script = document.createElement('script');
+          script.src = 'https://scripts.qomon.org/forms/v1/setup.js';
+          script.async = false;
+          script.defer = true;
+          script.setAttribute('data-qomon-setup', 'true');
+          document.body.appendChild(script);
+        }
+        if (document.readyState === 'complete') {
+          injectQomonScript();
+        } else {
+          window.addEventListener('load', injectQomonScript, { once: true });
+        }
+      })();
+    </script>
 </body>
 </html>
