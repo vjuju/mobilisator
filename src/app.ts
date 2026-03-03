@@ -246,7 +246,7 @@ async function handleRoute(): Promise<void> {
 	) {
 		const container = document.getElementById("influImageContainer");
 		if (container && container.innerHTML === "") {
-			container.innerHTML = INFLU_LOADING_HTML;
+			container.innerHTML = getInfluLoadingHtml();
 			void shareCity();
 		}
 	}
@@ -282,13 +282,21 @@ function openAgendaPanel(): void {
 	updatePanelVisibility();
 }
 
-const INFLU_LOADING_HTML = `<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+const getInfluLoadingHtml = (): string => {
+	const slug = currentCityData?.citySlug ?? "";
+	const name = currentCityData?.cityName ?? "ville";
+	const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
+	return `
+		<div class="influ-loading">Image en cours de création<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+		<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">📥</span></a>
+	`;
+};
 
 // Open influ/share panel and trigger share flow
 async function openInfluPanel(): Promise<void> {
 	matomoTrack("CTA", "informer_potes");
 	const container = document.getElementById("influImageContainer");
-	if (container) container.innerHTML = INFLU_LOADING_HTML;
+	if (container) container.innerHTML = getInfluLoadingHtml();
 
 	const url = new URL(window.location.href);
 	url.searchParams.set("jememobilise", "true");
@@ -1110,8 +1118,14 @@ async function shareCity(): Promise<void> {
 	} catch (error) {
 		const container = document.getElementById("influImageContainer");
 		if (container) {
-			container.innerHTML =
-				`<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
+			const slug = currentCityData?.citySlug ?? "";
+			const name = currentCityData?.cityName ?? "ville";
+			const ogUrl = `/og/${encodeURIComponent(slug)}.png`;
+			container.innerHTML = `
+				<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>
+				<a href="${ogUrl}" download="mobilisator-${name}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">📥</span></a>
+				${getRejoinButtonHtml()}
+			`;
 		}
 		alert(`Erreur lors du partage. Réessaie !\n${String(error)}`);
 	}
