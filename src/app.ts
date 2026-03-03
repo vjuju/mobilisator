@@ -52,6 +52,9 @@ const searchIndexCache: Record<string, Record<string, CitySearchResult[]>> = {};
 let citiesDataCache: Record<number, City> | null = null;
 let slugMapCache: Record<string, number> | null = null;
 
+// Current image blob for the influ panel (used by copy button)
+let currentInfluBlob: Blob | null = null;
+
 // Current city data for sharing
 let currentCityData: {
 	citySlug: string;
@@ -717,14 +720,17 @@ const appendRejoinButtonWhenImageReady = (
 	img.addEventListener("error", maybeAppend, { once: true });
 };
 
-// Show share result in the influ panel
-function showShareModal(imageUrl: string): void {
+// Show the generated image in the influ panel with copy + download buttons
+function showShareModal(imageUrl: string, cityName: string): void {
 	const container = document.getElementById("influImageContainer");
 	if (container) {
 		container.innerHTML = `
-			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
-			<div class="influ-copy-text" style="color:#5ECBA1">TU PEUX LA COLLER EN STORY</div>
+			<div class="influ-title">Image générée 🎉</div>
 			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
+			<div class="influ-actions">
+				<button type="button" class="cta-button influ-copy-btn" onclick="copyInfluImage()">COPIER<span class="emoji">📋</span></button>
+				<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">📥</span></a>
+			</div>
 		`;
 		appendRejoinButtonWhenImageReady(container);
 	}
@@ -732,6 +738,29 @@ function showShareModal(imageUrl: string): void {
 
 // No-op: share is now handled by the influ panel
 function closeShareModal(): void {}
+
+// Copy the current influ image to clipboard
+async function copyInfluImage(): Promise<void> {
+	if (!currentInfluBlob) return;
+	const clipboardSupportsPng =
+		navigator.clipboard &&
+		typeof ClipboardItem !== "undefined" &&
+		(typeof ClipboardItem.supports !== "function" ||
+			ClipboardItem.supports("image/png"));
+	if (!clipboardSupportsPng) return;
+	try {
+		const pngBlob = await normalizeImageForClipboard(currentInfluBlob);
+		await navigator.clipboard.write([new ClipboardItem({ "image/png": Promise.resolve(pngBlob) })]);
+		const btn = document.querySelector<HTMLButtonElement>(".influ-copy-btn");
+		if (btn) {
+			const orig = btn.innerHTML;
+			btn.innerHTML = "COPIÉ !<span class=\"emoji\">✓</span>";
+			setTimeout(() => { btn.innerHTML = orig; }, 2000);
+		}
+	} catch (e) {
+		console.error("Clipboard error:", e);
+	}
+}
 
 const normalizeImageForClipboard = async (blob: Blob): Promise<Blob> => {
 	try {
@@ -1058,28 +1087,26 @@ async function shareCity(): Promise<void> {
 		}
 
 		// Create image URL for display
+		currentInfluBlob = imageBlob;
 		const imageUrl = URL.createObjectURL(imageBlob);
 
-		// Try to copy to clipboard first (supported browsers / secure contexts only)
+		// Try to copy to clipboard silently (supported browsers / secure contexts only)
 		const clipboardSupportsPng =
 			navigator.clipboard &&
 			typeof ClipboardItem !== "undefined" &&
 			(typeof ClipboardItem.supports !== "function" ||
 				ClipboardItem.supports("image/png"));
 
-			if (clipboardSupportsPng) {
-				try {
-					const pngBlob = await normalizeImageForClipboard(imageBlob);
-					const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
-					await navigator.clipboard.write([clipboardItem]);
-					showShareModal(imageUrl);
-				} catch (clipboardError) {
+		if (clipboardSupportsPng) {
+			try {
+				const pngBlob = await normalizeImageForClipboard(imageBlob);
+				const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
+				await navigator.clipboard.write([clipboardItem]);
+			} catch (clipboardError) {
 				console.error("Clipboard error:", clipboardError);
-				showShareModalWithDownload(imageUrl, cityName);
 			}
-		} else {
-			showShareModalWithDownload(imageUrl, cityName);
 		}
+		showShareModal(imageUrl, cityName);
 	} catch (error) {
 		const container = document.getElementById("influImageContainer");
 		if (container) {
@@ -1087,22 +1114,6 @@ async function shareCity(): Promise<void> {
 				`<p class="error">Erreur lors de la génération de l'image. Réessaie.</p>${getRejoinButtonHtml()}`;
 		}
 		alert(`Erreur lors du partage. Réessaie !\n${String(error)}`);
-	}
-}
-
-// Show share download fallback in the influ panel
-function showShareModalWithDownload(imageUrl: string, cityName: string): void {
-	const container = document.getElementById("influImageContainer");
-	if (container) {
-		container.innerHTML = `
-			<div class="influ-title">Ton image est prête !</div>
-			<div class="influ-subtitle">Télécharge-la et partage-la en story</div>
-			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
-			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration: none; margin-top: 8px;">
-				TÉLÉCHARGER<span class="emoji">📥</span>
-			</a>
-		`;
-		appendRejoinButtonWhenImageReady(container);
 	}
 }
 
@@ -1117,6 +1128,7 @@ declare global {
 		closeDetailModal: () => void;
 		shareCity: () => Promise<void>;
 		closeShareModal: () => void;
+		copyInfluImage: () => Promise<void>;
 		openHowPanel: () => void;
 		openAgendaPanel: () => void;
 		openInfluPanel: () => Promise<void>;
@@ -1135,6 +1147,7 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
+window.copyInfluImage = copyInfluImage;
 window.openHowPanel = openHowPanel;
 window.openAgendaPanel = openAgendaPanel;
 window.openInfluPanel = openInfluPanel;

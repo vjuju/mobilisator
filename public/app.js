@@ -300,6 +300,7 @@ var searchTimeout = null;
 var searchIndexCache = {};
 var citiesDataCache = null;
 var slugMapCache = null;
+var currentInfluBlob = null;
 var currentCityData = null;
 function getPartitionKey(query) {
   const firstChar = query.charAt(0).toLowerCase();
@@ -739,18 +740,42 @@ var appendRejoinButtonWhenImageReady = (container, imageSelector = ".influ-image
   img.addEventListener("load", maybeAppend, { once: true });
   img.addEventListener("error", maybeAppend, { once: true });
 };
-function showShareModal(imageUrl) {
+function showShareModal(imageUrl, cityName) {
   const container = document.getElementById("influImageContainer");
   if (container) {
     container.innerHTML = `
-			<div class="influ-copy-text">IMAGE COPIÉE ! </div>
-			<div class="influ-copy-text" style="color:#5ECBA1">TU PEUX LA COLLER EN STORY</div>
+			<div class="influ-title">Image générée \uD83C\uDF89</div>
 			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
+			<div class="influ-actions">
+				<button type="button" class="cta-button influ-copy-btn" onclick="copyInfluImage()">COPIER<span class="emoji">\uD83D\uDCCB</span></button>
+				<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration:none;">TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span></a>
+			</div>
 		`;
     appendRejoinButtonWhenImageReady(container);
   }
 }
 function closeShareModal() {}
+async function copyInfluImage() {
+  if (!currentInfluBlob)
+    return;
+  const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
+  if (!clipboardSupportsPng)
+    return;
+  try {
+    const pngBlob = await normalizeImageForClipboard(currentInfluBlob);
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": Promise.resolve(pngBlob) })]);
+    const btn = document.querySelector(".influ-copy-btn");
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = 'COPIÉ !<span class="emoji">✓</span>';
+      setTimeout(() => {
+        btn.innerHTML = orig;
+      }, 2000);
+    }
+  } catch (e) {
+    console.error("Clipboard error:", e);
+  }
+}
 var normalizeImageForClipboard = async (blob) => {
   try {
     const bitmap = await createImageBitmap(blob);
@@ -1013,6 +1038,7 @@ async function shareCity() {
       imageBlob = await createClientFallbackImageBlob(cityName, votesDecisifs);
       console.warn("Using client-side fallback image", { citySlug });
     }
+    currentInfluBlob = imageBlob;
     const imageUrl = URL.createObjectURL(imageBlob);
     const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
     if (clipboardSupportsPng) {
@@ -1020,14 +1046,11 @@ async function shareCity() {
         const pngBlob = await normalizeImageForClipboard(imageBlob);
         const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
         await navigator.clipboard.write([clipboardItem]);
-        showShareModal(imageUrl);
       } catch (clipboardError) {
         console.error("Clipboard error:", clipboardError);
-        showShareModalWithDownload(imageUrl, cityName);
       }
-    } else {
-      showShareModalWithDownload(imageUrl, cityName);
     }
+    showShareModal(imageUrl, cityName);
   } catch (error) {
     const container = document.getElementById("influImageContainer");
     if (container) {
@@ -1035,20 +1058,6 @@ async function shareCity() {
     }
     alert(`Erreur lors du partage. Réessaie !
 ${String(error)}`);
-  }
-}
-function showShareModalWithDownload(imageUrl, cityName) {
-  const container = document.getElementById("influImageContainer");
-  if (container) {
-    container.innerHTML = `
-			<div class="influ-title">Ton image est prête !</div>
-			<div class="influ-subtitle">Télécharge-la et partage-la en story</div>
-			<img class="influ-image" src="${imageUrl}" alt="Image à partager">
-			<a href="${imageUrl}" download="mobilisator-${cityName}.png" class="cta-button" style="text-decoration: none; margin-top: 8px;">
-				TÉLÉCHARGER<span class="emoji">\uD83D\uDCE5</span>
-			</a>
-		`;
-    appendRejoinButtonWhenImageReady(container);
   }
 }
 window.navigateToCityById = navigateToCityById;
@@ -1059,6 +1068,7 @@ window.openDetailModalByKey = openDetailModalByKey;
 window.closeDetailModal = closeDetailModal;
 window.shareCity = shareCity;
 window.closeShareModal = closeShareModal;
+window.copyInfluImage = copyInfluImage;
 window.openHowPanel = openHowPanel;
 window.openAgendaPanel = openAgendaPanel;
 window.openInfluPanel = openInfluPanel;
