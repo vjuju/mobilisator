@@ -575,79 +575,6 @@
             display: none;
         }
 
-        /* ── Access Gate ── */
-        .access-gate {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .access-gate.show {
-            display: flex;
-        }
-
-        .access-gate-title {
-            font-size: 24px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: #fff;
-            margin-bottom: 40px;
-        }
-
-        .access-gate-input {
-            background: #1a1a1a;
-            border: 2px solid #5ECBA1;
-            border-radius: 10px;
-            padding: 15px 25px;
-            font-family: Arial, sans-serif;
-            font-size: 20px;
-            color: #fff;
-            text-align: center;
-            width: 200px;
-            outline: none;
-        }
-
-        .access-gate-input:focus {
-            border-color: #7EDBB5;
-        }
-
-        .access-gate-input::placeholder {
-            color: #666;
-        }
-
-        .access-gate-button {
-            margin-top: 20px;
-            background: #5ECBA1;
-            border: none;
-            border-radius: 10px;
-            padding: 15px 40px;
-            font-family: 'Folsom', Impact, sans-serif;
-            font-size: 20px;
-            color: #000;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .access-gate-button:hover {
-            background: #7EDBB5;
-        }
-
-        .access-error {
-            display: none;
-            color: #ff6b6b;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            margin-top: 15px;
-        }
-
         /* ── Modal ── */
         .modal {
             display: none;
@@ -959,13 +886,6 @@
     </style>
 </head>
 <body>
-    <!-- Access Gate -->
-    <div id="accessGate" class="access-gate">
-        <h1 class="access-gate-title">#RIENSANSNOUS</h1>
-        <input type="text" id="accessCodeInput" class="access-gate-input" placeholder="Code d'accès" autocomplete="off">
-        <button type="button" id="accessCodeSubmit" class="access-gate-button">Valider</button>
-        <p id="accessError" class="access-error"></p>
-    </div>
 
     <!-- Main Content -->
     <div id="mainContent">
