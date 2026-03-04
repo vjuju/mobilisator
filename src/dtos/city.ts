@@ -84,6 +84,7 @@ export interface FullCity {
 	code_departement: string;
 	libelle_departement: string;
 	code_commune: string;
+	communesAgregees?: string[];
 }
 
 export interface AnalyseData {

@@ -49,6 +49,7 @@ export const createSearchIndex = (
 			city.nom_sans_pronom,
 			city.code_departement,
 			city.code_commune,
+			...(city.communesAgregees ?? []),
 		].forEach(addStringToFullCityIndex);
 	});
 	return searchIndex;
@@ -116,6 +117,7 @@ const cities: FullCity[] = elections
 			code_departement: entry["Code du département"],
 			libelle_departement: entry["Libellé du département"],
 			code_commune: entry["Code de la commune"],
+			...(entry.communesAgregees && { communesAgregees: entry.communesAgregees }),
 		};
 	});
 

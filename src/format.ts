@@ -426,7 +426,7 @@ export function formatAggregationWarning(communesAgregees: string[]): string {
 	const communesList = communesAgregees.join(", ");
 	return `
 		<div class="aggregation-warning">
-			⚠️ Les chiffres présentés sont les agrégations des communes suivantes : ${communesList}
+			ℹ️ Ces données regroupent les arrondissements : ${communesList}
 		</div>
 	`;
 }

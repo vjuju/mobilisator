@@ -207,6 +207,8 @@
 
         .search-input::placeholder {
             color: rgba(0, 0, 0, 0.55);
+            font-family: Arial, sans-serif;
+            font-size: 18px;
         }
 
         .results {
@@ -366,14 +368,14 @@
         /* Aggregation Warning */
         .aggregation-warning {
             flex-shrink: 0;
-            background: rgba(255, 193, 7, 0.15);
-            border: 1px solid rgba(255, 193, 7, 0.5);
+            background: rgba(94, 203, 161, 0.1);
+            border: 1px solid rgba(94, 203, 161, 0.4);
             border-radius: 8px;
             padding: 8px 12px;
             margin-bottom: 4px;
             font-family: Arial, sans-serif;
             font-size: clamp(10px, 1.8cqh, 13px);
-            color: #ffc107;
+            color: #5ECBA1;
             line-height: 1.4;
             text-align: left;
         }
@@ -898,14 +900,14 @@
                     <span class="back-label">RETOUR</span>
                 </button>
             </div>
-            <img src="/assets/LogoOEP.png" alt="On Est Prêt" class="navbar-logo">
             <div></div>
+            <img src="/assets/LogoOEP.png" alt="On Est Prêt" class="navbar-logo" style="justify-self:end;">
         </nav>
 
         <div class="container">
             <div class="search-box">
                 <label class="search-input-wrapper" for="searchInput">
-                    <input type="text" id="searchInput" class="search-input" placeholder="RENTRE TA VILLE">
+                    <input type="text" id="searchInput" class="search-input" placeholder="rentre ta ville...">
                 </label>
                 <div id="results" class="results"></div>
             </div>
