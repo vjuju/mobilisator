@@ -695,7 +695,7 @@ interface DetailDataItem {
 }
 
 const getRejoinButtonHtml = (): string => `
-	<button type="button" class="cta-button" onclick="openRejoinPanel()">
+	<button type="button" class="cta-button cta-button-green" onclick="openRejoinPanel()">
 		JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
 	</button>
 `;

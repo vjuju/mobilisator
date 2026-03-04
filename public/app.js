@@ -238,7 +238,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
                 <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
                     J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>
                 </button>
-                <button type="button" class="cta-button" onclick="openRejoinPanel()">
+                <button type="button" class="cta-button cta-button-green" onclick="openRejoinPanel()">
                     JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
             </div>
@@ -707,7 +707,7 @@ function openDetailModalByKey(key) {
   }
 }
 var getRejoinButtonHtml = () => `
-	<button type="button" class="cta-button" onclick="openRejoinPanel()">
+	<button type="button" class="cta-button cta-button-green" onclick="openRejoinPanel()">
 		JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
 	</button>
 `;
