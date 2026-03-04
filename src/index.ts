@@ -1,6 +1,6 @@
 import { rm } from "node:fs/promises";
 
-import type { City, ElectionEntry, FullCity } from "./dtos/city";
+import type { City, CitySearchResult, ElectionEntry, FullCity } from "./dtos/city";
 import { computeVotesDecisifs } from "./format";
 import { fullCityToCity, normalizeText } from "./utils";
 
@@ -21,54 +21,50 @@ const outputDirectoryPath = "./public/cities";
 const inputPath = "./elections.json";
 const inputFile = Bun.file(inputPath);
 
-interface Indexable {
-	id: number;
-}
-
 export const createSearchIndex = (
 	cities: FullCity[],
-): Map<string, number[]> => {
-	const searchIndex: Map<string, number[]> = new Map();
+): Map<string, CitySearchResult[]> => {
+	const searchIndex: Map<string, CitySearchResult[]> = new Map();
 
-	const addStringToIndex = (index: Indexable) => (str: string) =>
+	const addToIndex = (key: string, result: CitySearchResult) => {
+		if (!searchIndex.has(key)) {
+			searchIndex.set(key, []);
+		}
+		const arr = searchIndex.get(key)!;
+		if (!arr.find((r) => r[0] === result[0] && r[1] === result[1])) {
+			arr.push(result);
+		}
+	};
+
+	const addStringToIndex = (str: string, result: CitySearchResult) =>
 		tokenizeText(str)
 			.map(createNGrams)
 			.reduce((acc, ngrams) => {
-				ngrams.forEach((ngram) => {
-					acc.add(ngram);
-				});
+				ngrams.forEach((ngram) => acc.add(ngram));
 				return acc;
-			}, new Set())
-			.forEach(addToIndex(searchIndex)(index));
+			}, new Set<string>())
+			.forEach((ngram) => addToIndex(ngram, result));
 
 	cities.forEach((city: FullCity) => {
-		const addStringToFullCityIndex = addStringToIndex(city);
+		const result: CitySearchResult = [city.id, city.nom_standard, city.code_departement];
 
 		[
 			city.nom_standard,
 			city.nom_sans_pronom,
 			city.code_departement,
 			city.code_commune,
-			...(city.communesAgregees ?? []),
-		].forEach(addStringToFullCityIndex);
+		].forEach((str) => addStringToIndex(str, result));
+
+		(city.communesAgregees ?? []).forEach((commune) => {
+			const baseName = commune.replace(/\s*\(\d+\)\s*$/, "").trim();
+			const displayName = `${baseName} arrondissement`;
+			const arroResult: CitySearchResult = [city.id, displayName, city.code_departement];
+			addStringToIndex(commune, arroResult);
+		});
 	});
+
 	return searchIndex;
 };
-
-const addToIndex =
-	(searchIndex: Map<string, number[]>) =>
-	(indexable: Indexable) =>
-	(key: string) => {
-		if (!searchIndex.has(key)) {
-			searchIndex.set(key, []);
-		}
-		const found =
-			searchIndex.get(key)?.find((item) => item === indexable.id) ?? false;
-
-		if (!found) {
-			searchIndex.get(key)?.push(indexable.id);
-		}
-	};
 
 export const tokenizeText = (text: string): string[] => {
 	return normalizeText(text)
@@ -131,17 +127,7 @@ const electionsById = Object.fromEntries(
 // Build the search index with limited results per ngram
 const citiesIndex = Array.from(searchIndex.entries()).map(([k, v]) => [
 	k,
-	v
-		.sort(
-			(a, b) =>
-				citiesById[a].nom_standard.length - citiesById[b].nom_standard.length,
-		)
-		.slice(0, MAX_CITIES_PER_NGRAM)
-		.map((i) => [
-			i,
-			citiesById[i].nom_standard,
-			citiesById[i].code_departement,
-		]),
+	v.sort((a, b) => a[1].length - b[1].length).slice(0, MAX_CITIES_PER_NGRAM),
 ]);
 
 // Partition the search index by first character
