@@ -243,6 +243,9 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
                 </button>
             </div>
 
+            <!-- Footer injected by JS -->
+            <div class="city-detail-footer"></div>
+
         </div>
     `;
 }
@@ -645,6 +648,11 @@ function displayCityDetail(city) {
   const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
   const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning);
   cityDetailDiv.innerHTML = html;
+  const mainFooter = document.querySelector("footer.footer");
+  const footerPlaceholder = cityDetailDiv.querySelector(".city-detail-footer");
+  if (mainFooter && footerPlaceholder) {
+    footerPlaceholder.appendChild(mainFooter.cloneNode(true));
+  }
 }
 function openQomonModal() {
   openRejoinPanel();

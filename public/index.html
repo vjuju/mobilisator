@@ -847,9 +847,16 @@
             flex-shrink: 0;
         }
 
-        /* illu-credit only on home */
-        #mainContent:has(#cityDetail:not(:empty)) .illu-credit {
+        /* illu-credit and main footer only on home */
+        #mainContent:has(#cityDetail:not(:empty)) .illu-credit,
+        #mainContent:has(#cityDetail:not(:empty)) > footer.footer {
             display: none;
+        }
+
+        /* Footer cloned inside city detail scroll area */
+        .city-detail-footer .footer {
+            border-top: 1px solid #333;
+            margin-top: 8px;
         }
 
         .footer a {

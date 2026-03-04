@@ -441,6 +441,9 @@ export function formatCityDetailHtml(
                 </button>
             </div>
 
+            <!-- Footer injected by JS -->
+            <div class="city-detail-footer"></div>
+
         </div>
     `;
 }

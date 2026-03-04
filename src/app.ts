@@ -613,6 +613,13 @@ function displayCityDetail(city: City): void {
 	);
 
 	cityDetailDiv.innerHTML = html;
+
+	// Clone the main footer into the city detail scrollable area
+	const mainFooter = document.querySelector("footer.footer");
+	const footerPlaceholder = cityDetailDiv.querySelector(".city-detail-footer");
+	if (mainFooter && footerPlaceholder) {
+		footerPlaceholder.appendChild(mainFooter.cloneNode(true));
+	}
 }
 
 // Open Qomon modal / rejoins panel
