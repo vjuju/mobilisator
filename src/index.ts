@@ -48,19 +48,25 @@ export const createSearchIndex = (
 	cities.forEach((city: FullCity) => {
 		const result: CitySearchResult = [city.id, city.nom_standard, city.code_departement];
 
-		[
-			city.nom_standard,
-			city.nom_sans_pronom,
-			city.code_departement,
-			city.code_commune,
-		].forEach((str) => addStringToIndex(str, result));
-
-		(city.communesAgregees ?? []).forEach((commune) => {
-			const baseName = commune.replace(/\s*\(\d+\)\s*$/, "").trim();
-			const displayName = `${baseName} arrondissement`;
-			const arroResult: CitySearchResult = [city.id, displayName, city.code_departement];
-			addStringToIndex(commune, arroResult);
-		});
+		if (city.communesAgregees && city.communesAgregees.length > 0) {
+			// Secteur city: only index by code, not by secteur name
+			[city.code_departement, city.code_commune].forEach((str) =>
+				addStringToIndex(str, result),
+			);
+			city.communesAgregees.forEach((commune) => {
+				const baseName = commune.replace(/\s*\(\d+\)\s*$/, "").trim();
+				const displayName = `${baseName} arrondissement`;
+				const arroResult: CitySearchResult = [city.id, displayName, city.code_departement];
+				addStringToIndex(commune, arroResult);
+			});
+		} else {
+			[
+				city.nom_standard,
+				city.nom_sans_pronom,
+				city.code_departement,
+				city.code_commune,
+			].forEach((str) => addStringToIndex(str, result));
+		}
 	});
 
 	return searchIndex;
