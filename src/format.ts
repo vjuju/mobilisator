@@ -61,42 +61,6 @@ export const labels = {
 	sourceLabel: "Source :",
 };
 
-// ============================================================================
-// TAILLE DE CHIFFRE BASÉE SUR LE RATIO nonVotants / votesDecisifs
-// ============================================================================
-
-/**
- * Calcule les font-sizes des deux chiffres principaux en fonction du ratio
- * nonVotants1839 / votesDecisifs, sur une échelle log :
- *   - ratio ≤ 1        → sizeRatio = 1 (même taille)
- *   - ratio ≥ 15 (cap) → sizeRatio = 2 (secondary = 2× main)
- *
- * Les deux chiffres divergent symétriquement autour d'un point médian
- * (÷√sizeRatio pour main, ×√sizeRatio pour secondary) afin que
- * secondary_font / main_font = sizeRatio à tout instant.
- */
-function scaledNumberFontSizes(
-	nonVotants: number,
-	votesDecisifs: number,
-): { main: string; secondary: string } {
-	const CAP = 15; // ~99e percentile sur les données réelles (hors outliers)
-	const MID = 14; // cqh de référence commune quand sizeRatio = 1
-
-	let sizeRatio = 1;
-	if (votesDecisifs > 0 && nonVotants > 0) {
-		const cityRatio = nonVotants / votesDecisifs;
-		const t = Math.min(1, Math.log10(Math.max(1, cityRatio)) / Math.log10(CAP));
-		sizeRatio = 1 + t; // [1, 2]
-	}
-
-	const mainCqh = (MID / Math.sqrt(sizeRatio)).toFixed(1);
-	const secondaryCqh = (MID * Math.sqrt(sizeRatio)).toFixed(1);
-
-	return {
-		main: `clamp(26px, ${mainCqh}cqh, 100px)`,
-		secondary: `clamp(26px, ${secondaryCqh}cqh, 120px)`,
-	};
-}
 
 // ============================================================================
 // CALCUL DES VOTES DÉCISIFS (runtime)
@@ -444,7 +408,6 @@ export function formatCityDetailHtml(
 	nonVotants1839: number,
 	aggregationWarning: string,
 ): string {
-	const fontSizes = scaledNumberFontSizes(nonVotants1839, votesDecisifs);
 	return `
         <div class="city-detail">
 			${aggregationWarning}
@@ -452,7 +415,7 @@ export function formatCityDetailHtml(
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
 
-				<div class="main-number" style="font-size:${fontSizes.main}">${votesDecisifs.toLocaleString("fr-FR")}</div>
+				<div class="main-number">${votesDecisifs.toLocaleString("fr-FR")}</div>
 				<div class="main-label">${mainTagline}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('decisive'); return false;">${labels.detailLink}</a>
 			</div>
@@ -460,7 +423,7 @@ export function formatCityDetailHtml(
             <!-- Secondary Stat: Non-Voting Youth -->
             <div class="secondary-stat">
 
-                <div class="secondary-number" style="font-size:${fontSizes.secondary}">${nonVotants1839.toLocaleString("fr-FR")}</div>
+                <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
                 <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
