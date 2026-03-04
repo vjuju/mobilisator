@@ -46,20 +46,29 @@ export const createSearchIndex = (
 			.forEach((ngram) => addToIndex(ngram, result));
 
 	cities.forEach((city: FullCity) => {
-		const result: CitySearchResult = [city.id, city.nom_standard, city.code_departement];
+		const hasCommunesAgregees = city.communesAgregees && city.communesAgregees.length > 0;
+		const isSecteurName = /secteur/i.test(city.nom_standard);
 
-		if (city.communesAgregees && city.communesAgregees.length > 0) {
-			// Secteur city: only index by code, not by secteur name
-			[city.code_departement, city.code_commune].forEach((str) =>
-				addStringToIndex(str, result),
-			);
-			city.communesAgregees.forEach((commune) => {
+		if (hasCommunesAgregees) {
+			// Marseille/Paris secteurs with aggregated communes: index only as arrondissements
+			city.communesAgregees!.forEach((commune) => {
 				const baseName = commune.replace(/\s*\(\d+\)\s*$/, "").trim();
 				const displayName = `${baseName} arrondissement`;
 				const arroResult: CitySearchResult = [city.id, displayName, city.code_departement];
 				addStringToIndex(commune, arroResult);
 			});
+		} else if (isSecteurName) {
+			// Lyon/Paris secteurs without aggregation: rename "secteur" → "arrondissement"
+			const displayName = city.nom_standard.replace(/\bsecteur\b/gi, "arrondissement");
+			const result: CitySearchResult = [city.id, displayName, city.code_departement];
+			[
+				city.nom_standard,
+				city.nom_sans_pronom,
+				city.code_departement,
+				city.code_commune,
+			].forEach((str) => addStringToIndex(str, result));
 		} else {
+			const result: CitySearchResult = [city.id, city.nom_standard, city.code_departement];
 			[
 				city.nom_standard,
 				city.nom_sans_pronom,
