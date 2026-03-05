@@ -1098,22 +1098,6 @@ async function shareCity(): Promise<void> {
 		currentInfluBlob = imageBlob;
 		const imageUrl = URL.createObjectURL(imageBlob);
 
-		// Try to copy to clipboard silently (supported browsers / secure contexts only)
-		const clipboardSupportsPng =
-			navigator.clipboard &&
-			typeof ClipboardItem !== "undefined" &&
-			(typeof ClipboardItem.supports !== "function" ||
-				ClipboardItem.supports("image/png"));
-
-		if (clipboardSupportsPng) {
-			try {
-				const pngBlob = await normalizeImageForClipboard(imageBlob);
-				const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
-				await navigator.clipboard.write([clipboardItem]);
-			} catch (clipboardError) {
-				console.error("Clipboard error:", clipboardError);
-			}
-		}
 		showShareModal(imageUrl, cityName);
 	} catch (error) {
 		const container = document.getElementById("influImageContainer");

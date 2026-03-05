@@ -1031,16 +1031,6 @@ async function shareCity() {
     }
     currentInfluBlob = imageBlob;
     const imageUrl = URL.createObjectURL(imageBlob);
-    const clipboardSupportsPng = navigator.clipboard && typeof ClipboardItem !== "undefined" && (typeof ClipboardItem.supports !== "function" || ClipboardItem.supports("image/png"));
-    if (clipboardSupportsPng) {
-      try {
-        const pngBlob = await normalizeImageForClipboard(imageBlob);
-        const clipboardItem = new ClipboardItem({ "image/png": Promise.resolve(pngBlob) });
-        await navigator.clipboard.write([clipboardItem]);
-      } catch (clipboardError) {
-        console.error("Clipboard error:", clipboardError);
-      }
-    }
     showShareModal(imageUrl, cityName);
   } catch (error) {
     const container = document.getElementById("influImageContainer");
