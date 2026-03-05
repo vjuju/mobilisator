@@ -6,6 +6,14 @@
     <title>#RIENSANSNOUS - Municipales 2020</title>
     <link rel="canonical" id="canonicalTag" href="https://mobilisator.fr/">
     <meta name="description" id="metaDescription" content="Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville. #RIENSANSNOUS">
+    <script>
+        (function() {
+            var p = window.location.pathname.replace(/\/$/, '');
+            if (p && p !== '/index.html') {
+                document.getElementById('canonicalTag').setAttribute('href', 'https://mobilisator.fr' + p);
+            }
+        })();
+    </script>
     <link rel="preload" href="/fonts/Folsom-Black.otf" as="font" type="font/otf" crossorigin>
     <link rel="preconnect" href="https://scripts.qomon.org">
     <link rel="preconnect" href="https://cdn-form.qomon.org">
