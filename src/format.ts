@@ -53,7 +53,7 @@ export const labels = {
 
 	// Labels des stats
 	stats: {
-		jeunesNonVotants: "jeunes de 18-39 ans<br>n'ont pas voté,<br>selon nos estimations",
+		jeunesNonVotants: "jeunes de 18-39 ans n'ont pas voté,<br>selon nos estimations",
 	},
 
 	// Liens
@@ -139,9 +139,9 @@ export function getMainTagline(
 ): string {
 	const verb = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
 	if (cas === 1 || cas === 2 || cas === "2b") {
-		return `${verb}<br>faire élire un·e autre maire<br>en 2020`;
+		return `${verb} faire élire<br>un·e autre maire en 2020`;
 	}
-	return `${verb}<br>faire la diff' aux municipales<br>en 2020`;
+	return `${verb} faire la diff'<br>aux municipales en 2020`;
 }
 
 // ============================================================================
