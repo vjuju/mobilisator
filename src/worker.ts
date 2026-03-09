@@ -204,7 +204,7 @@ async function handleOgImage(
 // ─── Bot detection + dynamic meta tags ───────────────────────────
 const BOT_UA =
 	/facebookexternalhit|twitterbot|linkedinbot|slackbot|discordbot|googlebot|bingbot|whatsapp|telegram/i;
-const CITY_SLUG = /^\d{1,3}-\d/;
+const CITY_SLUG = /^(\d{1,3}|Z[A-Z])-\d/;
 
 function escapeAttr(str: string): string {
 	return str
@@ -242,7 +242,13 @@ async function handleBotCityRequest(
 	);
 	let html = await indexResp.text();
 
+	const votesFormatted = city ? city.votes.toLocaleString("fr-FR") : null;
+
 	html = html
+		.replace(
+			/<title>[^<]*<\/title>/,
+			`<title>${escapeAttr(title)}</title>`,
+		)
 		.replace(
 			/<meta property="og:title"[^>]*>/,
 			`<meta property="og:title" content="${escapeAttr(title)}">`,
@@ -268,6 +274,12 @@ async function handleBotCityRequest(
 <meta name="twitter:image" content="${ogImageUrl}">
 <link rel="canonical" href="${request.url}">
 </head>`,
+		)
+		.replace(
+			'<div id="cityDetail"></div>',
+			city && votesFormatted
+				? `<div id="cityDetail"><article style="color:#fff;font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto"><h1 style="font-size:2em;margin-bottom:0.5em">${escapeAttr(city.name)}</h1><p style="font-size:1.2em;margin-bottom:1em"><strong>${votesFormatted} jeunes de 18-39 ans</strong> qui n'ont pas voté auraient pu changer le résultat des élections municipales de 2020 à ${escapeAttr(city.name)}.</p><p>En 2026, rien ne doit se décider sans la jeunesse. Découvre l'impact de l'abstention des jeunes dans toutes les communes de France.</p></article></div>`
+				: '<div id="cityDetail"></div>',
 		);
 
 	return new Response(html, {
