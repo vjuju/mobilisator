@@ -113,7 +113,10 @@ const getPartitionKey = (ngram: string): string => {
 
 const startTime = performance.now();
 
-const elections: ElectionEntry[] = await inputFile.json();
+const MIN_INSCRITS = 700; // proxy for communes with 1000+ inhabitants
+const elections: ElectionEntry[] = (await inputFile.json()).filter(
+	(e: ElectionEntry) => e?.["Tour 1"]?.Inscrits >= MIN_INSCRITS,
+);
 const cities: FullCity[] = elections
 	.filter((entry) => !!entry && !!entry["Libellé de la commune"])
 	.map((entry, idx) => {
