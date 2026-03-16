@@ -446,6 +446,23 @@ function displayCityDetail(city: City): void {
 
 	if (!cityDetailDiv) return;
 
+	if (city.slug === "76-108-bois-guillaume") {
+		const landingText = document.getElementById("landingText");
+		if (landingText) landingText.classList.add("hidden");
+		cityDetailDiv.innerHTML = `
+			<div class="city-detail" style="text-align:center;padding:40px 20px;">
+				<div class="main-number" style="font-size:clamp(1.2rem,4vw,2rem);line-height:1.3;margin-bottom:40px;">
+					UN GRAND BRAVO À THÉO<br>ET L'ÉQUIPE D'IMAGINONS BOIS-GUILLAUME
+				</div>
+				<div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap;">
+					<img src="${BASE_PATH}assets/chien.jpeg" alt="Chien" style="width:48%;max-width:320px;border-radius:12px;object-fit:cover;">
+					<img src="${BASE_PATH}assets/copains.jpeg" alt="Copains" style="width:48%;max-width:320px;border-radius:12px;object-fit:cover;">
+				</div>
+			</div>`;
+		document.title = "Bravo Théo ! | #RIENSANSNOUS";
+		return;
+	}
+
 	// Hide landing text when city is shown
 	const landingText = document.getElementById("landingText");
 	if (landingText) landingText.classList.add("hidden");
