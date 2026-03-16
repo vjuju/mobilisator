@@ -586,9 +586,9 @@ export function formatCityDetailHtml(
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openHowPanel()">
-                    JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">🗳️</span>
-                </button>
+                ${showShareButton ? `<button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE LE 22 MARS<br>MODE D'EMPLOI<span class="emoji">🗳️</span>
+                </button>` : ""}
                 ${showShareButton ? `<button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
                     J'INFORME MES POTES<span class="emoji">📣</span>
                 </button>` : ""}

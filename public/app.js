@@ -164,9 +164,9 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
 
             <!-- CTA Buttons -->
             <div class="cta-section">
-                <button type="button" class="cta-button" onclick="openHowPanel()">
-                    JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">\uD83D\uDDF3️</span>
-                </button>
+                ${showShareButton ? `<button type="button" class="cta-button" onclick="openHowPanel()">
+                    JE VOTE LE 22 MARS<br>MODE D'EMPLOI<span class="emoji">\uD83D\uDDF3️</span>
+                </button>` : ""}
                 ${showShareButton ? `<button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
                     J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>
                 </button>` : ""}
