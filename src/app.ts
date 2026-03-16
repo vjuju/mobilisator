@@ -3,20 +3,16 @@ import { normalizeText } from "./utils";
 import {
 	messages,
 	labels,
-	computeVotesDecisifs,
-	getMainTagline,
-	formatFormulaDecisiveCas1,
-	formatFormulaDecisiveCas2,
-	formatFormulaDecisiveCas3,
-	formatFormulaDecisiveCas3b,
-	formatFormulaDecisiveCas2b,
-	formatExplanationNonVoting,
-	formatFormulaNonVotants,
-	formatResultsTable,
+	getMainTagline2026,
+	formatFormulaDecisive2026Terminee,
+	formatFormulaDecisive2026EnCours,
+	formatExplanationNonVoting2026,
+	formatFormulaNonVotants2026,
+	formatResultsTable2026,
 	formatAggregationWarning,
 	formatCityDetailHtml,
-	getElectionSourceUrl,
 	nonVotingSourceUrl,
+	electionSourceUrl2026,
 	formatSearchResultItem,
 	formatSearchInputValue,
 } from "./format";
@@ -217,7 +213,7 @@ async function handleRoute(): Promise<void> {
 		const landingText = document.getElementById("landingText");
 		if (landingText) landingText.classList.remove("hidden");
 		const searchInput = document.getElementById("searchInput") as HTMLInputElement;
-		document.title = "#RIENSANSNOUS - Municipales 2020";
+		document.title = "#RIENSANSNOUS - Municipales 2026";
 		(document.getElementById("canonicalTag") as HTMLLinkElement | null)?.setAttribute("href", "https://mobilisator.fr/");
 		// Handle ?q= parameter (from Google Sitelinks Search Box)
 		const qParam = new URLSearchParams(window.location.search).get("q");
@@ -463,130 +459,95 @@ function displayCityDetail(city: City): void {
 		return;
 	}
 
-	const hasSecondTour = !!city["Tour 2"];
-
-	// Compute votes décisifs at runtime using the new 3-case formula
-	const { votesDecisifs, cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
-
-	// Build election source URL
-	const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
-
-	// Build explanation for non-voting
-	const pop1839 = city.Analyse["Pop 18-39"];
-	const pop18Plus = city.Analyse["Pop 18+"];
-	const nonVotants = city.Analyse["Non votants"];
-	const partNeVotantPas = city.Analyse["Part ne votant pas"];
-	const explanationNonVoting = formatExplanationNonVoting(
-		city.nom_standard,
-		city.code_departement,
-		pop1839,
-		partNeVotantPas,
-		nonVotants,
-		pop18Plus,
-	);
-
-	// Determine tagline
-	const mainTagline = getMainTagline(cas, votesDecisifs);
-
-	const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
-
-	// Update page title and canonical for SEO
-	document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS`;
-	(document.getElementById("canonicalTag") as HTMLLinkElement | null)?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
-
-	// Store current city data for sharing
-	currentCityData = {
-		citySlug: city.slug,
-		cityName: city.nom_standard,
-		codeDepartement: city.code_departement,
-		votesDecisifs,
-		nonVotants1839,
-		hasSecondTour,
-	};
+	const tour1_2026 = city["2026"]?.["Tour 1"];
+	const has2026 = !!tour1_2026;
 
 	// Set Matomo custom dimension 1 = Ville
 	const paq: unknown[][] = (window as unknown as { _paq: unknown[][] })._paq ?? [];
 	paq.push(["setCustomDimension", 1, city.nom_standard]);
 
-	// Build results table for the decisive tour
-	const tourDecisif = hasSecondTour ? city["Tour 2"]! : city["Tour 1"];
-	const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
-	const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
+	const pop1839 = city.Analyse["Pop 18-39"];
+	const pop18Plus = city.Analyse["Pop 18+"];
+	const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
 
-	const resultsTable = formatResultsTable(resultats);
-
-	// Build formula explanations for the detail dialogs (3 cases)
-	const firstPlace = resultats[0];
-	const secondPlace = resultats[1];
-	const exprimes = tourDecisif.Exprimés;
-
+	let votesDecisifs = 0;
+	let mainTagline = "";
+	let nonVotants1839 = 0;
+	let nonVotantsLabel = labels.stats.jeunesNonVotantsTerminee2026;
 	let formulaDecisive = "";
-	if (cas === 1) {
-		formulaDecisive = formatFormulaDecisiveCas1(
-			city.nom_standard,
-			city.code_departement,
-			firstPlace.Voix,
-			votesDecisifs,
-			resultsTable,
-		);
-	} else if (cas === 2 && secondPlace) {
-		formulaDecisive = formatFormulaDecisiveCas2(
-			city.nom_standard,
-			city.code_departement,
-			firstPlace.Voix,
-			secondPlace.Voix,
-			votesDecisifs,
-			tourLabel,
-			resultsTable,
-		);
-	} else if (cas === "3b" && secondPlace) {
-		formulaDecisive = formatFormulaDecisiveCas3b(
-			city.nom_standard,
-			city.code_departement,
-			firstPlace.Voix,
-			secondPlace.Voix,
-			votesDecisifs,
-			resultsTable,
-		);
-	} else if (cas === "2b") {
-		// For Cas 2b, the formula uses Tour 1 data (Tour 2 had a single list)
-		const tour1Resultats = [...city["Tour 1"].resultats]
-			.filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix))
-			.sort((a, b) => b.Voix - a.Voix);
-		const tour1Table = formatResultsTable(tour1Resultats);
-		const tour1First = tour1Resultats[0];
-		const tour1Second = tour1Resultats[1];
-		if (tour1First && tour1Second) {
-			formulaDecisive = formatFormulaDecisiveCas2b(
+	let formulaNonVotants = "";
+	let electionSource = electionSourceUrl2026;
+
+	if (has2026 && city.Analyse["Votes décisifs 2026"] !== undefined && city.Analyse["Non votants de 18-39 2026"] !== undefined) {
+		// ── Calculs 2026 ──────────────────────────────────────────────────────
+		const electionTerminee = city.Analyse["election terminee 2026"] ?? false;
+		votesDecisifs = city.Analyse["Votes décisifs 2026"];
+		nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39 2026"]);
+		mainTagline = getMainTagline2026(electionTerminee, votesDecisifs);
+		nonVotantsLabel = electionTerminee
+			? labels.stats.jeunesNonVotantsTerminee2026
+			: labels.stats.jeunesNonVotantsEnCours2026;
+		electionSource = electionSourceUrl2026;
+
+		// Tableau des résultats T1 2026
+		const resultats2026 = [...tour1_2026.resultats].sort((a, b) => b.Voix - a.Voix);
+		const resultsTable2026 = formatResultsTable2026(resultats2026);
+		const first = resultats2026[0];
+		const second = resultats2026[1];
+
+		if (electionTerminee) {
+			const pourcentage = first["% Voix/Exp"];
+			formulaDecisive = formatFormulaDecisive2026Terminee(
 				city.nom_standard,
 				city.code_departement,
-				tour1First.Voix,
-				tour1Second.Voix,
+				first.Voix,
+				tour1_2026.Exprimés,
+				pourcentage,
 				votesDecisifs,
-				tour1Table,
+				resultsTable2026,
 			);
+		} else if (second) {
+			formulaDecisive = formatFormulaDecisive2026EnCours(
+				city.nom_standard,
+				city.code_departement,
+				first.Voix,
+				second.Voix,
+				votesDecisifs,
+				resultsTable2026,
+			);
+		} else {
+			formulaDecisive = resultsTable2026;
 		}
-	} else {
-		formulaDecisive = formatFormulaDecisiveCas3(
+
+		const explanationNonVoting2026 = formatExplanationNonVoting2026(
 			city.nom_standard,
 			city.code_departement,
-			firstPlace.Voix,
-			exprimes,
-			votesDecisifs,
-			tourLabel,
-			resultsTable,
+			pop1839,
+			tour1_2026.Abstentions,
+			pop18Plus,
 		);
+		formulaNonVotants = formatFormulaNonVotants2026(
+			explanationNonVoting2026,
+			pop1839,
+			pop18Plus,
+			tour1_2026.Abstentions,
+			nonVotants1839,
+		);
+
+		// Store current city data for sharing
+		currentCityData = {
+			citySlug: city.slug,
+			cityName: city.nom_standard,
+			codeDepartement: city.code_departement,
+			votesDecisifs,
+			nonVotants1839,
+			hasSecondTour: !electionTerminee,
+		};
 	}
 
-	const votants = tourDecisif.Votants;
-	const formulaNonVotants = formatFormulaNonVotants(
-		explanationNonVoting,
-		pop1839,
-		pop18Plus,
-		votants,
-		partNeVotantPas,
-		nonVotants1839,
-	);
+	// Update page title and canonical for SEO
+	document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes peuvent faire la diff' | #RIENSANSNOUS`;
+	(document.getElementById("canonicalTag") as HTMLLinkElement | null)?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
 
 	// Store detail data in global object for modal access
 	window.detailData = {
@@ -602,14 +563,14 @@ function displayCityDetail(city: City): void {
 		},
 	};
 
-	// Build aggregation warning if applicable
-	const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
-
+	const electionTerminee2026 = city.Analyse["election terminee 2026"] ?? true;
 	const html = formatCityDetailHtml(
 		votesDecisifs,
 		mainTagline,
 		nonVotants1839,
 		aggregationWarning,
+		nonVotantsLabel,
+		!electionTerminee2026,
 	);
 
 	cityDetailDiv.innerHTML = html;
@@ -875,24 +836,20 @@ const createClientFallbackImageBlob = async (
 	ctx.fillStyle = "#FFFFFF";
 	ctx.fillText(cityUpper, canvas.width / 2, 390);
 
-	ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
-	ctx.font = '700 38px Arial, sans-serif';
-	ctx.fillText("ON EST PRÊT ESTIME QUE", canvas.width / 2, 700);
-
 	ctx.fillStyle = "#5ECBA1";
-	ctx.font = '900 220px "Arial Black", Arial, sans-serif';
-	ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 880);
+	ctx.font = '900 240px "Arial Black", Arial, sans-serif';
+	ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 860);
 
 	ctx.fillStyle = "#FFFFFF";
-	ctx.font = '700 66px "Arial Black", Arial, sans-serif';
-	ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 1050);
-	ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1140);
-	ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1230);
+	ctx.font = '700 48px "Arial Black", Arial, sans-serif';
+	ctx.fillText("VOTES SÉPARENT LES CANDIDAT·ES", canvas.width / 2, 1010);
+	ctx.fillText("AU PREMIER TOUR EN 2026", canvas.width / 2, 1080);
 
 	ctx.fillStyle = "#5ECBA1";
-	ctx.font = '700 74px "Arial Black", Arial, sans-serif';
-	ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1400);
-	ctx.fillText("ET TOI ?", canvas.width / 2, 1490);
+	ctx.font = '700 88px "Arial Black", Arial, sans-serif';
+	ctx.fillText("JE VOTE", canvas.width / 2, 1330);
+	ctx.fillText("LE 22 MARS.", canvas.width / 2, 1440);
+	ctx.fillText("ET TOI ?", canvas.width / 2, 1540);
 
 	ctx.fillStyle = "#FFFFFF";
 	ctx.font = '700 46px "Arial Black", Arial, sans-serif';

@@ -155,19 +155,16 @@ async function handleOgImage(
 					),
 				),
 				el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 140 } },
-				el("div", { style: { fontSize: 260, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, city.votes.toLocaleString("fr-FR")),
-			),
-				el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 30, gap: 4 } },
-					el("div", { style: { display: "flex", flexDirection: "row", alignItems: "baseline" } },
-						el("div", { style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "JEUNES DE\u00A0"),
-						el("div", { style: { fontSize: 60, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "18-39 ANS"),
-					),
-					el("div", { style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "AURAIENT FAIT LA DIFF'"),
-					el("div", { style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, `À ${city.name.toUpperCase()} EN 2020`),
+					el("div", { style: { fontSize: 280, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, city.votes.toLocaleString("fr-FR")),
 				),
-				el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 130, gap: 0 } },
-					el("div", { style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "JE VOTE EN 2026."),
-					el("div", { style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "ET TOI ?"),
+				el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20, gap: 2 } },
+					el("div", { style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "VOTES SÉPARENT LES CANDIDAT·ES"),
+					el("div", { style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "AU PREMIER TOUR EN 2026"),
+				),
+				el("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 120, gap: 0 } },
+					el("div", { style: { fontSize: 90, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "JE VOTE"),
+					el("div", { style: { fontSize: 90, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "LE 22 MARS."),
+					el("div", { style: { fontSize: 90, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 } }, "ET TOI ?"),
 				),
 			),
 			el("div", { style: { position: "absolute", bottom: 275, right: 60, fontSize: 64, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1, display: "flex" } }, "#RIENSANSNOUS"),
@@ -232,10 +229,10 @@ async function handleBotCityRequest(
 	const city = shareDataCacheMeta?.[slug];
 	const title = city
 		? `${city.name} — ${city.votes.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS`
-		: "#RIENSANSNOUS - Municipales 2020";
+		: "#RIENSANSNOUS - Municipales 2026";
 	const description = city
-		? `${city.votes.toLocaleString("fr-FR")} jeunes de 18-39 ans auraient pu changer le résultat des municipales 2020 à ${city.name}. Et toi, tu votes en 2026 ?`
-		: "Découvre combien de jeunes auraient pu faire la diff' aux municipales 2020 dans ta ville.";
+		? `${city.votes.toLocaleString("fr-FR")} jeunes de 18-39 ans auraient pu changer le résultat des municipales 2026 à ${city.name}. Et toi, tu votes ?`
+		: "Découvre combien de jeunes auraient pu faire la diff' aux municipales 2026 dans ta ville.";
 
 	const indexResp = await env.ASSETS.fetch(
 		new URL("/index.html", request.url).toString(),
@@ -278,7 +275,7 @@ async function handleBotCityRequest(
 		.replace(
 			'<div id="cityDetail"></div>',
 			city && votesFormatted
-				? `<div id="cityDetail"><article style="color:#fff;font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto"><h1 style="font-size:2em;margin-bottom:0.5em">${escapeAttr(city.name)}</h1><p style="font-size:1.2em;margin-bottom:1em"><strong>${votesFormatted} jeunes de 18-39 ans</strong> qui n'ont pas voté auraient pu changer le résultat des élections municipales de 2020 à ${escapeAttr(city.name)}.</p><p>En 2026, rien ne doit se décider sans la jeunesse. Découvre l'impact de l'abstention des jeunes dans toutes les communes de France.</p></article></div>`
+				? `<div id="cityDetail"><article style="color:#fff;font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:0 auto"><h1 style="font-size:2em;margin-bottom:0.5em">${escapeAttr(city.name)}</h1><p style="font-size:1.2em;margin-bottom:1em"><strong>${votesFormatted} jeunes de 18-39 ans</strong> qui n'ont pas voté auraient pu changer le résultat des élections municipales de 2026 à ${escapeAttr(city.name)}.</p><p>Rien ne doit se décider sans la jeunesse. Découvre l'impact de l'abstention des jeunes dans toutes les communes de France.</p></article></div>`
 				: '<div id="cityDetail"></div>',
 		);
 

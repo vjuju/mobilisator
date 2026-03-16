@@ -35,76 +35,23 @@ var labels = {
     rejoindreEmoji: "✊"
   },
   stats: {
-    jeunesNonVotants: "jeunes de 18-39 ans n'ont pas voté,<br>selon nos estimations"
+    jeunesNonVotants: "jeunes de 18-39 ans n'ont pas voté,<br>selon nos estimations",
+    jeunesNonVotantsTerminee2026: "jeunes inscrits de 18-39 ans n'ont pas voté,<br>selon nos estimations",
+    jeunesNonVotantsEnCours2026: "jeunes n'ont pas voté,<br>selon nos estimations"
   },
   detailLink: "Détail",
   sourceLabel: "Source :"
 };
-function computeVotesDecisifs(tour1, tour2) {
-  if (tour2) {
-    const sorted2 = [...tour2.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
-    if (sorted2.length >= 2) {
-      return { votesDecisifs: sorted2[0].Voix - sorted2[1].Voix + 1, cas: 2 };
-    }
-    const sorted1 = [...tour1.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
-    if (sorted1.length >= 2) {
-      return { votesDecisifs: sorted1[0].Voix - sorted1[1].Voix + 1, cas: "2b" };
-    }
-    return { votesDecisifs: 0, cas: "2b" };
+function getMainTagline2026(electionTerminee, votesDecisifs) {
+  if (electionTerminee) {
+    const verb2 = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
+    return `${verb2} faire la diff'<br>aux municipales en 2026`;
   }
-  const sorted = [...tour1.resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
-  if (sorted.length === 0)
-    return { votesDecisifs: 0, cas: 3 };
-  const gagnantVoix = sorted[0].Voix;
-  if (sorted.length === 1) {
-    return { votesDecisifs: gagnantVoix + 1, cas: 1 };
-  }
-  const exprim_s = tour1.Exprimés;
-  const majority = 2 * gagnantVoix - exprim_s;
-  if (majority > 0) {
-    return { votesDecisifs: majority, cas: 3 };
-  }
-  return { votesDecisifs: sorted[0].Voix - sorted[1].Voix + 1, cas: "3b" };
+  const verb = votesDecisifs === 1 ? "vote sépare" : "votes séparent";
+  return `${verb}<br>les premiers candidats<br>au premier tour 2026`;
 }
-function getMainTagline(cas, votesDecisifs) {
-  const verb = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
-  if (cas === 1 || cas === 2 || cas === "2b") {
-    return `${verb} faire élire<br>un·e autre maire en 2020`;
-  }
-  return `${verb} faire la diff'<br>aux municipales en 2020`;
-}
-function formatFormulaDecisiveCas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
-  return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au premier tour.
-<br><br>
-Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
-<br><br>
-<strong>Formule :</strong> Voix de la liste unique + 1
-<br><br>
-<strong>Détail :</strong>
-<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
-<br><br><strong>Résultats du 1er tour :</strong>
-${resultsTableHtml}`;
-}
-function formatFormulaDecisiveCas2(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, tourLabel, resultsTableHtml) {
-  const ecart = firstPlaceVoix - secondPlaceVoix;
-  return `À ${cityName} (${codeDepartement}) en 2020, la liste arrivée en tête au second tour l'a emporté avec ${ecart.toLocaleString("fr-FR")} voix d'avance.
-<br><br>
-Pour que la 2e liste passe devant, il aurait suffi d'ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes à son score.
-<br><br>
-<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
-<br><br>
-<strong>Détail :</strong>
-<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
-<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
-<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
-<br><br><strong>Résultats du ${tourLabel} :</strong>
-${resultsTableHtml}`;
-}
-function formatFormulaDecisiveCas3(cityName, codeDepartement, firstPlaceVoix, exprimes, votesDecisifs, tourLabel, resultsTableHtml) {
-  const pourcentage = (firstPlaceVoix / exprimes * 100).toFixed(1);
-  return `À ${cityName} (${codeDepartement}) en 2020, la liste gagnante a remporté l'élection dès le premier tour avec ${pourcentage}% des suffrages exprimés (plus de 50%).
+function formatFormulaDecisive2026Terminee(cityName, codeDepartement, firstPlaceVoix, exprimes, pourcentage, votesDecisifs, resultsTableHtml) {
+  return `À ${cityName} (${codeDepartement}), la liste gagnante a remporté l'élection dès le premier tour du 15 mars 2026 avec ${pourcentage.toFixed(1)}% des suffrages exprimés (plus de 50%).
 <br><br>
 Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires aux autres listes — ce qui aurait ramené la liste de tête à 50% ou moins.
 <br><br>
@@ -114,14 +61,14 @@ Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLo
 <br>• Voix de la 1ère liste (V₁) : ${firstPlaceVoix.toLocaleString("fr-FR")}
 <br>• Total des exprimés (Vₜ) : ${exprimes.toLocaleString("fr-FR")}
 <br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
-<br><br><strong>Résultats du ${tourLabel} :</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
 ${resultsTableHtml}`;
 }
-function formatFormulaDecisiveCas3b(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, resultsTableHtml) {
+function formatFormulaDecisive2026EnCours(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, resultsTableHtml) {
   const ecart = firstPlaceVoix - secondPlaceVoix;
-  return `À ${cityName} (${codeDepartement}) en 2020, les élections municipales ne se sont pas tenues en deux tours bien qu'aucune liste n'ait obtenu la majorité absolue au premier tour.
+  return `À ${cityName} (${codeDepartement}), aucune liste n'a obtenu la majorité absolue au premier tour du 15 mars 2026 : un second tour aura lieu le 22 mars.
 <br><br>
-Par analogie avec les communes ayant eu un second tour, on calcule l'écart entre la première et la deuxième liste pour estimer le nombre de votes qui auraient pu inverser l'ordre d'arrivée.
+${ecart.toLocaleString("fr-FR")} voix séparaient la 1ère et la 2e liste au premier tour. Il aurait fallu <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires pour la 2e liste pour passer devant.
 <br><br>
 <strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
 <br><br>
@@ -130,54 +77,38 @@ Par analogie avec les communes ayant eu un second tour, on calcule l'écart entr
 <br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
 <br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
 <br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
-<br><br><strong>Résultats du 1er tour :</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
 ${resultsTableHtml}`;
 }
-function formatFormulaDecisiveCas2b(cityName, codeDepartement, tour1FirstPlaceVoix, tour1SecondPlaceVoix, votesDecisifs, tour1ResultsTableHtml) {
-  const ecart = tour1FirstPlaceVoix - tour1SecondPlaceVoix;
-  return `À ${cityName} (${codeDepartement}) en 2020, une seule liste était en lice au second tour : toutes les autres listes s'étaient retirées ou fusionnées avant le second tour.
-<br><br>
-En l'absence d'adversaire au second tour, on remonte au premier tour pour estimer les votes décisifs : l'écart entre la première et la deuxième liste au 1er tour indique combien de votes auraient pu modifier l'ordre d'arrivée avant les désistements.
-<br><br>
-<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste au 1er tour) + 1
-<br><br>
-<strong>Détail :</strong>
-<br>• Voix de la 1ère liste (1er tour) : ${tour1FirstPlaceVoix.toLocaleString("fr-FR")}
-<br>• Voix de la 2e liste (1er tour) : ${tour1SecondPlaceVoix.toLocaleString("fr-FR")}
-<br>• Écart : ${tour1FirstPlaceVoix.toLocaleString("fr-FR")} − ${tour1SecondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
-<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
-<br><br><strong>Résultats du 1er tour :</strong>
-${tour1ResultsTableHtml}`;
+function formatExplanationNonVoting2026(cityName, codeDepartement, pop1839, abstentions2026, pop18Plus) {
+  const taux = (abstentions2026 / pop18Plus * 100).toFixed(1);
+  return `Au 1er tour des municipales 2026, ${cityName} (${codeDepartement}) comptait ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans. Le taux d'abstention officiel était de ${taux}% (${abstentions2026.toLocaleString("fr-FR")} abstentionnistes sur ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
 }
-function formatExplanationNonVoting(cityName, codeDepartement, pop1839, partNeVotantPas, nonVotants, pop18Plus) {
-  return `Lors des municipales de 2020, ${cityName} (${codeDepartement}) compte ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans et en moyenne ${(partNeVotantPas * 100).toFixed(1)}% de la population majeure n'a pas voté à ${cityName} (${nonVotants.toLocaleString("fr-FR")} non votants / ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
-}
-function formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839) {
+function formatFormulaNonVotants2026(explanationNonVoting, pop1839, pop18Plus, abstentions2026, nonVotants1839) {
+  const part1839 = (pop1839 / pop18Plus * 100).toFixed(1);
   return `${explanationNonVoting}
 <br><br>
-<strong>Formule :</strong> Population 18-39 ans × Taux d'abstention
+<strong>Formule :</strong> Abstentions officielles × (Population 18-39 ans ÷ Population 18+ ans)
 <br><br>
 <strong>Détail :</strong>
+<br>• Abstentions au 1er tour 2026 : ${abstentions2026.toLocaleString("fr-FR")}
 <br>• Population 18-39 ans : ${pop1839.toLocaleString("fr-FR")}
 <br>• Population 18+ ans : ${pop18Plus.toLocaleString("fr-FR")}
-<br>• Votants : ${votants.toLocaleString("fr-FR")}
-<br>• Taux d'abstention : ${(partNeVotantPas * 100).toFixed(1)}% = (${pop18Plus.toLocaleString("fr-FR")} − ${votants.toLocaleString("fr-FR")}) ÷ ${pop18Plus.toLocaleString("fr-FR")}
-<br>• Non-votants 18-39 ans estimés : ${pop1839.toLocaleString("fr-FR")} × ${(partNeVotantPas * 100).toFixed(1)}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
+<br>• Part des 18-39 parmi les majeur·es : ${part1839}%
+<br>• Non-votants 18-39 ans estimés : ${abstentions2026.toLocaleString("fr-FR")} × ${part1839}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
 }
-function formatResultatRow(resultat) {
-  const titre = resultat.Sexe === "F" ? "Mme" : "M.";
-  const sieges = typeof resultat["Sièges / Elu"] === "number" ? resultat["Sièges / Elu"] : resultat["Sièges / Elu"] === "Oui" ? labels.elu : resultat["Sièges / Elu"];
+function formatResultatRow2026(resultat) {
   return `<tr>
-		<td>${titre} ${resultat.Prénom} ${resultat.Nom}</td>
+		<td>${resultat.Liste}<br><small>${resultat["Conduite par"]}</small></td>
 		<td>${resultat.Voix.toLocaleString("fr-FR")}</td>
 		<td>${resultat["% Voix/Ins"].toFixed(2)}%</td>
 		<td>${resultat["% Voix/Exp"].toFixed(2)}%</td>
-		<td>${sieges}</td>
+		<td>${resultat["Sièges CM"]}</td>
 		<td>${resultat["Sièges CC"]}</td>
 	</tr>`;
 }
-function formatResultsTable(resultats) {
-  const rows = resultats.map(formatResultatRow).join("");
+function formatResultsTable2026(resultats) {
+  const rows = resultats.map(formatResultatRow2026).join("");
   return `
 		<div class="table-scroll-container">
 			<table class="results-table">
@@ -209,7 +140,8 @@ function formatAggregationWarning(communesAgregees) {
 		</div>
 	`;
 }
-function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning) {
+function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, showShareButton) {
+  const secondaryLabel = nonVotantsLabel ?? labels.stats.jeunesNonVotants;
   return `
         <div class="city-detail">
 			${aggregationWarning}
@@ -226,7 +158,7 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
             <div class="secondary-stat">
 
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
-                <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
+                <div class="secondary-label">${secondaryLabel}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
@@ -235,9 +167,9 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
                 <button type="button" class="cta-button" onclick="openHowPanel()">
                     JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">\uD83D\uDDF3️</span>
                 </button>
-                <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
+                ${showShareButton ? `<button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
                     J'INFORME MES POTES<span class="emoji">\uD83D\uDCE3</span>
-                </button>
+                </button>` : ""}
                 <button type="button" class="cta-button cta-button-green" onclick="openRejoinPanel()">
                     JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
@@ -249,11 +181,8 @@ function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggreg
         </div>
     `;
 }
-function getElectionSourceUrl(codeDepartement, codeCommune) {
-  const deptCode = codeDepartement.padStart(3, "0");
-  return `https://www.archives-resultats-elections.interieur.gouv.fr/resultats/municipales-2020/${deptCode}/${deptCode}${codeCommune}.php`;
-}
 var nonVotingSourceUrl = "https://explore.data.gouv.fr/fr/datasets/6627b6fd7291f9d8a62d9997/#/resources/b8ad4a63-a4e3-4ef2-af6e-b08ef3b8084d";
+var electionSourceUrl2026 = "https://www.resultats-elections.interieur.gouv.fr/municipales2026";
 function formatSearchResultItem(id, name, codeDepartement) {
   return `
 		<div class="result-item" onclick="navigateToCityById(${id})">
@@ -399,7 +328,7 @@ async function handleRoute() {
     if (landingText)
       landingText.classList.remove("hidden");
     const searchInput = document.getElementById("searchInput");
-    document.title = "#RIENSANSNOUS - Municipales 2020";
+    document.title = "#RIENSANSNOUS - Municipales 2026";
     document.getElementById("canonicalTag")?.setAttribute("href", "https://mobilisator.fr/");
     const qParam = new URLSearchParams(window.location.search).get("q");
     if (qParam && searchInput) {
@@ -584,55 +513,52 @@ function displayCityDetail(city) {
     cityDetailDiv.innerHTML = `<p class="error">${messages.analyseNonDisponible}</p>`;
     return;
   }
-  const hasSecondTour = !!city["Tour 2"];
-  const { votesDecisifs, cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
-  const electionSource = getElectionSourceUrl(city.code_departement, city.code_commune);
-  const pop1839 = city.Analyse["Pop 18-39"];
-  const pop18Plus = city.Analyse["Pop 18+"];
-  const nonVotants = city.Analyse["Non votants"];
-  const partNeVotantPas = city.Analyse["Part ne votant pas"];
-  const explanationNonVoting = formatExplanationNonVoting(city.nom_standard, city.code_departement, pop1839, partNeVotantPas, nonVotants, pop18Plus);
-  const mainTagline = getMainTagline(cas, votesDecisifs);
-  const nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39"]);
-  document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes auraient fait la diff' | #RIENSANSNOUS`;
-  document.getElementById("canonicalTag")?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
-  currentCityData = {
-    citySlug: city.slug,
-    cityName: city.nom_standard,
-    codeDepartement: city.code_departement,
-    votesDecisifs,
-    nonVotants1839,
-    hasSecondTour
-  };
+  const tour1_2026 = city["2026"]?.["Tour 1"];
+  const has2026 = !!tour1_2026;
   const paq = window._paq ?? [];
   paq.push(["setCustomDimension", 1, city.nom_standard]);
-  const tourDecisif = hasSecondTour ? city["Tour 2"] : city["Tour 1"];
-  const tourLabel = hasSecondTour ? labels.tour2 : labels.tour1;
-  const resultats = [...tourDecisif.resultats].sort((a, b) => b.Voix - a.Voix);
-  const resultsTable = formatResultsTable(resultats);
-  const firstPlace = resultats[0];
-  const secondPlace = resultats[1];
-  const exprimes = tourDecisif.Exprimés;
+  const pop1839 = city.Analyse["Pop 18-39"];
+  const pop18Plus = city.Analyse["Pop 18+"];
+  const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
+  let votesDecisifs = 0;
+  let mainTagline = "";
+  let nonVotants1839 = 0;
+  let nonVotantsLabel = labels.stats.jeunesNonVotantsTerminee2026;
   let formulaDecisive = "";
-  if (cas === 1) {
-    formulaDecisive = formatFormulaDecisiveCas1(city.nom_standard, city.code_departement, firstPlace.Voix, votesDecisifs, resultsTable);
-  } else if (cas === 2 && secondPlace) {
-    formulaDecisive = formatFormulaDecisiveCas2(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, tourLabel, resultsTable);
-  } else if (cas === "3b" && secondPlace) {
-    formulaDecisive = formatFormulaDecisiveCas3b(city.nom_standard, city.code_departement, firstPlace.Voix, secondPlace.Voix, votesDecisifs, resultsTable);
-  } else if (cas === "2b") {
-    const tour1Resultats = [...city["Tour 1"].resultats].filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix)).sort((a, b) => b.Voix - a.Voix);
-    const tour1Table = formatResultsTable(tour1Resultats);
-    const tour1First = tour1Resultats[0];
-    const tour1Second = tour1Resultats[1];
-    if (tour1First && tour1Second) {
-      formulaDecisive = formatFormulaDecisiveCas2b(city.nom_standard, city.code_departement, tour1First.Voix, tour1Second.Voix, votesDecisifs, tour1Table);
+  let formulaNonVotants = "";
+  let electionSource = electionSourceUrl2026;
+  if (has2026 && city.Analyse["Votes décisifs 2026"] !== undefined && city.Analyse["Non votants de 18-39 2026"] !== undefined) {
+    const electionTerminee = city.Analyse["election terminee 2026"] ?? false;
+    votesDecisifs = city.Analyse["Votes décisifs 2026"];
+    nonVotants1839 = Math.round(city.Analyse["Non votants de 18-39 2026"]);
+    mainTagline = getMainTagline2026(electionTerminee, votesDecisifs);
+    nonVotantsLabel = electionTerminee ? labels.stats.jeunesNonVotantsTerminee2026 : labels.stats.jeunesNonVotantsEnCours2026;
+    electionSource = electionSourceUrl2026;
+    const resultats2026 = [...tour1_2026.resultats].sort((a, b) => b.Voix - a.Voix);
+    const resultsTable2026 = formatResultsTable2026(resultats2026);
+    const first = resultats2026[0];
+    const second = resultats2026[1];
+    if (electionTerminee) {
+      const pourcentage = first["% Voix/Exp"];
+      formulaDecisive = formatFormulaDecisive2026Terminee(city.nom_standard, city.code_departement, first.Voix, tour1_2026.Exprimés, pourcentage, votesDecisifs, resultsTable2026);
+    } else if (second) {
+      formulaDecisive = formatFormulaDecisive2026EnCours(city.nom_standard, city.code_departement, first.Voix, second.Voix, votesDecisifs, resultsTable2026);
+    } else {
+      formulaDecisive = resultsTable2026;
     }
-  } else {
-    formulaDecisive = formatFormulaDecisiveCas3(city.nom_standard, city.code_departement, firstPlace.Voix, exprimes, votesDecisifs, tourLabel, resultsTable);
+    const explanationNonVoting2026 = formatExplanationNonVoting2026(city.nom_standard, city.code_departement, pop1839, tour1_2026.Abstentions, pop18Plus);
+    formulaNonVotants = formatFormulaNonVotants2026(explanationNonVoting2026, pop1839, pop18Plus, tour1_2026.Abstentions, nonVotants1839);
+    currentCityData = {
+      citySlug: city.slug,
+      cityName: city.nom_standard,
+      codeDepartement: city.code_departement,
+      votesDecisifs,
+      nonVotants1839,
+      hasSecondTour: !electionTerminee
+    };
   }
-  const votants = tourDecisif.Votants;
-  const formulaNonVotants = formatFormulaNonVotants(explanationNonVoting, pop1839, pop18Plus, votants, partNeVotantPas, nonVotants1839);
+  document.title = `${city.nom_standard} — ${votesDecisifs.toLocaleString("fr-FR")} jeunes peuvent faire la diff' | #RIENSANSNOUS`;
+  document.getElementById("canonicalTag")?.setAttribute("href", `https://mobilisator.fr/${city.slug}`);
   window.detailData = {
     decisive: {
       title: labels.modalTitles.votesDecisifs,
@@ -645,8 +571,8 @@ function displayCityDetail(city) {
       source: nonVotingSourceUrl
     }
   };
-  const aggregationWarning = formatAggregationWarning(city.communesAgregees || []);
-  const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning);
+  const electionTerminee2026 = city.Analyse["election terminee 2026"] ?? true;
+  const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, !electionTerminee2026);
   cityDetailDiv.innerHTML = html;
   const mainFooter = document.querySelector("footer.footer");
   const footerPlaceholder = cityDetailDiv.querySelector(".city-detail-footer");
@@ -842,21 +768,18 @@ var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
   }
   ctx.fillStyle = "#FFFFFF";
   ctx.fillText(cityUpper, canvas.width / 2, 390);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
-  ctx.font = "700 38px Arial, sans-serif";
-  ctx.fillText("ON EST PRÊT ESTIME QUE", canvas.width / 2, 700);
   ctx.fillStyle = "#5ECBA1";
-  ctx.font = '900 220px "Arial Black", Arial, sans-serif';
-  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 880);
+  ctx.font = '900 240px "Arial Black", Arial, sans-serif';
+  ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 860);
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = '700 66px "Arial Black", Arial, sans-serif';
-  ctx.fillText("JEUNES DE 18-39 ANS", canvas.width / 2, 1050);
-  ctx.fillText("AURAIENT FAIT LA DIFF'", canvas.width / 2, 1140);
-  ctx.fillText(`A ${cityUpper} EN 2020`, canvas.width / 2, 1230);
+  ctx.font = '700 48px "Arial Black", Arial, sans-serif';
+  ctx.fillText("VOTES SÉPARENT LES CANDIDAT·ES", canvas.width / 2, 1010);
+  ctx.fillText("AU PREMIER TOUR EN 2026", canvas.width / 2, 1080);
   ctx.fillStyle = "#5ECBA1";
-  ctx.font = '700 74px "Arial Black", Arial, sans-serif';
-  ctx.fillText("JE VOTE EN 2026.", canvas.width / 2, 1400);
-  ctx.fillText("ET TOI ?", canvas.width / 2, 1490);
+  ctx.font = '700 88px "Arial Black", Arial, sans-serif';
+  ctx.fillText("JE VOTE", canvas.width / 2, 1330);
+  ctx.fillText("LE 22 MARS.", canvas.width / 2, 1440);
+  ctx.fillText("ET TOI ?", canvas.width / 2, 1540);
   ctx.fillStyle = "#FFFFFF";
   ctx.font = '700 46px "Arial Black", Arial, sans-serif';
   ctx.fillText("MOBILISATOR.FR", canvas.width / 2, 1690);

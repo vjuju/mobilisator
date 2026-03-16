@@ -13,6 +13,35 @@ export interface ElectionResult {
 	"% Voix/Exp": number;
 }
 
+export interface ElectionResult2026 {
+	Liste: string;
+	"Conduite par": string;
+	Nuance: string;
+	Voix: number;
+	"% Voix/Ins": number;
+	"% Voix/Exp": number;
+	"Sièges CM": number;
+	"Sièges CC": number;
+}
+
+export interface TourData2026 {
+	Inscrits: number;
+	Abstentions: number;
+	"% Abs/Ins": number;
+	Votants: number;
+	"% Vot/Ins": number;
+	Blancs: number;
+	"% Blancs/Ins": number;
+	"% Blancs/Vot": number;
+	Nuls: number;
+	"% Nuls/Ins": number;
+	"% Nuls/Vot": number;
+	Exprimés: number;
+	"% Exp/Ins": number;
+	"% Exp/Vot": number;
+	resultats: ElectionResult2026[];
+}
+
 export interface TourData {
 	Inscrits: number;
 	Abstentions: number;
@@ -69,6 +98,7 @@ export interface ElectionEntry {
 	"Libellé de la commune": string;
 	"Tour 1": TourData;
 	"Tour 2"?: TourData;
+	"2026"?: { "Tour 1": TourData2026 };
 	population?: PopulationData;
 	Analyse: AnalyseData;
 	communesAgregees?: string[];
@@ -96,6 +126,10 @@ export interface AnalyseData {
 	"Pop 18+": number;
 	"Non votants": number;
 	"Part ne votant pas": number;
+	// Champs 2026 (présents uniquement quand les données 2026 sont disponibles)
+	"Votes décisifs 2026"?: number;
+	"election terminee 2026"?: boolean;
+	"Non votants de 18-39 2026"?: number;
 }
 
 export interface City {
@@ -109,6 +143,7 @@ export interface City {
 	code_commune: string;
 	"Tour 1": TourData;
 	"Tour 2"?: TourData;
+	"2026"?: { "Tour 1": TourData2026 };
 	population?: PopulationData;
 	Analyse: AnalyseData;
 	communesAgregees?: string[];

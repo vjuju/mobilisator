@@ -10,6 +10,7 @@
 		"fetch:population": "curl -o population.json https://tabular-api.data.gouv.fr/api/resources/ae02973c-4538-49fe-8494-6b77df0f4771/data/json/",
 		"clean:elections": "bun run src/process-elections.ts",
 		"fetch:elections": "bun run fetch:elections_1 && bun run fetch:elections_2 && bun run fetch:population && bun run clean:elections",
+		"fetch:elections_2026": "bun run fetch:population && bun run src/process-elections-2026.ts",
 		"fetch:images": "bun run src/fetch-images.ts",
 		"dev": "bun run src/server.ts",
 		"dev:pages": "wrangler pages dev ./public",

@@ -1,4 +1,4 @@
-import type { ElectionResult as Resultat, TourData } from "./dtos/city";
+import type { ElectionResult as Resultat, ElectionResult2026, TourData } from "./dtos/city";
 
 // ============================================================================
 // MESSAGES D'ERREUR ET DE CHARGEMENT
@@ -54,6 +54,8 @@ export const labels = {
 	// Labels des stats
 	stats: {
 		jeunesNonVotants: "jeunes de 18-39 ans n'ont pas voté,<br>selon nos estimations",
+		jeunesNonVotantsTerminee2026: "jeunes inscrits de 18-39 ans n'ont pas voté,<br>selon nos estimations",
+		jeunesNonVotantsEnCours2026: "jeunes n'ont pas voté,<br>selon nos estimations",
 	},
 
 	// Liens
@@ -128,7 +130,7 @@ export function computeVotesDecisifs(
 // ============================================================================
 
 /**
- * Tagline sous le nombre de votes décisifs.
+ * Tagline sous le nombre de votes décisifs (données 2020).
  * - Cas 1 / 2 / 2b : "auraient pu faire élire un·e autre maire"
  * - Cas 3 / 3b     : "auraient pu faire la diff'"
  * Gère le singulier quand votesDecisifs === 1.
@@ -142,6 +144,23 @@ export function getMainTagline(
 		return `${verb} faire élire<br>un·e autre maire en 2020`;
 	}
 	return `${verb} faire la diff'<br>aux municipales en 2020`;
+}
+
+/**
+ * Tagline sous le nombre de votes décisifs (données 2026).
+ * - Cas terminée   : "votes auraient pu faire la diff' aux municipales en 2026"
+ * - Cas en cours   : "votes séparent les premiers candidats au premier tour 2026"
+ */
+export function getMainTagline2026(
+	electionTerminee: boolean,
+	votesDecisifs: number,
+): string {
+	if (electionTerminee) {
+		const verb = votesDecisifs === 1 ? "vote aurait pu" : "votes auraient pu";
+		return `${verb} faire la diff'<br>aux municipales en 2026`;
+	}
+	const verb = votesDecisifs === 1 ? "vote sépare" : "votes séparent";
+	return `${verb}<br>les premiers candidats<br>au premier tour 2026`;
 }
 
 // ============================================================================
@@ -282,6 +301,63 @@ ${tour1ResultsTableHtml}`;
 }
 
 // ============================================================================
+// FORMULES DÉTAILLÉES DES VOTES DÉCISIFS (2026)
+// ============================================================================
+
+/**
+ * Cas élection terminée 2026 : victoire au 1er tour (> 50%) → 2×V₁ − Exprimés
+ */
+export function formatFormulaDecisive2026Terminee(
+	cityName: string,
+	codeDepartement: string,
+	firstPlaceVoix: number,
+	exprimes: number,
+	pourcentage: number,
+	votesDecisifs: number,
+	resultsTableHtml: string,
+): string {
+	return `À ${cityName} (${codeDepartement}), la liste gagnante a remporté l'élection dès le premier tour du 15 mars 2026 avec ${pourcentage.toFixed(1)}% des suffrages exprimés (plus de 50%).
+<br><br>
+Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires aux autres listes — ce qui aurait ramené la liste de tête à 50% ou moins.
+<br><br>
+<strong>Formule :</strong> 2 × Voix de la 1ère liste − Total des exprimés
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste (V₁) : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Total des exprimés (Vₜ) : ${exprimes.toLocaleString("fr-FR")}
+<br>• 2 × ${firstPlaceVoix.toLocaleString("fr-FR")} − ${exprimes.toLocaleString("fr-FR")} = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
+${resultsTableHtml}`;
+}
+
+/**
+ * Cas second tour en cours 2026 : écart entre 1er et 2e + 1 au 1er tour
+ */
+export function formatFormulaDecisive2026EnCours(
+	cityName: string,
+	codeDepartement: string,
+	firstPlaceVoix: number,
+	secondPlaceVoix: number,
+	votesDecisifs: number,
+	resultsTableHtml: string,
+): string {
+	const ecart = firstPlaceVoix - secondPlaceVoix;
+	return `À ${cityName} (${codeDepartement}), aucune liste n'a obtenu la majorité absolue au premier tour du 15 mars 2026 : un second tour aura lieu le 22 mars.
+<br><br>
+${ecart.toLocaleString("fr-FR")} voix séparaient la 1ère et la 2e liste au premier tour. Il aurait fallu <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> votes supplémentaires pour la 2e liste pour passer devant.
+<br><br>
+<strong>Formule :</strong> (Voix de la 1ère liste − Voix de la 2e liste) + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la 1ère liste : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Voix de la 2e liste : ${secondPlaceVoix.toLocaleString("fr-FR")}
+<br>• Écart : ${firstPlaceVoix.toLocaleString("fr-FR")} − ${secondPlaceVoix.toLocaleString("fr-FR")} = ${ecart.toLocaleString("fr-FR")}
+<br>• Votes décisifs : ${ecart.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
+${resultsTableHtml}`;
+}
+
+// ============================================================================
 // EXPLICATIONS DES NON-VOTANTS
 // ============================================================================
 
@@ -320,6 +396,43 @@ export function formatFormulaNonVotants(
 <br>• Votants : ${votants.toLocaleString("fr-FR")}
 <br>• Taux d'abstention : ${(partNeVotantPas * 100).toFixed(1)}% = (${pop18Plus.toLocaleString("fr-FR")} − ${votants.toLocaleString("fr-FR")}) ÷ ${pop18Plus.toLocaleString("fr-FR")}
 <br>• Non-votants 18-39 ans estimés : ${pop1839.toLocaleString("fr-FR")} × ${(partNeVotantPas * 100).toFixed(1)}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
+}
+
+/**
+ * Génère l'explication des non-votants (2026)
+ */
+export function formatExplanationNonVoting2026(
+	cityName: string,
+	codeDepartement: string,
+	pop1839: number,
+	abstentions2026: number,
+	pop18Plus: number,
+): string {
+	const taux = ((abstentions2026 / pop18Plus) * 100).toFixed(1);
+	return `Au 1er tour des municipales 2026, ${cityName} (${codeDepartement}) comptait ${pop1839.toLocaleString("fr-FR")} jeunes de 18 à 39 ans. Le taux d'abstention officiel était de ${taux}% (${abstentions2026.toLocaleString("fr-FR")} abstentionnistes sur ${pop18Plus.toLocaleString("fr-FR")} majeur·es).`;
+}
+
+/**
+ * Génère la formule détaillée pour les non-votants (2026)
+ */
+export function formatFormulaNonVotants2026(
+	explanationNonVoting: string,
+	pop1839: number,
+	pop18Plus: number,
+	abstentions2026: number,
+	nonVotants1839: number,
+): string {
+	const part1839 = ((pop1839 / pop18Plus) * 100).toFixed(1);
+	return `${explanationNonVoting}
+<br><br>
+<strong>Formule :</strong> Abstentions officielles × (Population 18-39 ans ÷ Population 18+ ans)
+<br><br>
+<strong>Détail :</strong>
+<br>• Abstentions au 1er tour 2026 : ${abstentions2026.toLocaleString("fr-FR")}
+<br>• Population 18-39 ans : ${pop1839.toLocaleString("fr-FR")}
+<br>• Population 18+ ans : ${pop18Plus.toLocaleString("fr-FR")}
+<br>• Part des 18-39 parmi les majeur·es : ${part1839}%
+<br>• Non-votants 18-39 ans estimés : ${abstentions2026.toLocaleString("fr-FR")} × ${part1839}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
 }
 
 // ============================================================================
@@ -375,6 +488,46 @@ export function formatResultsTable(resultats: Resultat[]): string {
 	`;
 }
 
+/**
+ * Génère une ligne du tableau des résultats 2026
+ */
+export function formatResultatRow2026(resultat: ElectionResult2026): string {
+	return `<tr>
+		<td>${resultat.Liste}<br><small>${resultat["Conduite par"]}</small></td>
+		<td>${resultat.Voix.toLocaleString("fr-FR")}</td>
+		<td>${resultat["% Voix/Ins"].toFixed(2)}%</td>
+		<td>${resultat["% Voix/Exp"].toFixed(2)}%</td>
+		<td>${resultat["Sièges CM"]}</td>
+		<td>${resultat["Sièges CC"]}</td>
+	</tr>`;
+}
+
+/**
+ * Génère le tableau complet des résultats 2026
+ */
+export function formatResultsTable2026(resultats: ElectionResult2026[]): string {
+	const rows = resultats.map(formatResultatRow2026).join("");
+	return `
+		<div class="table-scroll-container">
+			<table class="results-table">
+				<thead>
+					<tr>
+						<th>${labels.tableHeaders.listeConduitePar}</th>
+						<th>${labels.tableHeaders.voix}</th>
+						<th>${labels.tableHeaders.pourcentInscrits}</th>
+						<th>${labels.tableHeaders.pourcentExprimes}</th>
+						<th>${labels.tableHeaders.siegesCM}</th>
+						<th>${labels.tableHeaders.siegesCC}</th>
+					</tr>
+				</thead>
+				<tbody>
+					${rows}
+				</tbody>
+			</table>
+		</div>
+	`;
+}
+
 // ============================================================================
 // AVERTISSEMENT D'AGRÉGATION
 // ============================================================================
@@ -407,7 +560,10 @@ export function formatCityDetailHtml(
 	mainTagline: string,
 	nonVotants1839: number,
 	aggregationWarning: string,
+	nonVotantsLabel?: string,
+	showShareButton?: boolean,
 ): string {
+	const secondaryLabel = nonVotantsLabel ?? labels.stats.jeunesNonVotants;
 	return `
         <div class="city-detail">
 			${aggregationWarning}
@@ -424,7 +580,7 @@ export function formatCityDetailHtml(
             <div class="secondary-stat">
 
                 <div class="secondary-number">${nonVotants1839.toLocaleString("fr-FR")}</div>
-                <div class="secondary-label">${labels.stats.jeunesNonVotants}</div>
+                <div class="secondary-label">${secondaryLabel}</div>
 				<a href="#" class="detail-link" onclick="openDetailModalByKey('nonVoting'); return false;">${labels.detailLink}</a>
             </div>
 
@@ -433,9 +589,9 @@ export function formatCityDetailHtml(
                 <button type="button" class="cta-button" onclick="openHowPanel()">
                     JE VOTE LES 15 ET 22 MARS<br>MODE D'EMPLOI<span class="emoji">🗳️</span>
                 </button>
-                <button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
+                ${showShareButton ? `<button id="shareBtn" type="button" class="cta-button" onclick="openInfluPanel()">
                     J'INFORME MES POTES<span class="emoji">📣</span>
-                </button>
+                </button>` : ""}
                 <button type="button" class="cta-button cta-button-green" onclick="openRejoinPanel()">
                     JE ME MOBILISE<br>AVEC ON EST PRÊT<span class="emoji">✊</span>
                 </button>
@@ -468,6 +624,11 @@ export function getElectionSourceUrl(
  */
 export const nonVotingSourceUrl =
 	"https://explore.data.gouv.fr/fr/datasets/6627b6fd7291f9d8a62d9997/#/resources/b8ad4a63-a4e3-4ef2-af6e-b08ef3b8084d";
+
+/**
+ * URL de la source des résultats électoraux 2026
+ */
+export const electionSourceUrl2026 = "https://www.resultats-elections.interieur.gouv.fr/municipales2026";
 
 // ============================================================================
 // FORMATAGE DES RÉSULTATS DE RECHERCHE

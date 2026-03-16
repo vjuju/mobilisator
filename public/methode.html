@@ -320,9 +320,9 @@
 
         <p>Le Mobilisator est un outil pédagogique basé uniquement sur des données publiques officielles (Ministère de l'Intérieur, INSEE).</p>
 
-        <p>Il permet de comparer, pour chaque commune, en 2020 :</p>
+        <p>Il permet de visualiser, pour chaque commune, à partir des résultats du 1er tour des municipales 2026 :</p>
         <ul>
-            <li>le nombre minimal de voix qui auraient pu modifier le résultat d'une élection municipale</li>
+            <li>le nombre de votes décisifs au 1er tour</li>
             <li>une estimation du nombre de personnes âgées de 18 à 39 ans n'ayant pas voté</li>
         </ul>
 
@@ -332,7 +332,7 @@
 
         <h2>Comment calculons-nous les "votes décisifs" ?</h2>
 
-        <p>On calcule le nombre minimal de votes supplémentaires qui auraient pu modifier la nature d'une élection municipale (communes de plus de 1 000 habitants).</p>
+        <p>On calcule le nombre minimal de votes supplémentaires qui auraient pu modifier la nature de l'élection municipale au 1er tour du 15 mars 2026, selon deux cas.</p>
 
         <div class="highlight">
             <p><strong>Deux principes de base :</strong></p>
@@ -340,23 +340,22 @@
             <p>→ Nous simulons uniquement l'ajout de nouveaux votants.</p>
         </div>
 
-        <h3><span class="cas-label">CAS 1</span><br>Une seule liste au premier tour</h3>
+        <h3><span class="cas-label">CAS 1</span><br>Élection terminée dès le 1er tour</h3>
 
-        <p>Dans certaines communes, une seule liste se présente. Les électeurs n'ont pas réellement le choix entre plusieurs projets. Changer la nature de l'élection signifie alors : <strong>faire apparaître une autre liste capable de gagner</strong>.</p>
-
-        <p>Pour qu'une nouvelle liste gagne uniquement grâce à des votes supplémentaires, elle doit obtenir strictement plus de voix que la liste unique :</p>
+        <p>Quand une liste obtient plus de 50% des suffrages exprimés au 1er tour, elle est élue directement. On calcule combien de votes supplémentaires — attribués aux autres listes — auraient été nécessaires pour que la liste de tête tombe à 50% ou moins, ce qui aurait déclenché un second tour.</p>
 
         <div class="formula-block">
-            Votes décisifs = Voix de la liste unique + 1
+            Votes décisifs = 2 × Voix de la 1ère liste − Total des exprimés
         </div>
 
         <div class="example-block">
-            <p><strong>Exemple :</strong> Si la liste unique obtient 1 200 voix, il faudrait au minimum <strong>1 201</strong> nouveaux votants pour qu'une autre liste puisse la battre.</p>
+            <p><strong>Exemple :</strong> Si une liste obtient 5 200 voix sur 10 000 exprimés (52%) :</p>
+            <p>2 × 5 200 − 10 000 = <strong>400</strong> votes supplémentaires pour les autres listes auraient suffi pour déclencher un second tour.</p>
         </div>
 
-        <h3><span class="cas-label">CAS 2</span><br>Changer la liste majoritaire au second tour</h3>
+        <h3><span class="cas-label">CAS 2</span><br>Second tour en cours</h3>
 
-        <p>Quand il y a plusieurs listes et qu'un second tour a lieu, la liste arrivée en tête remporte la mairie. On cherche le nombre minimal de votes supplémentaires qu'il aurait fallu ajouter à la liste arrivée deuxième pour qu'elle passe devant.</p>
+        <p>Quand aucune liste n'a obtenu la majorité absolue au 1er tour, un second tour a lieu le 22 mars 2026. On affiche l'écart entre la 1ère et la 2e liste au 1er tour : c'est le nombre de votes supplémentaires qu'il aurait fallu à la 2e liste pour passer devant.</p>
 
         <div class="formula-block">
             Écart = Voix du 1er − Voix du 2e<br>
@@ -365,119 +364,23 @@
 
         <div class="example-block">
             <p><strong>Exemple :</strong> Si la liste A a 2 500 voix et la liste B 2 420 voix :</p>
-            <p>Écart = 80 voix → Il faudrait <strong>81</strong> votes supplémentaires pour que la liste B gagne.</p>
+            <p>Écart = 80 voix → Il faudrait <strong>81</strong> votes supplémentaires pour que la liste B passe devant au 1er tour.</p>
         </div>
-
-        <h3><span class="cas-label">CAS 3</span><br>Transformer une victoire au premier tour en élection à deux tours</h3>
-
-        <p>Au premier tour, une liste est élue directement si elle obtient plus de 50% des suffrages exprimés. On calcule combien de votes supplémentaires — attribués aux autres listes — auraient été nécessaires pour que la liste majoritaire passe à 50% ou moins, ce qui aurait déclenché un second tour.</p>
-
-        <div class="formula-block">
-            Votes décisifs = 2 × Voix de la 1ère liste − Total des exprimés
-        </div>
-
-        <div class="example-block">
-            <p><strong>Exemple :</strong> Si une liste obtient 5 200 voix sur 10 000 exprimés (52%) :</p>
-            <p>2 × 5 200 − 10 000 = <strong>400</strong> votes supplémentaires pour les autres listes auraient suffi pour qu'il y ait un second tour.</p>
-        </div>
-
-        <details class="exceptions-details">
-            <summary>
-                <span class="cas-label">15 CAS PARTICULIERS</span>
-                <span class="exceptions-summary-label">Communes avec un calcul adapté</span>
-                <span class="exceptions-chevron">▶</span>
-            </summary>
-            <div class="exceptions-content">
-                <p style="color:#aaa; font-size:14px; margin-bottom:16px;">Pour 15 communes, les données officielles ne permettent pas d'appliquer directement l'une des trois formules standard. Voici le détail de chaque cas et le calcul retenu.</p>
-
-                <div class="exception-group-title">Cas 3b — Premier tour sans majorité absolue, pas de second tour (7 communes)</div>
-                <p style="color:#aaa; font-size:13px; margin-bottom:12px;">Ces communes de Guyane (et une en Dordogne) n'ont pas eu de second tour malgré l'absence de majorité absolue au premier tour. Par analogie avec le Cas 2, on applique : <span class="exception-calc">V₁ − V₂ + 1</span></p>
-
-                <div class="exception-item">
-                    <p><strong>Iracoubo</strong> (97, Guyane)</p>
-                    <p class="exception-calc">319 − 231 + 1 = <strong>89</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Matoury</strong> (97, Guyane)</p>
-                    <p class="exception-calc">2 467 − 1 252 + 1 = <strong>1 216</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Rémire-Montjoly</strong> (97, Guyane)</p>
-                    <p class="exception-calc">1 741 − 1 259 + 1 = <strong>483</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Roura</strong> (97, Guyane)</p>
-                    <p class="exception-calc">453 − 428 + 1 = <strong>26</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Awala-Yalimapo</strong> (97, Guyane)</p>
-                    <p class="exception-calc">230 − 137 + 1 = <strong>94</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Papaichton</strong> (97, Guyane)</p>
-                    <p class="exception-calc">365 − 330 + 1 = <strong>36</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Le Lardin-Saint-Lazare</strong> (24, Dordogne)</p>
-                    <p class="exception-calc">3 − 1 + 1 = <strong>3</strong> votes décisifs</p>
-                </div>
-
-                <div class="exception-group-title">Cas 2b — Second tour avec une seule liste (3 communes)</div>
-                <p style="color:#aaa; font-size:13px; margin-bottom:12px;">Ces communes n'avaient qu'une seule liste au second tour (toutes les autres s'étaient retirées ou fusionnées). On remonte au premier tour pour estimer l'écart décisif : <span class="exception-calc">V₁ − V₂ + 1 (1er tour)</span></p>
-
-                <div class="exception-item">
-                    <p><strong>La Charité-sur-Loire</strong> (58, Nièvre) — 1er tour : 545 vs 438</p>
-                    <p class="exception-calc">545 − 438 + 1 = <strong>108</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Lyon 1er secteur</strong> (69, Rhône) — 1er tour : 2 489 vs 2 114</p>
-                    <p class="exception-calc">2 489 − 2 114 + 1 = <strong>376</strong> votes décisifs</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Saint-Leu</strong> (974, La Réunion) — 1er tour : 4 995 vs 1 957</p>
-                    <p class="exception-calc">4 995 − 1 957 + 1 = <strong>3 039</strong> votes décisifs</p>
-                </div>
-
-                <div class="exception-group-title">Second tour avec égalité parfaite (4 communes)</div>
-                <p style="color:#aaa; font-size:13px; margin-bottom:12px;">Ces communes ont eu un résultat à égalité parfaite au second tour. En droit électoral français, le candidat le plus âgé l'emporte en cas d'égalité. Un seul vote supplémentaire aurait suffi : <span class="exception-calc">V₁ − V₂ + 1 = 1</span></p>
-
-                <div class="exception-item">
-                    <p><strong>Saint-Sulpice-et-Cameyrac</strong> (33, Gironde)</p>
-                    <p class="exception-calc">864 − 864 + 1 = <strong>1</strong> vote décisif</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Villelongue-de-la-Salanque</strong> (66, Pyrénées-Orientales)</p>
-                    <p class="exception-calc">774 − 774 + 1 = <strong>1</strong> vote décisif</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Val d'Oingt</strong> (69, Rhône)</p>
-                    <p class="exception-calc">674 − 674 + 1 = <strong>1</strong> vote décisif</p>
-                </div>
-                <div class="exception-item">
-                    <p><strong>Chassieu</strong> (69, Rhône)</p>
-                    <p class="exception-calc">1 285 − 1 285 + 1 = <strong>1</strong> vote décisif</p>
-                </div>
-
-                <div class="exception-group-title">Cas 1 — Données partielles (1 commune)</div>
-                <p style="color:#aaa; font-size:13px; margin-bottom:12px;">Pour cette commune, les données officielles ne comportent qu'un seul résultat exploitable au premier tour. Le Cas 1 (liste unique) est appliqué par défaut.</p>
-
-                <div class="exception-item">
-                    <p><strong>Brasparts</strong> (29, Finistère)</p>
-                    <p class="exception-calc">4 + 1 = <strong>5</strong> votes décisifs (Cas 1 appliqué)</p>
-                </div>
-            </div>
-        </details>
 
         <h2>Comment estimons-nous le nombre de non-votants de 18 à 39 ans ?</h2>
 
-        <p>Les données officielles ne publient pas le nombre de votants par âge à l'échelle communale. Nous procédons donc en deux étapes :</p>
+        <p>Les données officielles publient le nombre d'abstentionnistes à l'échelle communale, mais pas leur répartition par âge. Nous procédons donc ainsi :</p>
 
         <ol style="margin-bottom: 15px; padding-left: 25px; color: #ccc;">
-            <li style="margin-bottom: 8px;">Nous calculons le taux de participation global de la commune à partir des chiffres officiels.</li>
-            <li style="margin-bottom: 8px;">Nous appliquons ce taux à la population de 18 à 39 ans issue du recensement INSEE.</li>
+            <li style="margin-bottom: 8px;">On part du nombre officiel d'abstentionnistes au 1er tour 2026.</li>
+            <li style="margin-bottom: 8px;">On applique la part des 18-39 ans dans la population majeure (données INSEE) pour estimer combien d'entre eux n'ont pas voté.</li>
         </ol>
 
-        <p>Cette méthode repose sur une hypothèse simple : le taux de participation est identique entre tranches d'âge dans une même commune. En réalité, les jeunes votent en moyenne moins que les personnes âgées. <strong>Notre estimation est donc probablement prudente.</strong></p>
+        <div class="formula-block">
+            Non-votants 18-39 = Abstentions officielles × (Population 18-39 ÷ Population 18+)
+        </div>
+
+        <p>Cette méthode repose sur une hypothèse simple : les abstentionnistes se répartissent proportionnellement à leur poids dans la population majeure. En réalité, les jeunes s'abstiennent davantage que les personnes âgées. <strong>Notre estimation est donc probablement prudente.</strong></p>
 
         <h2>Transparence</h2>
 
