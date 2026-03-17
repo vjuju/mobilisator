@@ -44,7 +44,11 @@ export const fullCityToCity = (
 			.filter((r) => typeof r.Voix === "number" && !Number.isNaN(r.Voix))
 			.sort((a, b) => b.Voix - a.Voix);
 
-		if (sorted.length > 0) {
+		if (sorted.length === 1) {
+			// Cas 1 : une seule liste au premier tour → V + 1
+			electionTerminee2026 = true;
+			votesDecisifs2026 = sorted[0].Voix + 1;
+		} else if (sorted.length > 0) {
 			const gagnant = sorted[0];
 			const terminee = gagnant["% Voix/Exp"] > 50;
 			electionTerminee2026 = terminee;
@@ -52,7 +56,7 @@ export const fullCityToCity = (
 			if (terminee) {
 				// Cas terminée : votes pour forcer un second tour → 2×V₁ − Exprimés
 				votesDecisifs2026 = 2 * gagnant.Voix - tour1_2026.Exprimés;
-			} else if (sorted.length >= 2) {
+			} else {
 				// Cas second tour : écart entre 1er et 2e au T1 → V₁ − V₂ + 1
 				votesDecisifs2026 = gagnant.Voix - sorted[1].Voix + 1;
 			}

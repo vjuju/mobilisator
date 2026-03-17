@@ -64,6 +64,19 @@ Pour forcer un second tour, il aurait fallu ajouter <strong>${votesDecisifs.toLo
 <br><br><strong>Résultats du 1er tour 2026 :</strong>
 ${resultsTableHtml}`;
 }
+function formatFormulaDecisive2026Cas1(cityName, codeDepartement, firstPlaceVoix, votesDecisifs, resultsTableHtml) {
+  return `À ${cityName} (${codeDepartement}), une seule liste était en lice au premier tour du 15 mars 2026.
+<br><br>
+Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
+<br><br>
+<strong>Formule :</strong> Voix de la liste unique + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
+${resultsTableHtml}`;
+}
 function formatFormulaDecisive2026EnCours(cityName, codeDepartement, firstPlaceVoix, secondPlaceVoix, votesDecisifs, resultsTableHtml) {
   const ecart = firstPlaceVoix - secondPlaceVoix;
   return `À ${cityName} (${codeDepartement}), aucune liste n'a obtenu la majorité absolue au premier tour du 15 mars 2026 : un second tour aura lieu le 22 mars.
@@ -97,9 +110,10 @@ function formatFormulaNonVotants2026(explanationNonVoting, pop1839, pop18Plus, a
 <br>• Part des 18-39 parmi les majeur·es : ${part1839}%
 <br>• Non-votants 18-39 ans estimés : ${abstentions2026.toLocaleString("fr-FR")} × ${part1839}% = ${nonVotants1839.toLocaleString("fr-FR")}`;
 }
-function formatResultatRow2026(resultat) {
+function formatResultatRow2026(resultat, showCandidat) {
   return `<tr>
-		<td>${resultat.Liste}<br><small>${resultat["Conduite par"]}</small></td>
+		<td>${resultat.Liste}</td>
+		${showCandidat ? `<td>${resultat["Conduite par"]}</td>` : ""}
 		<td>${resultat.Voix.toLocaleString("fr-FR")}</td>
 		<td>${resultat["% Voix/Ins"].toFixed(2)}%</td>
 		<td>${resultat["% Voix/Exp"].toFixed(2)}%</td>
@@ -108,13 +122,15 @@ function formatResultatRow2026(resultat) {
 	</tr>`;
 }
 function formatResultsTable2026(resultats) {
-  const rows = resultats.map(formatResultatRow2026).join("");
+  const showCandidat = resultats.some((r) => r["Conduite par"]?.trim());
+  const rows = resultats.map((r) => formatResultatRow2026(r, showCandidat)).join("");
   return `
 		<div class="table-scroll-container">
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>${labels.tableHeaders.listeConduitePar}</th>
+						<th>Liste</th>
+						${showCandidat ? "<th>Candidat·e</th>" : ""}
 						<th>${labels.tableHeaders.voix}</th>
 						<th>${labels.tableHeaders.pourcentInscrits}</th>
 						<th>${labels.tableHeaders.pourcentExprimes}</th>
@@ -140,11 +156,13 @@ function formatAggregationWarning(communesAgregees) {
 		</div>
 	`;
 }
-function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, showShareButton) {
+function formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, showShareButton, casNote) {
   const secondaryLabel = nonVotantsLabel ?? labels.stats.jeunesNonVotants;
+  const casNoteHtml = casNote ? `<div class="cas-note">${casNote}</div>` : "";
   return `
         <div class="city-detail">
 			${aggregationWarning}
+			${casNoteHtml}
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">
@@ -555,13 +573,13 @@ function displayCityDetail(city) {
     const resultsTable2026 = formatResultsTable2026(resultats2026);
     const first = resultats2026[0];
     const second = resultats2026[1];
-    if (electionTerminee) {
+    if (!second) {
+      formulaDecisive = formatFormulaDecisive2026Cas1(city.nom_standard, city.code_departement, first.Voix, votesDecisifs, resultsTable2026);
+    } else if (electionTerminee) {
       const pourcentage = first["% Voix/Exp"];
       formulaDecisive = formatFormulaDecisive2026Terminee(city.nom_standard, city.code_departement, first.Voix, tour1_2026.Exprimés, pourcentage, votesDecisifs, resultsTable2026);
-    } else if (second) {
-      formulaDecisive = formatFormulaDecisive2026EnCours(city.nom_standard, city.code_departement, first.Voix, second.Voix, votesDecisifs, resultsTable2026);
     } else {
-      formulaDecisive = resultsTable2026;
+      formulaDecisive = formatFormulaDecisive2026EnCours(city.nom_standard, city.code_departement, first.Voix, second.Voix, votesDecisifs, resultsTable2026);
     }
     const explanationNonVoting2026 = formatExplanationNonVoting2026(city.nom_standard, city.code_departement, pop1839, tour1_2026.Abstentions, pop18Plus);
     formulaNonVotants = formatFormulaNonVotants2026(explanationNonVoting2026, pop1839, pop18Plus, tour1_2026.Abstentions, nonVotants1839);
@@ -589,7 +607,20 @@ function displayCityDetail(city) {
     }
   };
   const electionTerminee2026 = city.Analyse["election terminee 2026"] ?? true;
-  const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, !electionTerminee2026);
+  let casNote;
+  if (has2026) {
+    const resultats2026 = [...tour1_2026?.resultats ?? []].sort((a, b) => b.Voix - a.Voix);
+    if (resultats2026.length <= 1) {
+      const seul = resultats2026[0]?.["Conduite par"]?.trim() || resultats2026[0]?.Liste || "";
+      casNote = seul ? `LA LISTE DE ${seul.toUpperCase()} ÉTAIT SEUL·E EN LICE` : "UNE SEULE LISTE ÉTAIT EN LICE AU 1ER TOUR.";
+    } else if (electionTerminee2026) {
+      const gagnant = resultats2026[0]["Conduite par"]?.trim() || resultats2026[0].Liste || "";
+      casNote = `LA LISTE DE ${gagnant.toUpperCase()} A REMPORTÉ L'ÉLECTION`;
+    } else {
+      casNote = "LE SECOND TOUR A LIEU LE 22 MARS !";
+    }
+  }
+  const html = formatCityDetailHtml(votesDecisifs, mainTagline, nonVotants1839, aggregationWarning, nonVotantsLabel, !electionTerminee2026, casNote);
   cityDetailDiv.innerHTML = html;
   const mainFooter = document.querySelector("footer.footer");
   const footerPlaceholder = cityDetailDiv.querySelector(".city-detail-footer");
@@ -790,8 +821,30 @@ var createClientFallbackImageBlob = async (cityName, votesDecisifs) => {
   ctx.fillText(votesDecisifs.toLocaleString("fr-FR"), canvas.width / 2, 860);
   ctx.fillStyle = "#FFFFFF";
   ctx.font = '700 48px "Arial Black", Arial, sans-serif';
-  ctx.fillText("VOTES SÉPARENT LES CANDIDAT·ES", canvas.width / 2, 1010);
-  ctx.fillText("AU PREMIER TOUR EN 2026", canvas.width / 2, 1080);
+  ctx.fillText("VOTES SÉPARENT LES FINALISTES", canvas.width / 2, 1010);
+  {
+    const y = 1080;
+    const fontSize = 48;
+    const supFontSize = 30;
+    ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+    const before = "DU 1";
+    const sup = "ER";
+    const after = " TOUR DES MUNICIPALES 2026";
+    const wBefore = ctx.measureText(before).width;
+    ctx.font = `700 ${supFontSize}px "Arial Black", Arial, sans-serif`;
+    const wSup = ctx.measureText(sup).width;
+    ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+    const wAfter = ctx.measureText(after).width;
+    const totalW = wBefore + wSup + wAfter;
+    const startX = canvas.width / 2 - totalW / 2;
+    ctx.textAlign = "left";
+    ctx.fillText(before, startX, y);
+    ctx.font = `700 ${supFontSize}px "Arial Black", Arial, sans-serif`;
+    ctx.fillText(sup, startX + wBefore, y - 18);
+    ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+    ctx.fillText(after, startX + wBefore + wSup, y);
+    ctx.textAlign = "center";
+  }
   ctx.fillStyle = "#5ECBA1";
   ctx.font = '700 88px "Arial Black", Arial, sans-serif';
   ctx.fillText("JE VOTE", canvas.width / 2, 1330);

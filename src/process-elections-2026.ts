@@ -9,6 +9,7 @@ const API_URL =
 	"https://tabular-api.data.gouv.fr/api/resources/4feeef01-24f7-4d5a-914f-8aa806f31ec2/data/json/";
 const POPULATION_FILE = "./population.json";
 const OUTPUT_FILE = "./elections.json";
+const LISTES_CSV = "/Users/julienvinckel/Documents/OEP/Sources 2026/listes2026.csv";
 
 const populationKeys = [
 	"F0-2", "F3-5", "F6-10", "F11-17", "F18-24", "F25-39", "F40-54", "F55-64", "F65-79", "F80+",
@@ -26,6 +27,47 @@ function parseNum(v: unknown): number {
 	if (!v) return 0;
 	return parseFloat(String(v).replace(/\s/g, "").replace(",", ".").replace("%", "")) || 0;
 }
+
+// ── 0. Load listes2026.csv (têtes de liste) ───────────────────────────────────
+
+/** Parse one semicolon-delimited CSV line with optional double-quote wrapping */
+function parseCsvLine(line: string): string[] {
+	const fields: string[] = [];
+	let i = 0;
+	while (i <= line.length) {
+		if (i === line.length) { fields.push(""); break; }
+		if (line[i] === '"') {
+			const j = line.indexOf('"', i + 1);
+			fields.push(j === -1 ? line.slice(i + 1) : line.slice(i + 1, j));
+			i = (j === -1 ? line.length : j + 1);
+			if (line[i] === ';') i++;
+		} else {
+			const end = line.indexOf(';', i);
+			if (end === -1) { fields.push(line.slice(i)); break; }
+			fields.push(line.slice(i, end));
+			i = end + 1;
+		}
+	}
+	return fields;
+}
+
+console.log("📖 Loading listes2026.csv…");
+const listesText = await Bun.file(LISTES_CSV).text();
+const listesLines = listesText.split("\n").filter((l) => l.trim());
+// index: "codeCirco_panneau" → "Prénom Nom"
+const listesIndex = new Map<string, string>();
+for (let li = 1; li < listesLines.length; li++) {
+	const f = parseCsvLine(listesLines[li]);
+	const codeCirco = f[2];  // "Code circonscription" (e.g. "01001")
+	const panneau   = f[4];  // "Numéro de panneau"
+	const tete      = f[9];  // "Tête de liste" = "OUI"
+	const nom       = f[12]; // "Nom sur le bulletin de vote"
+	const prenom    = f[13]; // "Prénom sur le bulletin de vote"
+	if (tete === "OUI" && codeCirco && panneau) {
+		listesIndex.set(`${codeCirco}_${panneau}`, [prenom, nom].filter(Boolean).join(" "));
+	}
+}
+console.log(`✅ ${listesIndex.size} têtes de liste indexed`);
 
 // ── 1. Fetch 2026 election data ───────────────────────────────────────────────
 
@@ -76,9 +118,11 @@ for (const row of rawData) {
 	for (let i = 1; i <= 15; i++) {
 		const voix = row[`Voix ${i}`];
 		if (voix === null || voix === undefined) break;
-		const prenom = String(row[`Prénom candidat ${i}`] ?? "").trim();
-		const nom = String(row[`Nom candidat ${i}`] ?? "").trim();
-		const conductePar = [prenom, nom].filter(Boolean).join(" ");
+		const csvKey = `${fullCode}_${i}`;
+		const conductePar = listesIndex.get(csvKey) ?? (
+			[String(row[`Prénom candidat ${i}`] ?? "").trim(), String(row[`Nom candidat ${i}`] ?? "").trim()]
+				.filter(Boolean).join(" ")
+		);
 		resultats2026.push({
 			Liste: String(row[`Libellé abrégé de liste ${i}`] || row[`Libellé de liste ${i}`] || ""),
 			"Conduite par": conductePar,
@@ -153,14 +197,18 @@ for (const row of rawData) {
 	let votesDecisifs = 0;
 	let electionTerminee = false;
 
-	if (sorted.length > 0) {
+	if (sorted.length === 1) {
+		// Cas 1 : une seule liste au premier tour → V + 1
+		electionTerminee = true;
+		votesDecisifs = sorted[0].Voix + 1;
+	} else if (sorted.length > 0) {
 		const winner = sorted[0];
 		const terminee = winner["% Voix/Exp"] > 50;
 		electionTerminee = terminee;
 		if (terminee) {
 			// Cas terminée : votes pour forcer un 2nd tour → 2×V₁ − Exprimés
 			votesDecisifs = Math.max(0, 2 * winner.Voix - tour1_2026.Exprimés);
-		} else if (sorted.length >= 2) {
+		} else {
 			// Cas 2nd tour en cours : écart entre 1er et 2e + 1
 			votesDecisifs = sorted[0].Voix - sorted[1].Voix + 1;
 		}

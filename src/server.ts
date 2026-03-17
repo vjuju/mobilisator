@@ -30,11 +30,9 @@ const server = Bun.serve({
 				return new Response(file(join(PUBLIC_DIR, "index.html")));
 			}
 
-			// Serve the file with cache headers for JSON files
+			// No cache in dev (avoid stale JSON after rebuilds)
 			const headers = new Headers();
-			if (pathname.endsWith(".json")) {
-				headers.set("Cache-Control", "public, max-age=3600");
-			}
+			headers.set("Cache-Control", "no-store");
 
 			return new Response(fileToServe, { headers });
 		}

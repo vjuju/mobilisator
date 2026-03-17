@@ -331,6 +331,29 @@ ${resultsTableHtml}`;
 }
 
 /**
+ * Cas 1 — 2026 : Une seule liste au premier tour → V + 1
+ */
+export function formatFormulaDecisive2026Cas1(
+	cityName: string,
+	codeDepartement: string,
+	firstPlaceVoix: number,
+	votesDecisifs: number,
+	resultsTableHtml: string,
+): string {
+	return `À ${cityName} (${codeDepartement}), une seule liste était en lice au premier tour du 15 mars 2026.
+<br><br>
+Pour qu'une autre liste ait pu l'emporter, il aurait fallu qu'elle obtienne strictement plus de voix que la liste unique — soit au moins <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong> nouveaux votes.
+<br><br>
+<strong>Formule :</strong> Voix de la liste unique + 1
+<br><br>
+<strong>Détail :</strong>
+<br>• Voix de la liste unique : ${firstPlaceVoix.toLocaleString("fr-FR")}
+<br>• Votes nécessaires : ${firstPlaceVoix.toLocaleString("fr-FR")} + 1 = <strong>${votesDecisifs.toLocaleString("fr-FR")}</strong>
+<br><br><strong>Résultats du 1er tour 2026 :</strong>
+${resultsTableHtml}`;
+}
+
+/**
  * Cas second tour en cours 2026 : écart entre 1er et 2e + 1 au 1er tour
  */
 export function formatFormulaDecisive2026EnCours(
@@ -491,9 +514,10 @@ export function formatResultsTable(resultats: Resultat[]): string {
 /**
  * Génère une ligne du tableau des résultats 2026
  */
-export function formatResultatRow2026(resultat: ElectionResult2026): string {
+export function formatResultatRow2026(resultat: ElectionResult2026, showCandidat: boolean): string {
 	return `<tr>
-		<td>${resultat.Liste}<br><small>${resultat["Conduite par"]}</small></td>
+		<td>${resultat.Liste}</td>
+		${showCandidat ? `<td>${resultat["Conduite par"]}</td>` : ""}
 		<td>${resultat.Voix.toLocaleString("fr-FR")}</td>
 		<td>${resultat["% Voix/Ins"].toFixed(2)}%</td>
 		<td>${resultat["% Voix/Exp"].toFixed(2)}%</td>
@@ -506,13 +530,15 @@ export function formatResultatRow2026(resultat: ElectionResult2026): string {
  * Génère le tableau complet des résultats 2026
  */
 export function formatResultsTable2026(resultats: ElectionResult2026[]): string {
-	const rows = resultats.map(formatResultatRow2026).join("");
+	const showCandidat = resultats.some((r) => r["Conduite par"]?.trim());
+	const rows = resultats.map((r) => formatResultatRow2026(r, showCandidat)).join("");
 	return `
 		<div class="table-scroll-container">
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>${labels.tableHeaders.listeConduitePar}</th>
+						<th>Liste</th>
+						${showCandidat ? "<th>Candidat·e</th>" : ""}
 						<th>${labels.tableHeaders.voix}</th>
 						<th>${labels.tableHeaders.pourcentInscrits}</th>
 						<th>${labels.tableHeaders.pourcentExprimes}</th>
@@ -562,11 +588,16 @@ export function formatCityDetailHtml(
 	aggregationWarning: string,
 	nonVotantsLabel?: string,
 	showShareButton?: boolean,
+	casNote?: string,
 ): string {
 	const secondaryLabel = nonVotantsLabel ?? labels.stats.jeunesNonVotants;
+	const casNoteHtml = casNote
+		? `<div class="cas-note">${casNote}</div>`
+		: "";
 	return `
         <div class="city-detail">
 			${aggregationWarning}
+			${casNoteHtml}
 
 			<!-- Main Stat: Decisive Votes -->
 			<div class="main-stat">

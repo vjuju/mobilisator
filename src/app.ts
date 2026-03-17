@@ -4,6 +4,7 @@ import {
 	messages,
 	labels,
 	getMainTagline2026,
+	formatFormulaDecisive2026Cas1,
 	formatFormulaDecisive2026Terminee,
 	formatFormulaDecisive2026EnCours,
 	formatExplanationNonVoting2026,
@@ -512,7 +513,16 @@ function displayCityDetail(city: City): void {
 		const first = resultats2026[0];
 		const second = resultats2026[1];
 
-		if (electionTerminee) {
+		if (!second) {
+			// Cas 1 : une seule liste au premier tour
+			formulaDecisive = formatFormulaDecisive2026Cas1(
+				city.nom_standard,
+				city.code_departement,
+				first.Voix,
+				votesDecisifs,
+				resultsTable2026,
+			);
+		} else if (electionTerminee) {
 			const pourcentage = first["% Voix/Exp"];
 			formulaDecisive = formatFormulaDecisive2026Terminee(
 				city.nom_standard,
@@ -523,7 +533,7 @@ function displayCityDetail(city: City): void {
 				votesDecisifs,
 				resultsTable2026,
 			);
-		} else if (second) {
+		} else {
 			formulaDecisive = formatFormulaDecisive2026EnCours(
 				city.nom_standard,
 				city.code_departement,
@@ -532,8 +542,6 @@ function displayCityDetail(city: City): void {
 				votesDecisifs,
 				resultsTable2026,
 			);
-		} else {
-			formulaDecisive = resultsTable2026;
 		}
 
 		const explanationNonVoting2026 = formatExplanationNonVoting2026(
@@ -581,6 +589,19 @@ function displayCityDetail(city: City): void {
 	};
 
 	const electionTerminee2026 = city.Analyse["election terminee 2026"] ?? true;
+	let casNote: string | undefined;
+	if (has2026) {
+		const resultats2026 = [...(tour1_2026?.resultats ?? [])].sort((a, b) => b.Voix - a.Voix);
+		if (resultats2026.length <= 1) {
+			const seul = resultats2026[0]?.["Conduite par"]?.trim() || resultats2026[0]?.Liste || "";
+			casNote = seul ? `LA LISTE DE ${seul.toUpperCase()} ÉTAIT SEUL·E EN LICE` : "UNE SEULE LISTE ÉTAIT EN LICE AU 1ER TOUR.";
+		} else if (electionTerminee2026) {
+			const gagnant = resultats2026[0]["Conduite par"]?.trim() || resultats2026[0].Liste || "";
+			casNote = `LA LISTE DE ${gagnant.toUpperCase()} A REMPORTÉ L'ÉLECTION`;
+		} else {
+			casNote = "LE SECOND TOUR A LIEU LE 22 MARS\u00A0!";
+		}
+	}
 	const html = formatCityDetailHtml(
 		votesDecisifs,
 		mainTagline,
@@ -588,6 +609,7 @@ function displayCityDetail(city: City): void {
 		aggregationWarning,
 		nonVotantsLabel,
 		!electionTerminee2026,
+		casNote,
 	);
 
 	cityDetailDiv.innerHTML = html;
@@ -859,8 +881,31 @@ const createClientFallbackImageBlob = async (
 
 	ctx.fillStyle = "#FFFFFF";
 	ctx.font = '700 48px "Arial Black", Arial, sans-serif';
-	ctx.fillText("VOTES SÉPARENT LES CANDIDAT·ES", canvas.width / 2, 1010);
-	ctx.fillText("AU PREMIER TOUR EN 2026", canvas.width / 2, 1080);
+	ctx.fillText("VOTES SÉPARENT LES FINALISTES", canvas.width / 2, 1010);
+	// "DU 1ER TOUR DES MUNICIPALES 2026" with superscript ER
+	{
+		const y = 1080;
+		const fontSize = 48;
+		const supFontSize = 30;
+		ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+		const before = "DU 1";
+		const sup = "ER";
+		const after = " TOUR DES MUNICIPALES 2026";
+		const wBefore = ctx.measureText(before).width;
+		ctx.font = `700 ${supFontSize}px "Arial Black", Arial, sans-serif`;
+		const wSup = ctx.measureText(sup).width;
+		ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+		const wAfter = ctx.measureText(after).width;
+		const totalW = wBefore + wSup + wAfter;
+		const startX = canvas.width / 2 - totalW / 2;
+		ctx.textAlign = "left";
+		ctx.fillText(before, startX, y);
+		ctx.font = `700 ${supFontSize}px "Arial Black", Arial, sans-serif`;
+		ctx.fillText(sup, startX + wBefore, y - 18);
+		ctx.font = `700 ${fontSize}px "Arial Black", Arial, sans-serif`;
+		ctx.fillText(after, startX + wBefore + wSup, y);
+		ctx.textAlign = "center";
+	}
 
 	ctx.fillStyle = "#5ECBA1";
 	ctx.font = '700 88px "Arial Black", Arial, sans-serif';
