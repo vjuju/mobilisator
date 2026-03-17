@@ -289,8 +289,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 					style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
 				}, "VOTES SÉPARENT LES FINALISTES"),
 				el("div", {
-					style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-				}, "DU 1ER TOUR DES MUNICIPALES 2026"),
+					style: { display: "flex", alignItems: "flex-start", fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				},
+					"DU 1",
+					el("span", { style: { fontSize: 24, lineHeight: 1, marginTop: 4 } }, "ER"),
+					" TOUR DES MUNICIPALES 2026",
+				),
 			),
 				// "JE VOTE / ET TOI ?"
 			el("div", {

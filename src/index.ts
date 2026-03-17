@@ -192,12 +192,12 @@ await Bun.write(slugMapLocation, JSON.stringify(slugToId));
 // Write share-data.json: slug → { name, votes, thumbUrl, url, author, license }
 // Used by the Cloudflare Pages Function that generates share images (og:image + clipboard)
 const cityImagesFile = Bun.file("./city-images.json");
-const cityImages: Record<number, { thumbUrl?: string; url?: string; author?: string; license?: string }> =
+const cityImages: Record<string, { thumbUrl?: string; url?: string; author?: string; license?: string }> =
 	(await cityImagesFile.exists()) ? await cityImagesFile.json() : {};
 
 const shareData: Record<string, { name: string; votes: number; cas: number | string; thumbUrl: string; url: string; author: string; license: string }> = {};
 for (const city of Object.values(allCitiesData)) {
-	const img = cityImages[city.id] ?? {};
+	const img = cityImages[city.code_insee] ?? {};
 	const { cas } = computeVotesDecisifs(city["Tour 1"], city["Tour 2"]);
 	shareData[city.slug] = {
 		name: city.nom_standard,
