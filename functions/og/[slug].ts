@@ -285,34 +285,14 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 					gap: 4,
 				},
 			},
-				// Line 1: "JEUNES DE " + "18-39 ANS" in green
 				el("div", {
-					style: { display: "flex", flexDirection: "row", alignItems: "baseline" },
-				},
-					el("div", {
-						style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-					}, "JEUNES DE\u00A0"),
-					el("div", {
-						style: { fontSize: 60, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-					}, "18-39 ANS"),
-				),
-				// Line 2 (+ optional line 2b): action tagline — depends on cas
-				...(city.cas === 1 || city.cas === 2 || city.cas === "2b"
-					? [
-						el("div", {
-							style: { fontSize: 58, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE ÉLIRE"),
-						el("div", {
-							style: { fontSize: 58, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-						}, "UN·E AUTRE MAIRE EN 2020"),
-					]
-					: [
-						el("div", {
-							style: { fontSize: 60, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-						}, (city.votes === 1 ? "AURAIT" : "AURAIENT") + " PU FAIRE LA DIFF' AUX MUNICIPALES EN 2020"),
-					]),
+					style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "VOTES SÉPARENT LES FINALISTES"),
+				el("div", {
+					style: { fontSize: 44, color: "#ffffff", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
+				}, "DU 1ER TOUR DES MUNICIPALES 2026"),
 			),
-				// "JE VOTE EN 2026. / ET TOI ?"
+				// "JE VOTE / ET TOI ?"
 			el("div", {
 				style: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 130, gap: 0 },
 			},
@@ -321,7 +301,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 				}, "JE VOTE"),
 				el("div", {
 					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
-				}, "LE 15 ET 22 MARS."),
+				}, "LE 22 MARS."),
 				el("div", {
 					style: { fontSize: 72, color: "#5ECBA1", fontFamily: "Folsom", fontWeight: 400, lineHeight: 1 },
 				}, "ET TOI ?"),
