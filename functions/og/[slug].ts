@@ -373,7 +373,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 		});
 
 		const headers = new Headers(response.headers);
-		headers.set("Cache-Control", "public, max-age=86400, s-maxage=604800");
+		headers.set("Cache-Control", "no-store");
 		return new Response(response.body, { status: response.status, headers });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
